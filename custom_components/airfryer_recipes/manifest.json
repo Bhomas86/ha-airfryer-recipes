@@ -1,6 +1,9 @@
 {
   "domain": "airfryer_recipes",
   "name": "Airfryer Recipes",
+  "categories": [
+    "appliances_cleaning.cooking"
+  ],
   "codeowners": [
     "@Bhomas86"
   ],
