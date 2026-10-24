@@ -1,8 +1,4 @@
-"""Hardware-free regression tests for Issue #3 Home Assistant scaffolding.
-
-HA is deliberately stubbed to keep GitHub Actions offline. These tests do
-NOT replace an actual Home Assistant OS installation / config flow check.
-"""
+"""Hardware-free Issue #3 tests plus Issue #4 repository initialization."""
 
 import asyncio
 import importlib
@@ -20,7 +16,7 @@ from custom_components.airfryer_recipes import (
     async_unload_entry,
 )
 from custom_components.airfryer_recipes.const import DOMAIN
-
+from custom_components.airfryer_recipes.recipe_repository import RecipeRepository
 
 ROOT = Path(__file__).resolve().parents[1]
 INTEGRATION = ROOT / "custom_components" / DOMAIN
@@ -28,15 +24,28 @@ INTEGRATION = ROOT / "custom_components" / DOMAIN
 
 class TestIntegrationLifecycle(unittest.TestCase):
     def test_setup_and_unload_config_entry(self):
-        entry = SimpleNamespace(runtime_data=None)
-        self.assertTrue(asyncio.run(async_setup_entry(SimpleNamespace(), entry)))
-        self.assertIsInstance(entry.runtime_data, AirfryerRecipesRuntime)
-        self.assertTrue(asyncio.run(async_unload_entry(SimpleNamespace(), entry)))
+        record = {"schema_version": 1, "recipes": []}
+
+        async def load():
+            return record
+
+        async def save(data):
+            nonlocal record
+            record = data
+
+        async def run():
+            entry = SimpleNamespace(runtime_data=None)
+            fake = RecipeRepository(load, save)
+            with patch("custom_components.airfryer_recipes.storage.create_repository", return_value=fake):
+                self.assertTrue(await async_setup_entry(SimpleNamespace(), entry))
+            self.assertIsInstance(entry.runtime_data, AirfryerRecipesRuntime)
+            self.assertEqual(await entry.runtime_data.recipes.async_list(), ())
+            self.assertTrue(await async_unload_entry(SimpleNamespace(), entry))
+
+        asyncio.run(run())
 
 
 class StubConfigFlow:
-    """Stand-in for the HA flow class; not a real HA integration test."""
-
     def __init_subclass__(cls, **kwargs):
         cls.integration_domain = kwargs["domain"]
 
@@ -122,7 +131,3 @@ class TestPackagedMetadata(unittest.TestCase):
         icon = INTEGRATION / "brand" / "icon.png"
         self.assertTrue(icon.exists(), "HACS requires integration-local brand/icon.png")
         self.assertEqual(icon.read_bytes()[:8], bytes((137, 80, 78, 71, 13, 10, 26, 10)))
-
-
-if __name__ == "__main__":
-    unittest.main()
