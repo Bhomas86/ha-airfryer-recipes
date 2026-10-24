@@ -1,56 +1,48 @@
-# Entwicklungsplan – Roadmap
+# Entwicklungsplan – Airfryer Recipes
 
 [Deutsch](ROADMAP.de.md) | [English](ROADMAP.md)
 
-Aktueller Status: **Grundlagen-Pull-Request in Prüfung. Noch nicht über HACS installierbar.**
+**Status:** Architektur und alle **31 Anforderungen beschlossen**. Die Projektgrundlage liegt in [PR #2](https://github.com/Bhomas86/ha-airfryer-recipes/pull/2), ist aber **weder gemergt noch über HACS installierbar**. Die [Architekturbeschreibung](ARCHITECTURE.de.md) ist die Grundlage für die technische Umsetzung.
 
-## Phase 0 – Dokumentation und unabhängiges Rezeptmodell (dieser PR)
-- [x] Codex-Modellprüfung und Eskalationsregeln (`AGENTS.md`)
-- [x] Anforderungen 1–30 zusammengefasst
-- [x] Geräteunabhängiges Rezeptschema, Validierung, versionierter JSON-Import/-Export
-- [x] Offline-Python-Unit-Tests
-- [x] Erfolgreiche GitHub-CI-Läufe für Python 3.12 und 3.14
-- [ ] Prüfung und Merge durch Repository-Verantwortlichen
+## Prioritäten und Abhängigkeiten
 
-## Phase 1 – Basis der Home-Assistant-Integration
-- [ ] Manifest, HACS-Metadaten und Einrichtungsdialog
-- [ ] Lokale HA-Speicherung mit asynchronem `Store`
-- [ ] Sichere Datenmigrationen mit Sicherung und Wiederherstellung
-- [ ] Admin-Rechte für Änderungen, normale Benutzerrechte zur Bedienung
-- [ ] Backend für Anlegen/Bearbeiten/Löschen und JSON-Import/-Export mit Konfliktvorschau
-- [ ] Rezeptverwaltung ohne Airfryer Control benutzbar
+| Phase | Issue | Ergebnis | Voraussetzung | Prüfung |
+| --- | --- | --- | --- | --- |
+| 0 · Grundlage | [PR #2](https://github.com/Bhomas86/ha-airfryer-recipes/pull/2) | Rezeptmodell, JSON, Tests, 31 zweisprachige Anforderungen, Architektur, Codex-Regeln | Freigabe durch Nutzer | Python 3.12/3.14-CI, Code Review |
+| 1 · Home Assistant | [#3](https://github.com/Bhomas86/ha-airfryer-recipes/issues/3) | Installierbare Integration, Einrichtung, Übersetzung, HACS-Metadaten | PR #2 | HA startet auch ohne Geräteadapter |
+| 2 · Datenspeicherung | [#4](https://github.com/Bhomas86/ha-airfryer-recipes/issues/4) | Versionierter Speicher, CRUD, Migration, JSON-Import/-Export | #3 | Neustart, Migration, ungültige Daten |
+| 3 · Berechtigte API | [#5](https://github.com/Bhomas86/ha-airfryer-recipes/issues/5) | Rechtegeprüfte WebSocket-Befehle | #3, #4 | Admin/Benutzer und manipulierte Requests |
+| 4 · Rezeptverwaltung | [#6](https://github.com/Bhomas86/ha-airfryer-recipes/issues/6) | Responsive Admin-Seite, Deutsch und Englisch | #4, #5 | Bearbeitung ohne Airfryer, Rechte |
+| 5 · Sichere Anbindung | [#7](https://github.com/Bhomas86/ha-airfryer-recipes/issues/7) | Airfryer-Control-Adapter, Gerätefähigkeiten, Befehlskoordinator, Testmodus | #3, #5 | Simulierte Sicherheitstests, lokale Cosori-Checkliste |
+| 6 · Dashboard | [#8](https://github.com/Bhomas86/ha-airfryer-recipes/issues/8) | Interaktive Fächer, Rezept/Manuell, Rückmeldungen und Karteneditor | #4, #5, #7 | Smartphone/Tablet, beide Fächer, Offline |
+| 7 · Individualisierung | [#9](https://github.com/Bhomas86/ha-airfryer-recipes/issues/9) | Bildergalerie, sichere Uploads, verschiebbare Fachpositionen | #8 | Skalierung, Rechte und Bildvalidierung |
+| 8 · Beta-Freigabe | [#10](https://github.com/Bhomas86/ha-airfryer-recipes/issues/10) | HACS-Beta, zweisprachige Release Notes, Diagnose, optionale Fertigmeldung | #3–#8, ggf. #9 | CI, echtes HA und Gerätetests |
+| Später | [#1](https://github.com/Bhomas86/ha-airfryer-recipes/issues/1) | SYNC/MATCH in Dashboard unter Verwendung vorhandener Aktionen | #7, #8 | Sicherheit und echte Gerätebestätigung |
 
-## Phase 2 – Grafische Rezeptverwaltung
-- [ ] Administrationsoberfläche in Home Assistant, Deutsch/Englisch
-- [ ] Anlegen, bearbeiten, duplizieren, löschen (mit Bestätigung) und suchen
-- [ ] Kategorien, Tags, gemeinsame/persönliche Favoriten
-- [ ] Optionale Beispielrezepte bei Ersteinrichtung
+## Arbeitsteilung
 
-## Phase 3 – Geräteadapter und sichere Übertragung
-- [ ] Adapter-Vertrag für Modell, Garkammern, Fähigkeiten und Online-Status
-- [ ] Airfryer-Control-Adapter mit Prüfung der vorhandenen Aktionsparameter
-- [ ] Kompatibilitätsprüfung für Programm, Temperatur und Zeit
-- [ ] Schutz bei offline, unbekanntem Zustand und laufendem Garbetrieb
-- [ ] Serverseitiger Testmodus; Wiederholung nur auf ausdrücklichen Wunsch
-- [ ] Reale, beaufsichtigte Tests mit CAF-DC111S-AEU
+- **ChatGPT kann übernehmen:** Architektur, Rezeptdatenmodelle, Python-Hilfsfunktionen, Tests, Dokumentation, Reviews sowie kleinere abgegrenzte Branches und Pull Requests.
+- **Codex übernimmt geeignete größere Pakete:** HA-Lifecycle, Admin-Seite, Adapter und Dashboard. Vor jedem Paket gelten die **vier Modellstufen** aus [AGENTS.md](../AGENTS.de.md). **GPT-5.6 Sol High ist Standard**, nicht GPT-6.1.
+- **GitHub Actions:** Ausschließlich Simulationen, Unit-/statische Tests; niemals Zugang zum Heimnetz oder echten Gerät.
+- **Nutzer / lokales Home Assistant:** Installation, Neustart und reale Tests mit der Cosori anhand der [Testcheckliste](LOCAL_TEST_CHECKLIST.de.md).
+- **Pull Requests:** Eigene Branches, vollständige deutsche und englische Dokumentation, Tests und Review vor dem Merge. Keine automatische Zusammenführung.
 
-## Phase 4 – Grafisches Dashboard
-- [ ] Modellspezifische oder neutrale Gerätegrafik
-- [ ] Anklickbare Fächer für Rezepte und manuelle Werte
-- [ ] Responsiver Karteneditor, eigene Bilder und relative Koordinaten
-- [ ] Status-/Restzeit-Anzeige und optionale Benachrichtigungen
-- [ ] Eindeutige Sende-, Fehler- und Offline-Anzeige
+## Erste nutzbare Entwicklungsziele
 
-## Phase 5 – Optionale Erweiterungen
-- [ ] SYNC- und MATCH-Bedienung für vorhandene Aktionen (Issue #1)
-- [ ] Home-Assistant-Aktionen für Skripte und Automationen (nach Dashboard-MVP)
-- [ ] Mehrphasige Rezepte
-- [ ] Weitere Geräteadapter und Gerätebilder
+**Meilenstein A – Rezeptverwaltung ohne Airfryer** nach #3–#6: Rezepte anlegen, ändern, importieren/exportieren und dauerhaft speichern, inklusive Admin-Berechtigungen.
 
-## Voraussetzungen für Releases
-- Erfolgreiche Unit-Tests und CI
-- Home-Assistant-Integrations- und Einrichtungstests vor HACS-Freigabe
-- Sicherheitsprüfungen: kein unbeabsichtigter Start, keine Offline-Befehle nachholen
-- **Vollständig zweisprachige Berichte, PRs, Release Notes und Benutzerdokumentation**
-- Reale Tests separat dokumentieren; keine Testerfolge behaupten, die nicht durchgeführt wurden
-- Stabile Releases und optionale Betas; Rezeptdaten bleiben erhalten
+**Meilenstein B – Sichere Übertragung ans Gerät** nach #7–#8: Cosori-Fach antippen, Rezept oder manuelle Werte einstellen und bewusst senden, ohne Fernstart der Heizung. Verbindung und Fehler sind erkennbar.
+
+**Meilenstein C – HACS-Beta für Tester** nach #9/#10 nach Bedarf: Individualisierung, Prüfungen, Anleitungen, optionale verlässliche Fertigmeldungen, Diagnose und Veröffentlichung.
+
+Keine konkreten Veröffentlichungstermine, bevor Installation und Sicherheitsprüfung am realen System durchgeführt wurden.
+
+## Freigabekriterien
+
+- Erfolgreiche CI- und Home-Assistant-Setup-Tests
+- Keine blockierenden Dateizugriffe im Event-Loop
+- Kein unbeabsichtigter Heizstart, Offline-Nachholen, Auto-Retry oder echte Befehle im Testmodus
+- Admin-/Benutzerrechte werden vom Backend geprüft
+- Sicherungen vor Migrationen und geschützter Import mit Konfliktvorschau
+- **Vollständige deutsche und englische** Oberfläche, Issues, PRs, Dokumentation, Testberichte und Release Notes; Berichte zuerst auf Deutsch
+- Reale Cosori-Tests nur mit den Angaben BESTANDEN / FEHLGESCHLAGEN / NICHT GETESTET dokumentieren
