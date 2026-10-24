@@ -15,17 +15,11 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry
     from homeassistant.core import HomeAssistant
-    from homeassistant.helpers.typing import ConfigType
 
 
 @dataclass(slots=True)
 class AirfryerRecipesRuntime:
     """Placeholder for per-entry services added in later issues."""
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the integration domain without dependencies or side effects."""
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
