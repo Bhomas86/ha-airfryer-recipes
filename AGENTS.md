@@ -1,5 +1,7 @@
 # AGENTS.md — Airfryer Recipes
 
+[English](AGENTS.md) | [Deutsch](AGENTS.de.md)
+
 This file contains binding project instructions for Codex and other coding agents.
 Read this file and `docs/REQUIREMENTS.md` before every task. Do not assume that
 a higher-cost model is better for every task.
