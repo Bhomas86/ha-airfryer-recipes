@@ -125,7 +125,7 @@ class TestPackagedMetadata(unittest.TestCase):
     def test_brand_icon_is_present(self):
         icon = ROOT / "brand" / "icon.png"
         self.assertTrue(icon.exists(), "HACS requires a root brand/icon.png")
-        self.assertEqual(icon.read_bytes()[:8], b"\\x89PNG\\r\\n\\x1a\\n")
+        self.assertEqual(icon.read_bytes()[:8], bytes((137, 80, 78, 71, 13, 10, 26, 10)))
 
 
 if __name__ == "__main__":
