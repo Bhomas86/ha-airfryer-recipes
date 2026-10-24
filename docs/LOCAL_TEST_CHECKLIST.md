@@ -1,5 +1,7 @@
 # Local test checklist — appliance tests
 
+[English](LOCAL_TEST_CHECKLIST.md) | [Deutsch](LOCAL_TEST_CHECKLIST.de.md)
+
 **This project currently has no device adapter or dashboard.** Do not run these
 steps until the corresponding phase has been implemented and a beta build is
 available for manual installation. Real tests take place only in the owner's
@@ -39,6 +41,7 @@ the local network or real VeSync device.
 - [ ] Verify normal users cannot modify recipes or safety preferences.
 - [ ] Check °C/°F presentation, device-specific limits and range warnings.
 - [ ] Inspect diagnostic preview for any secrets before sharing.
+- [ ] Compare German and English reports and release notes for completeness.
 
 ## Future SYNC / MATCH test (not MVP)
 

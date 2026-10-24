@@ -1,7 +1,9 @@
 # Requirements — Airfryer Recipes
 
+[English](REQUIREMENTS.md) | [Deutsch](REQUIREMENTS.de.md)
+
 Status: **Agreed product requirements, not an implemented feature list**.
-Last consolidated: 2026-10-24. Project language policy: English default; German translation.
+Last consolidated: 2026-10-24. Project language policy: English default UI language; complete English and German documentation, with German-first reports to the project owner.
 
 ## Confirmed requirements
 
@@ -36,7 +38,8 @@ Last consolidated: 2026-10-24. Project language policy: English default; German 
 | 27 | Guided onboarding (B) | Detect device if present, choose model/zones, optional sample recipes, help add card; permit setup without appliance. |
 | 28 | Stable releases + beta (B) | HACS via GitHub Releases; optional prereleases, CI checks, English/German release notes; no automatic breaking migrations. |
 | 29 | Automated + real tests (B) | Offline mock CI, documented local test checklist; real Cosori test only on user's HA, no cloud/LAN access for Codex. |
-| 30 | Structured GitHub/Codex workflow (B) | AGENTS.md, requirements, roadmap, issue/PR templates, dedicated branches, automated checks. Enforce explicit model/task check and escalation rules in AGENTS.md. |
+| 30 | Structured GitHub/Codex workflow (B) | AGENTS.md, bilingual requirements/roadmap/reports and issue/PR descriptions, dedicated branches, automated checks. Enforce explicit model/task check and escalation rules in AGENTS.md. |
+| 31 | Modular Home Assistant architecture (B) | One HACS package with Python backend, separate admin recipe panel and Lovelace dashboard card, versioned local store, authenticated backend API and replaceable device adapters. No additional services. See [Architecture](ARCHITECTURE.md). |
 
 ## Core user workflow
 
