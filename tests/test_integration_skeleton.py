@@ -16,7 +16,6 @@ from unittest.mock import patch
 
 from custom_components.airfryer_recipes import (
     AirfryerRecipesRuntime,
-    async_setup,
     async_setup_entry,
     async_unload_entry,
 )
@@ -28,10 +27,6 @@ INTEGRATION = ROOT / "custom_components" / DOMAIN
 
 
 class TestIntegrationLifecycle(unittest.TestCase):
-    def test_setup_is_device_independent(self):
-        result = asyncio.run(async_setup(SimpleNamespace(), {}))
-        self.assertTrue(result)
-
     def test_setup_and_unload_config_entry(self):
         entry = SimpleNamespace(runtime_data=None)
         self.assertTrue(asyncio.run(async_setup_entry(SimpleNamespace(), entry)))
@@ -96,6 +91,7 @@ class TestPackagedMetadata(unittest.TestCase):
         self.assertTrue(manifest["config_flow"])
         self.assertTrue(manifest["single_config_entry"])
         self.assertEqual(manifest["integration_type"], "hub")
+        self.assertEqual(manifest["iot_class"], "calculated")
         self.assertEqual(manifest["requirements"], [])
         self.assertNotIn("dependencies", manifest)
         self.assertTrue(manifest["version"])
