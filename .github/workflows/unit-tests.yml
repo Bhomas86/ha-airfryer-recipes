@@ -2,7 +2,7 @@ name: Offline unit tests
 
 on:
   push:
-    branches: ["main", "feat/**", "fix/**"]
+    branches: ["main"]
   pull_request:
 
 permissions:

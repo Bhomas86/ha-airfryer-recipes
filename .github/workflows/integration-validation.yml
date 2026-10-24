@@ -2,7 +2,7 @@ name: Home Assistant and HACS validation
 
 on:
   push:
-    branches: ["main", "feat/**", "fix/**"]
+    branches: ["main"]
   pull_request:
   workflow_dispatch:
 
