@@ -1,0 +1,11 @@
+{
+  "title": "Airfryer Recipes",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set up Airfryer Recipes",
+        "description": "Create a local recipe library in Home Assistant. No air fryer or cloud account is required. Device discovery, sample recipes and the dashboard will be added in later updates."
+      }
+    }
+  }
+}
