@@ -15,6 +15,10 @@
 - `tests/test_integration_skeleton.py`: isolierte Tests für Setup/Unload, nachgestellten Config Flow, Manifest, Übersetzungen und Icon.
 - READMEs in beiden Sprachen auf den tatsächlichen Entwicklungsstand aktualisiert.
 
+## Noch notwendige GitHub-Einstellung
+
+Der HACS-Validator verlangt mindestens ein GitHub-Repository-Topic. Diese Repository-Einstellung kann über die aktuelle GitHub-Verbindung nicht geändert werden. Der Verantwortliche öffnet [das Repository](https://github.com/Bhomas86/ha-airfryer-recipes), bearbeitet rechts unter **About** das Zahnrad-Symbol und fügt beispielsweise `home-assistant`, `hacs`, `airfryer` und `recipes` als Topics hinzu. **Keine HACS-Prüfung deaktivieren oder ignorieren.** Der Icon-Pfad innerhalb von `custom_components/airfryer_recipes/brand/icon.png` wurde korrigiert.
+
 ## Grenzen
 
 **Kein produktiver Release.** Es fehlen weiterhin Rezeptpersistenz, Rezeptverwaltung, Dashboard, Gerätedetektion, Airfryer-Control-Adapter und sichere Gerätebefehle. Der Einrichtungsdialog ist bisher **kein vollständiger Assistent** aus Anforderung 27. Die vorbereitete HACS-Struktur allein beweist keine erfolgreiche HA-Installation.
