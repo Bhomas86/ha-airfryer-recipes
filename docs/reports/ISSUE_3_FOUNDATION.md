@@ -11,7 +11,7 @@
 - `__init__.py`: Async setup, config-entry setup and unload with no network or appliance calls.
 - `const.py`: Shared integration constants.
 - `strings.json`, `translations/en.json`, `translations/de.json`: Both onboarding languages.
-- `hacs.json` and `brand/icon.png`: HACS repository metadata and original branding icon.
+- `hacs.json` and `custom_components/airfryer_recipes/brand/icon.png`: HACS repository metadata and original branding icon.
 - `tests/test_integration_skeleton.py`: Isolated tests for setup/unload, stubbed config flow, metadata, translations and icon.
 - Both READMEs updated to distinguish actual work from planned features.
 
