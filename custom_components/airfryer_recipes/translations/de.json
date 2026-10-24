@@ -1,0 +1,11 @@
+{
+  "title": "Airfryer Recipes",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Airfryer Recipes einrichten",
+        "description": "Eine lokale Rezeptbibliothek in Home Assistant einrichten. Weder eine Heißluftfritteuse noch ein Cloud-Konto sind erforderlich. Geräteerkennung, Beispielrezepte und das Dashboard folgen in späteren Updates."
+      }
+    }
+  }
+}

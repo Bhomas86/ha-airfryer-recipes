@@ -4,7 +4,7 @@
 
 Geplante benutzerdefinierte Home-Assistant-Integration zur Verwaltung wiederverwendbarer Heißluftfritteusen-Rezepte. Die gespeicherten Einstellungen sollen über bestehende Home-Assistant-Integrationen an unterstützte Geräte übertragen werden.
 
-> **Projektstatus: Frühe Entwicklungs- und Planungsphase.** Rezeptverwaltung, Dashboard-Bedienung und HACS-Installation sind **noch nicht implementiert**. Dieses Repository enthält derzeit die Projektdokumentation.
+> **Projektstatus: Frühe Entwicklungsphase.** Eine Home-Assistant-Grundstruktur und ein bestätigungsbasierter Einrichtungsdialog werden in [Issue #3](https://github.com/Bhomas86/ha-airfryer-recipes/issues/3) entwickelt. Rezeptdaten-Speicherung, grafische Verwaltung, Dashboard, Geräteadapter und eine getestete HACS-Installation sind **noch nicht implementiert beziehungsweise verifiziert**.
 
 ## Ziele
 
@@ -35,7 +35,7 @@ Als erstes Zielgerät dient die **Cosori Turbo Tower Pro Smart (CAF-DC111S-AEU)*
 
 ## Geplante Meilensteine
 
-- [ ] Grundstruktur der Home-Assistant-Integration und Einrichtung
+- [ ] Grundstruktur der Home-Assistant-Integration und Einrichtung ([Issue #3](https://github.com/Bhomas86/ha-airfryer-recipes/issues/3); erste Implementierung vorbereitet, reale HA-Prüfung fehlt)
 - [ ] Dauerhafte Speicherung mit Plausibilitätsprüfung
 - [ ] Grafische Rezeptverwaltung
 - [ ] Lovelace-Dashboard-Karte
@@ -46,7 +46,9 @@ Als erstes Zielgerät dient die **Cosori Turbo Tower Pro Smart (CAF-DC111S-AEU)*
 
 ## Installation
 
-**Noch nicht verfügbar.** Bitte dieses Repository erst nach Veröffentlichung einer installierbaren Version zu HACS hinzufügen. Die Installationsanleitung wird dann hier ergänzt.
+**Noch keine getestete und installierbare Version verfügbar.** Erste HACS-Metadaten und die Einrichtungs-Grundstruktur sind vorhanden, wurden aber **noch nicht innerhalb von Home Assistant getestet**. Bitte nicht in einer produktiven HACS-Installation hinzufügen, bevor die erste geprüfte Version veröffentlicht wurde.
+
+Der vorgesehene Einrichtungsdialog benötigt weder Airfryer noch Cloud-Zugangsdaten oder eine Internetverbindung. Der vollständige Assistent und die Rezeptverwaltung folgen in späteren Issues.
 
 ## Sicherheit und Datenschutz
 

@@ -4,7 +4,7 @@
 
 A planned Home Assistant custom integration for managing reusable air fryer recipes and sending their settings to supported air fryers through existing Home Assistant integrations.
 
-> **Project status: Early development / planning.** Recipe management, dashboard controls and HACS installation are **not implemented yet**. This repository currently contains the project documentation.
+> **Project status: Early development.** A basic Home Assistant integration shell and confirmation-based config flow are under development in [Issue #3](https://github.com/Bhomas86/ha-airfryer-recipes/issues/3). Recipe storage, management panels, dashboard controls, device adapters and tested HACS installation are **not implemented or verified yet**.
 
 ## Goals
 
@@ -35,7 +35,7 @@ The first target device is the **Cosori Turbo Tower Pro Smart (CAF-DC111S-AEU)**
 
 ## Planned milestones
 
-- [ ] Custom integration skeleton and configuration flow
+- [ ] Custom integration skeleton and configuration flow ([Issue #3](https://github.com/Bhomas86/ha-airfryer-recipes/issues/3); initial implementation proposed, real HA validation pending)
 - [ ] Persistent, validated recipe storage
 - [ ] Recipe management interface
 - [ ] Lovelace dashboard card
@@ -46,7 +46,9 @@ The first target device is the **Cosori Turbo Tower Pro Smart (CAF-DC111S-AEU)**
 
 ## Installation
 
-**Not available yet.** Do not add this repository to HACS until the first installable release is published. Once implemented, installation instructions will be provided here.
+**No tested, installable release is available yet.** The repository now includes preliminary HACS metadata and a setup shell, but they have **not been tested inside Home Assistant**. Do not add it to a production HACS installation until the first verified release is published.
+
+The planned setup flow requires no device, cloud credentials or network access. The full onboarding wizard and recipe UI will be added in later issues.
 
 ## Safety and privacy
 
