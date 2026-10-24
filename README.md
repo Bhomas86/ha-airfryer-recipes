@@ -4,7 +4,7 @@
 
 A planned Home Assistant custom integration for managing reusable air fryer recipes and sending their settings to supported air fryers through existing Home Assistant integrations.
 
-> **Project status: Early development.** A basic Home Assistant integration shell and confirmation-based config flow are under development in [Issue #3](https://github.com/Bhomas86/ha-airfryer-recipes/issues/3). Recipe storage, management panels, dashboard controls, device adapters and tested HACS installation are **not implemented or verified yet**.
+> **Project status: Early development.** The integration shell from [Issue #3](https://github.com/Bhomas86/ha-airfryer-recipes/issues/3) is merged. A device-independent, versioned local recipe backend is proposed in [Issue #4](https://github.com/Bhomas86/ha-airfryer-recipes/issues/4) / [PR #13](https://github.com/Bhomas86/ha-airfryer-recipes/pull/13). The management panel, dashboard, device adapter and real Home Assistant installation testing are **not complete**.
 
 ## Goals
 
@@ -35,8 +35,8 @@ The first target device is the **Cosori Turbo Tower Pro Smart (CAF-DC111S-AEU)**
 
 ## Planned milestones
 
-- [ ] Custom integration skeleton and configuration flow ([Issue #3](https://github.com/Bhomas86/ha-airfryer-recipes/issues/3); initial implementation proposed, real HA validation pending)
-- [ ] Persistent, validated recipe storage
+- [x] Custom integration skeleton and configuration flow code ([Issue #3](https://github.com/Bhomas86/ha-airfryer-recipes/issues/3); real HA validation remains pending)
+- [ ] Persistent, validated recipe storage ([Issue #4](https://github.com/Bhomas86/ha-airfryer-recipes/issues/4); initial backend implementation in PR #13, local acceptance pending)
 - [ ] Recipe management interface
 - [ ] Lovelace dashboard card
 - [ ] Adapter for Airfryer Control
@@ -46,7 +46,7 @@ The first target device is the **Cosori Turbo Tower Pro Smart (CAF-DC111S-AEU)**
 
 ## Installation
 
-**No tested, installable release is available yet.** The repository now includes preliminary HACS metadata and a setup shell, but they have **not been tested inside Home Assistant**. Do not add it to a production HACS installation until the first verified release is published.
+**No fully tested release is available yet.** HACS/Hassfest metadata checks pass and the setup shell is merged, but a real Home Assistant setup and persistent-recipe test are **still pending**. Do not add it to a production HACS installation until the first verified release is published.
 
 The planned setup flow requires no device, cloud credentials or network access. The full onboarding wizard and recipe UI will be added in later issues.
 
