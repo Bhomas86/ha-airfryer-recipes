@@ -4,6 +4,27 @@ This file contains binding project instructions for Codex and other coding agent
 Read this file and `docs/REQUIREMENTS.md` before every task. Do not assume that
 a higher-cost model is better for every task.
 
+## Bilingual reporting and documentation — mandatory
+
+**German is the project owner's working language; English is required for the wider community.**
+
+- **Every new or updated report or non-code project document must have complete
+  German and English versions.** Use `*.md` for English and matching `*.de.md`
+  for German, with reciprocal language links at the top.
+- This applies to requirements, roadmaps, architecture decisions, test reports,
+  test checklists, issue descriptions, PR descriptions, release notes and user
+  documentation. Do not publish English-only or German-only reports.
+- In pull requests and issues use **Deutsch first, English second** as clearly
+  marked sections. Make both sections independently understandable.
+- Communication with the owner should prioritize clear German. Technical code
+  identifiers and comments may use English. User-visible UI strings require
+  both `en` and `de` translations; English remains the default/fallback.
+- Documentation translations must remain semantically equivalent; whenever one
+  language changes, update the other in the **same PR**. Include a review check.
+- Translation or report-writing work is small/medium by default under the
+  separate Codex model-selection policy; do not spend GPT-6.1 High credits
+  without exceptional justification.
+
 ## Model policy (explicit project choices)
 
 The owner has selected exactly four Codex configurations for this workflow,
@@ -100,7 +121,7 @@ Action: Confirm current model before implementation; do not claim to switch it.
 5. Before marking a task complete: report what changed, automated tests that
    actually ran, unavailable checks, risks, and precise local test steps.
 6. Preserve stored recipe data and migration rollback paths across upgrades.
-7. Keep public docs/user-facing features in English and German.
+7. Keep all reports, PR descriptions, issue descriptions, release notes, public docs and user-facing features fully bilingual. German comes first for reports; English is the UI fallback. Update both translations together.
 8. Follow Home Assistant asyncio guidance; avoid synchronous file I/O in its
    event loop, and do not bypass built-in permission checks.
 9. Record decisions in `docs/REQUIREMENTS.md` and staged work in
