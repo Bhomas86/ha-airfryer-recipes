@@ -108,9 +108,9 @@ class WebsocketTests(unittest.IsolatedAsyncioTestCase):
         self.admin = FakeConnection(is_admin=True)
         self.user = FakeConnection()
 
-    async def call(self, name, connection, **kwargs):
-        handler = getattr(self.api, f"ws_{name}")
-        msg = {"id": len(connection.messages) + 1, "type": f"{DOMAIN}/{name}", **kwargs}
+    async def call(self, command_name, connection, **kwargs):
+        handler = getattr(self.api, f"ws_{command_name}")
+        msg = {"id": len(connection.messages) + 1, "type": f"{DOMAIN}/{command_name}", **kwargs}
         await handler(self.hass, connection, msg)
         return connection.messages[-1]
 
