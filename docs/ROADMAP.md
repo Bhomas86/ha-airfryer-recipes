@@ -1,5 +1,7 @@
 # Roadmap
 
+[English](ROADMAP.md) | [Deutsch](ROADMAP.de.md)
+
 Current status: **Foundation PR in progress. Not installable through HACS yet.**
 
 ## Phase 0 — Documentation and pure recipe core (this PR)
@@ -7,7 +9,7 @@ Current status: **Foundation PR in progress. Not installable through HACS yet.**
 - [x] Consolidated decisions 1–30
 - [x] Device-independent recipe schema, validations and versioned JSON codec
 - [x] Offline Python unit tests
-- [ ] GitHub CI confirmed passing
+- [x] GitHub CI confirmed passing on Python 3.12 and 3.14
 - [ ] Owner review and merge
 
 ## Phase 1 — Home Assistant integration foundation
@@ -49,6 +51,6 @@ Current status: **Foundation PR in progress. Not installable through HACS yet.**
 - Unit tests and CI passing
 - HA configuration/setup tests passing before claiming HACS compatibility
 - Safety behavior verified: no unexpected start, no offline replay
-- English and German user-facing strings and release notes
+- Complete bilingual reports, PRs, release notes, documentation and user-facing strings
 - Device testing documented separately; do not invent successful tests
 - Stable and opt-in beta releases; preserve recipe storage
