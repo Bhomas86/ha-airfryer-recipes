@@ -2,17 +2,34 @@
 
 [Deutsch](UPSTREAM_SAFE_SEND_PROPOSAL.de.md) | [English](UPSTREAM_SAFE_SEND_PROPOSAL.md)
 
-**Status: nicht veröffentlicht.** Vorgeschlagener Issue-Titel: `Sichere einmalige Bereitstellung und Statusaktualität / Safe single-attempt preparation and telemetry freshness`.
+**Status: nicht veröffentlicht.** Die Nachricht an den Entwickler soll auf Wunsch des Eigentümers ausschließlich deutsch erscheinen. Die englische Begleitdatei dient nur der internen Projektdokumentation.
 
-Hallo, wir entwickeln mit Airfryer Recipes eine geräteunabhängige Rezeptverwaltung, die Airfryer Control optional als Geräteadapter verwenden soll. Zielgerät ist zunächst eine Cosori Turbo Tower Pro Smart CAF-DC111S-AEU. Es geht ausschließlich um Bereitstellen mit anschließendem manuellem Start am Gerät.
+**Vorgeschlagener Titel:** Rezeptverwaltung für Airfryer Control – Anbindung und benötigte Schnittstellen
 
-Bei der Quellcodeprüfung von Revision `5a3c530d0fb0b0d1a3f347a172caf95f2dd2eeee` sind für unsere Anbindung folgende Fragen entstanden:
+---
 
-- `programm_senden` verwendet `async_send`, das bei Ablehnungen mehrere Varianten versucht. `bypass_v2` verwendet außerdem `_with_relogin`, das eine Anfrage nach Authentifizierungsfehler wiederholt. Gibt es eine unterstützte Möglichkeit für höchstens einen Steuer-Transportversuch ohne Varianten-Fallback und ohne Replay nach Versandbeginn? Wir möchten weder private Methoden aufrufen noch eigene VeSync-Anmeldung implementieren.
-- Gibt es erfolgreiche Erfassungszeitpunkte und Statusrevisionen pro Gerät/Fach oder wäre eine solche Schnittstelle möglich? Ein globaler Refresh und der Ersatzwert „bereit“ für ein nicht gemeldetes Fach reichen für unsere Sicherheitsprüfung nicht aus.
-- Welche Programme, Grenzen und Fachzuordnungen sind für CAF-DC111S-AEU bestätigt? Die globalen TwinFry-Konstanten möchten wir nicht ungeprüft übertragen.
-- Könnte eine unterstützte Schnittstelle diese Daten sowie eine feste Bereitstellen-Funktion anbieten, die niemals die Heizung startet und keine Rohmethoden oder Startvarianten annimmt? Bei Timeout nach Versand sollte das Ergebnis als unbekannt zurückgegeben werden; ein neuer Versuch wäre nur nach erneuter Benutzerentscheidung zulässig.
+Hallo,
 
-Unsere echte Übertragung bleibt bis zur Klärung deaktiviert. Bislang gibt es nur lesende Erkennung und eine serverseitige Testvorschau ohne Steueraufrufe. Wir haben keine echten Geräte aus der Cloud angesprochen und keine Änderungen an diesem Repository vorgenommen. Es handelt sich um eine Anfrage zur Interoperabilität, nicht um die Behauptung einer bestätigten Sicherheitslücke.
+wir hatten ja bereits wegen zweier Issues Kontakt. Ich möchte dir kurz vorstellen, was ich gerade auf Basis deiner Integration plane und welche Schnittstellen dafür hilfreich wären.
 
-Die vollständigen technischen Vertragsanforderungen und Grenzen stehen im [Prüfbericht](ISSUE_7_COMMAND_CONTRACT.de.md). Dieser Entwurf ist noch keine Kommunikationsfreigabe.
+Ich entwickle mit Unterstützung von Codex eine zusätzliche Home-Assistant-Integration namens [Airfryer Recipes](https://github.com/Bhomas86/ha-airfryer-recipes). Sie soll einfache Rezepte mit Programm, Temperatur und Garzeit lokal verwalten. Die Rezeptbibliothek mit Kategorien, persönlichen Favoriten und JSON-Import/-Export funktioniert bereits und wurde von mir in Home Assistant getestet.
+
+Als Nächstes ist eine Dashboard-Karte geplant: Airfryer und Fach auswählen, ein Rezept laden oder Werte manuell einstellen und anschließend bewusst übertragen. Die Gerätekommunikation und VeSync-Anmeldung sollen weiterhin vollständig über **Airfryer Control** laufen. Die Rezeptverwaltung soll auch ohne angeschlossenes Gerät funktionieren.
+
+Mein erstes Zielgerät ist die **Cosori Turbo Tower Pro Smart CAF-DC111S-AEU**. Der Start des Garvorgangs soll weiterhin manuell am Gerät erfolgen. SYNC und MATCH sind für später vorgesehen.
+
+Bei der Prüfung deines Quellcodes, Stand `5a3c530` / Version 1.0.1, sind für diese Anbindung vier Punkte aufgefallen:
+
+1. **Ein festgelegter Sendeversuch ohne automatische Wiederholung.** `programm_senden` probiert über `async_send` bei Ablehnungen mehrere Befehlsvarianten. Zusätzlich kann `bypass_v2` über `_with_relogin` dieselbe Anfrage nach erneuter Anmeldung wiederholen. Für unsere Bedienung möchten wir einen Modus, der genau die festgelegte Variante höchstens einmal sendet. Nach einem unklaren Ergebnis soll der Benutzer selbst über einen neuen Versuch entscheiden. Eine nötige Anmeldung vor dem eigentlichen Senden wäre selbstverständlich möglich.
+
+2. **Verlässlich aktuelle Zustände je Gerät und Fach.** Dafür wären der Zeitpunkt der letzten erfolgreichen Gerätemeldung und ein eindeutiger Fehler-/Verbindungsstatus hilfreich. Ein nicht gemeldetes Fach müsste von einem tatsächlich als „bereit“ gemeldeten Fach unterscheidbar sein. Aktuell liefert der Fachsensor bei fehlender Fachmeldung ebenfalls „bereit“. Alte Daten oder ein insgesamt erfolgreicher Koordinator-Refresh sollen keine Sendeerlaubnis begründen. Eine Statusrevision würde zusätzlich helfen, Änderungen zwischen Vorschau und Bestätigung zu erkennen.
+
+3. **Bestätigte Programme und Grenzen pro Modell und Fach.** Die Oberfläche soll nur tatsächlich unterstützte Programme und passende Temperatur-/Zeitbereiche anbieten. Welche davon sind für die CAF-DC111S-AEU bereits bestätigt? Die allgemeinen TwinFry-Werte möchten wir nicht ungeprüft für andere Modelle übernehmen. Werte sollen auch nicht unbemerkt beim Senden begrenzt werden.
+
+4. **Eine unterstützte Schnittstelle zum Bereitstellen ohne Heizstart.** Ideal wäre eine klar definierte Aktion oder Python-Schnittstelle mit Gerät, Fach, Programm, Temperatur und Minuten. Unsere Integration soll weder private Methoden aufrufen noch eigene Cloud-Zugangsdaten verwalten. Bei der Rückmeldung wäre die Unterscheidung zwischen „Befehl angenommen“, „Werte am Gerät bestätigt“ und „Ergebnis unbekannt“ hilfreich, soweit sich das feststellen lässt.
+
+Wären solche Ergänzungen für dich grundsätzlich denkbar, oder gibt es dafür bereits einen vorgesehenen Weg? Mir geht es vor allem darum, die Anbindung mit dir abzustimmen und nicht an deiner Integration vorbeizubauen.
+
+Bis zur Klärung bleibt die echte Übertragung bei uns deaktiviert. Vorhanden sind eine lesende Geräteerkennung und eine Testvorschau ohne Steuerbefehle. Änderungen während eines laufenden Garvorgangs bleiben zunächst ebenfalls gesperrt. Das sind Anforderungen an unsere geplante Anbindung; damit möchte ich keinen bestätigten Sicherheitsfehler deiner Integration behaupten.
+
+Danke dir für deine bisherige Unterstützung!
