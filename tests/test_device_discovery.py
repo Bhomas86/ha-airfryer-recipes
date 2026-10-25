@@ -5,12 +5,16 @@ import sys
 import types
 import unittest
 from types import SimpleNamespace as NS
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
-from custom_components.airfryer_recipes.device_discovery import describe_devices, discover_devices
+from custom_components.airfryer_recipes.device_discovery import (
+    describe_devices,
+    discover_devices,
+    normalize_capabilities,
+)
 
 
-class DiscoveryTests(unittest.TestCase):
+class DiscoveryTests(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
         self.device = NS(id="ha-device", name="Kitchen", name_by_user=None,
                          model="CAF-DC111S-AEU", disabled_by=None,
@@ -76,20 +80,86 @@ class DiscoveryTests(unittest.TestCase):
         self.entry.runtime_data = None
         self.assertEqual(self.describe(), [])
 
-    def test_hass_discovery_handles_missing_or_incompatible_optional_adapter(self):
+    async def test_hass_discovery_handles_missing_or_incompatible_optional_adapter(self):
         helpers = types.ModuleType("homeassistant.helpers")
         dr = types.ModuleType("homeassistant.helpers.device_registry")
         helpers.device_registry = dr
         dr.async_get = Mock(return_value=NS(devices={self.device.id: self.device}))
-        hass = NS(config_entries=NS(async_loaded_entries=Mock(return_value=[])),
-                  services=Mock(side_effect=AssertionError("No service calls allowed")))
+        services = NS(has_service=Mock(return_value=False), async_call=Mock())
+        hass = NS(config_entries=NS(async_loaded_entries=Mock(return_value=[])), services=services)
         with patch.dict(sys.modules, {"homeassistant.helpers": helpers,
                                      "homeassistant.helpers.device_registry": dr}):
-            self.assertEqual(discover_devices(hass), {
+            self.assertEqual(await discover_devices(hass), {
                 "status": "adapter_missing", "devices": [], "live_send_enabled": False})
             hass.config_entries.async_loaded_entries.return_value = [self.entry]
-            self.assertEqual(len(discover_devices(hass)["devices"]), 1)
+            result = await discover_devices(hass)
+            self.assertEqual(result["status"], "adapter_outdated")
+            self.assertEqual(len(result["devices"]), 1)
             dr.async_get.side_effect = ValueError("private-failure")
-            self.assertEqual(discover_devices(hass), {
+            self.assertEqual(await discover_devices(hass), {
                 "status": "adapter_incompatible", "devices": [], "live_send_enabled": False})
-        self.assertEqual(hass.services.mock_calls, [])
+        services.async_call.assert_not_called()
+
+    async def test_public_capability_service_is_allowlisted_without_enabling_send(self):
+        helpers = types.ModuleType("homeassistant.helpers")
+        dr = types.ModuleType("homeassistant.helpers.device_registry")
+        helpers.device_registry = dr
+        dr.async_get = Mock(return_value=NS(devices={self.device.id: self.device}))
+        payload = {
+            "geraet": "private-name", "modell": "CAF-DC111S-AEU",
+            "modell_bekannt": False, "zonen": [1, 2, 3],
+            "programme": {
+                "airfry": {
+                    "temperatur": [120, 205], "minuten": [1, 60],
+                    "vorschlag": {"temperatur": 195, "minuten": 15},
+                    "grenzen": "geschaetzt", "senden": "ungeprueft",
+                },
+            },
+            "verbindung": "ok", "letzte_meldung": "2026-10-25T21:02:00+00:00",
+            "revision": 7, "secret": "must-not-leak",
+        }
+        async_call = AsyncMock(return_value=payload)
+        services = NS(has_service=Mock(return_value=True), async_call=async_call)
+        hass = NS(config_entries=NS(async_loaded_entries=Mock(return_value=[self.entry])),
+                  services=services)
+        with patch.dict(sys.modules, {"homeassistant.helpers": helpers,
+                                     "homeassistant.helpers.device_registry": dr}):
+            result = await discover_devices(hass)
+        self.assertEqual(result["status"], "adapter_beta")
+        self.assertFalse(result["live_send_enabled"])
+        device = result["devices"][0]
+        self.assertEqual(device["programs"], [{
+            "id": "airfry", "temperature_c": {"min": 120, "max": 205},
+            "duration_minutes": {"min": 1, "max": 60},
+            "suggested": {"temperature_c": 195, "duration_minutes": 15},
+            "limits_status": "estimated", "send_status": "unverified",
+        }])
+        self.assertEqual(device["reported_at"], "2026-10-25T21:02:00+00:00")
+        self.assertEqual(device["revision"], 7)
+        self.assertEqual(device["zones"], [{"zone_id": 1, "status": "idle"},
+                                           {"zone_id": 2, "status": "cooking"}])
+        self.assertNotIn("secret", json.dumps(result))
+        async_call.assert_awaited_once_with(
+            "airfryer_control", "faehigkeiten", {"geraet": "ha-device"},
+            blocking=True, return_response=True,
+        )
+
+    def test_malformed_capability_fields_fail_closed(self):
+        payload = {
+            "modell_bekannt": "yes", "verbindung": "private-state",
+            "letzte_meldung": "not-a-time", "revision": True,
+            "programme": {
+                " valid ": {},
+                "broken": {"temperatur": [205, 120], "minuten": [1, 60]},
+                "bake": {"temperatur": [120, 205], "minuten": [1, 240],
+                         "vorschlag": {"temperatur": 180, "minuten": 20},
+                         "grenzen": "new-value", "senden": "new-value"},
+            },
+        }
+        normalized = normalize_capabilities(payload)
+        self.assertEqual([program["id"] for program in normalized["programs"]], ["bake"])
+        self.assertEqual(normalized["programs"][0]["limits_status"], "unknown")
+        self.assertEqual(normalized["connection"], "unknown")
+        self.assertIsNone(normalized["reported_at"])
+        self.assertIsNone(normalized["revision"])
+        self.assertFalse(normalized["model_known"])

@@ -29,12 +29,18 @@ const WORDS = {
     checkPreview: "Check test preview", refreshDevices: "Refresh devices", noDevices: "No supported air fryer was reported.",
     adapterMissing: "Airfryer Control is not loaded. Recipe management remains available.",
     adapterIncompatible: "Airfryer Control data could not be read safely.", reportedOnline: "Reported online",
+    adapterOutdated: "Install Airfryer Control 1.0.2-beta.1 or newer to load device programs.",
+    capabilitiesError: "Airfryer Control did not return usable device programs.",
     offline: "Offline", unknown: "Unknown", unverifiedFreshness: "Status freshness is not verified.",
+    reportedFreshness: "Airfryer Control supplied a report time; freshness is not yet used for sending.",
+    estimatedProgram: "estimated", confirmedProgram: "confirmed", unknownProgram: "not reported by this device",
+    sendUnverified: "sending unverified", sendConfirmed: "sending confirmed",
     dryRunResult: "Test preview result", noTransmission: "Nothing was transmitted to the appliance.",
     desiredSettings: "Requested settings", blockingReasons: "Live transmission remains blocked for these reasons",
     targetMissing: "The selected device or reported zone is no longer available. Refresh the device list.",
     reasonContract: "The upstream send contract is not verified.", reasonFreshness: "Status freshness is not verified.",
-    reasonLimits: "Programs and limits are not verified for this model.", reasonOffline: "The appliance is offline.",
+    reasonLimits: "Programs and limits are not verified for this model.",
+    reasonProgramMissing: "This program was not reported for the selected appliance.", reasonOffline: "The appliance is offline.",
     reasonConnection: "The connection state is unknown.", reasonZone: "The zone is not safely idle.",
     statusIdle: "Idle", statusOff: "Off", statusReady: "Waiting for manual start", statusFinished: "Finished",
     statusCooking: "Cooking", statusPreheating: "Preheating", statusPaused: "Paused",
@@ -69,12 +75,18 @@ const WORDS = {
     checkPreview: "Testvorschau prüfen", refreshDevices: "Geräte aktualisieren", noDevices: "Es wurde kein unterstützter Airfryer gemeldet.",
     adapterMissing: "Airfryer Control ist nicht geladen. Die Rezeptverwaltung bleibt verfügbar.",
     adapterIncompatible: "Die Daten von Airfryer Control konnten nicht sicher gelesen werden.", reportedOnline: "Als online gemeldet",
+    adapterOutdated: "Zum Laden der Geräteprogramme wird Airfryer Control 1.0.2-beta.1 oder neuer benötigt.",
+    capabilitiesError: "Airfryer Control hat keine verwendbaren Geräteprogramme geliefert.",
     offline: "Offline", unknown: "Unbekannt", unverifiedFreshness: "Die Aktualität des Zustands ist nicht bestätigt.",
+    reportedFreshness: "Airfryer Control hat eine Meldezeit geliefert; sie wird noch nicht zum Senden verwendet.",
+    estimatedProgram: "geschätzt", confirmedProgram: "bestätigt", unknownProgram: "von diesem Gerät nicht gemeldet",
+    sendUnverified: "Senden ungeprüft", sendConfirmed: "Senden bestätigt",
     dryRunResult: "Ergebnis der Testvorschau", noTransmission: "Es wurde nichts an das Gerät übertragen.",
     desiredSettings: "Gewünschte Werte", blockingReasons: "Echte Übertragung bleibt aus diesen Gründen gesperrt",
     targetMissing: "Das gewählte Gerät oder das gemeldete Fach ist nicht mehr verfügbar. Bitte Geräteliste aktualisieren.",
     reasonContract: "Der Upstream-Sendevertrag ist nicht bestätigt.", reasonFreshness: "Die Aktualität des Zustands ist nicht bestätigt.",
-    reasonLimits: "Programme und Grenzen sind für dieses Modell nicht bestätigt.", reasonOffline: "Das Gerät ist offline.",
+    reasonLimits: "Programme und Grenzen sind für dieses Modell nicht bestätigt.",
+    reasonProgramMissing: "Dieses Programm wurde für das gewählte Gerät nicht gemeldet.", reasonOffline: "Das Gerät ist offline.",
     reasonConnection: "Der Verbindungszustand ist unbekannt.", reasonZone: "Das Fach ist nicht sicher bereit.",
     statusIdle: "Bereit", statusOff: "Aus", statusReady: "Wartet auf manuellen Start", statusFinished: "Fertig",
     statusCooking: "Gart", statusPreheating: "Heizt vor", statusPaused: "Pausiert",
@@ -101,6 +113,7 @@ class AirfryerRecipesPanel extends HTMLElement {
     this.selectedDeviceId = "";
     this.selectedZoneId = "";
     this.previewRecipeId = "";
+    this.manualPreviewProgram = "airfry";
     this.sendPreview = null;
     this.deviceError = "";
     this.devicesBusy = false;
@@ -194,6 +207,24 @@ class AirfryerRecipesPanel extends HTMLElement {
     return this.recipes.find((recipe) => recipe.id === this.previewRecipeId && recipe.phases?.length === 1) || null;
   }
 
+  programName(program) {
+    const names = {
+      airfry: { de: "Heißluft-Frittieren", en: "Air Fry" },
+      roast: { de: "Braten", en: "Roast" }, bake: { de: "Backen", en: "Bake" },
+      grill: { de: "Grillen", en: "Grill" }, reheat: { de: "Aufwärmen", en: "Reheat" },
+      dry: { de: "Dörren", en: "Dry" }, proof: { de: "Gären", en: "Proof" },
+    };
+    const language = this._hass?.language?.toLowerCase().startsWith("de") ? "de" : "en";
+    return names[program]?.[language] || program;
+  }
+
+  programOption(program) {
+    const limits = program.limits_status === "confirmed" ? this.words.confirmedProgram
+      : program.limits_status === "estimated" ? this.words.estimatedProgram : this.words.unknown;
+    const send = program.send_status === "confirmed" ? this.words.sendConfirmed : this.words.sendUnverified;
+    return `${this.programName(program.id)} · ${limits} · ${send}`;
+  }
+
   async loadDevices() {
     if (!this.admin) return;
     this.devicesBusy = true;
@@ -208,6 +239,10 @@ class AirfryerRecipesPanel extends HTMLElement {
       };
       if (!this.deviceState.devices.some((device) => device.device_id === this.selectedDeviceId)) {
         this.selectedDeviceId = this.deviceState.devices[0]?.device_id || "";
+      }
+      const programs = this.selectedDevice()?.programs || [];
+      if (!programs.some((program) => program.id === this.manualPreviewProgram)) {
+        this.manualPreviewProgram = programs[0]?.id || "airfry";
       }
       const zones = this.selectedDevice()?.zones || [];
       if (!zones.some((zone) => String(zone.zone_id) === String(this.selectedZoneId))) {
@@ -235,7 +270,8 @@ class AirfryerRecipesPanel extends HTMLElement {
   reasonLabel(reason) {
     const key = {
       upstream_contract_unverified: "reasonContract", freshness_unverified: "reasonFreshness",
-      program_limits_unverified: "reasonLimits", device_offline: "reasonOffline",
+      program_limits_unverified: "reasonLimits", program_not_reported: "reasonProgramMissing",
+      device_offline: "reasonOffline",
       connection_unknown: "reasonConnection", zone_not_idle: "reasonZone",
     }[reason];
     return key ? this.words[key] : this.words.unknown;
@@ -287,10 +323,18 @@ class AirfryerRecipesPanel extends HTMLElement {
     const zones = device?.zones || [];
     const previewRecipe = this.selectedPreviewRecipe();
     const previewPhase = previewRecipe?.phases?.[0] || {
-      program: "airfry", temperature_c: 180, duration_minutes: 10,
+      program: this.manualPreviewProgram, temperature_c: 180, duration_minutes: 10,
     };
+    const programs = device?.programs || [];
+    const programReported = programs.some((program) => program.id === previewPhase.program);
+    const programOptions = programs.length ? [
+      ...(!programReported && previewPhase.program ? [{ id: previewPhase.program, missing: true }] : []),
+      ...programs,
+    ] : [];
     const deviceMessage = this.deviceState.status === "adapter_missing" ? t.adapterMissing
       : this.deviceState.status === "adapter_incompatible" ? t.adapterIncompatible
+      : this.deviceState.status === "adapter_outdated" ? t.adapterOutdated
+      : this.deviceState.status === "adapter_capabilities_error" ? t.capabilitiesError
       : !this.deviceState.devices.length ? t.noDevices : "";
     this.shadowRoot.innerHTML = `
       <style>
@@ -347,10 +391,12 @@ class AirfryerRecipesPanel extends HTMLElement {
           <div class="actions"><button type="button" data-action="refresh-devices" ${this.devicesBusy || this.busy ? "disabled" : ""}>${t.refreshDevices}</button></div>
           ${device ? `<form id="device-preview-form">
             <div class="grid"><div><label for="preview-device">${t.device}</label><select id="preview-device" name="device_id">${this.deviceState.devices.map((item) => `<option value="${escapeHtml(item.device_id)}" ${item.device_id === this.selectedDeviceId ? "selected" : ""}>${escapeHtml(item.name)}${item.model ? ` · ${escapeHtml(item.model)}` : ""}</option>`).join("")}</select>
-            <p class="muted">${device.connectivity === "reported_online" ? t.reportedOnline : device.connectivity === "offline" ? t.offline : t.unknown} · ${t.unverifiedFreshness}</p></div>
+            <p class="muted">${device.connectivity === "reported_online" ? t.reportedOnline : device.connectivity === "offline" ? t.offline : t.unknown} · ${device.freshness === "reported" ? t.reportedFreshness : t.unverifiedFreshness}</p></div>
             <div><label for="preview-zone">${t.zone}</label><select id="preview-zone" name="zone_id" ${!zones.length ? "disabled" : ""}>${zones.map((item) => `<option value="${item.zone_id}" ${String(item.zone_id) === String(this.selectedZoneId) ? "selected" : ""}>${t.zone} ${item.zone_id} · ${escapeHtml(this.statusLabel(item.status))}</option>`).join("")}</select></div>
             <div><label for="preview-recipe">${t.recipeChoice}</label><select id="preview-recipe" name="recipe_id"><option value="">${t.manualValues}</option>${this.recipes.filter((item) => item.phases?.length === 1).map((item) => `<option value="${escapeHtml(item.id)}" ${item.id === this.previewRecipeId ? "selected" : ""}>${escapeHtml(item.name)}</option>`).join("")}</select></div></div>
-            <div class="grid"><div><label for="preview-program">${t.program}</label><input id="preview-program" name="program" maxlength="64" required ${previewRecipe ? "readonly" : ""} value="${escapeHtml(previewPhase.program)}"></div>
+            <div class="grid"><div><label for="preview-program">${t.program}</label>${programOptions.length
+              ? `<select id="preview-program" name="program" required ${previewRecipe ? "disabled" : ""}>${programOptions.map((program) => `<option value="${escapeHtml(program.id)}" ${program.id === previewPhase.program ? "selected" : ""}>${escapeHtml(program.missing ? `${this.programName(program.id)} · ${t.unknownProgram}` : this.programOption(program))}</option>`).join("")}</select>${previewRecipe ? `<input type="hidden" name="program" value="${escapeHtml(previewPhase.program)}">` : ""}`
+              : `<input id="preview-program" name="program" maxlength="64" required ${previewRecipe ? "readonly" : ""} value="${escapeHtml(previewPhase.program)}">`}</div>
             <div><label for="preview-temperature">${t.temperature} (${this.unit})</label><input id="preview-temperature" name="temperature_c" type="number" min="${this.unit === "°F" ? 32 : 0}" max="${this.unit === "°F" ? 752 : 400}" step="1" required ${previewRecipe ? "readonly" : ""} value="${escapeHtml(this.toDisplay(previewPhase.temperature_c))}"></div>
             <div><label for="preview-duration">${t.duration}</label><input id="preview-duration" name="duration_minutes" type="number" min="1" max="1440" step="1" required ${previewRecipe ? "readonly" : ""} value="${escapeHtml(previewPhase.duration_minutes)}"></div></div>
             <div class="actions"><button class="primary" type="submit" ${this.busy || this.devicesBusy || !zones.length ? "disabled" : ""}>${t.checkPreview}</button></div>
@@ -400,6 +446,7 @@ class AirfryerRecipesPanel extends HTMLElement {
       this.selectedDeviceId = event.target.value;
       this.selectedZoneId = this.selectedDevice()?.zones?.[0]
         ? String(this.selectedDevice().zones[0].zone_id) : "";
+      this.manualPreviewProgram = this.selectedDevice()?.programs?.[0]?.id || "airfry";
       this.sendPreview = null;
       this.render();
     } else if (event.target.id === "preview-zone") {
@@ -410,6 +457,9 @@ class AirfryerRecipesPanel extends HTMLElement {
       this.previewRecipeId = event.target.value;
       this.sendPreview = null;
       this.render();
+    } else if (event.target.id === "preview-program") {
+      this.manualPreviewProgram = event.target.value;
+      this.sendPreview = null;
     } else if (event.target.id === "import-file") {
       this.previewFile(event.target.files?.[0]);
     }

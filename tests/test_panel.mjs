@@ -243,8 +243,12 @@ test("dry-run UI uses only reported zones and sends no live-control fields", asy
   }] }];
   panel.deviceState = { status: "adapter_loaded", live_send_enabled: false, devices: [{
     device_id: "ha-device", name: "Küche <oben>", model: "CAF-DC111S-AEU",
-    connectivity: "reported_online", freshness: "unverified",
+    connectivity: "reported_online", freshness: "reported",
     zones: [{ zone_id: 2, status: "cooking" }],
+    programs: [
+      { id: "airfry", limits_status: "estimated", send_status: "unverified" },
+      { id: "bake", limits_status: "confirmed", send_status: "confirmed" },
+    ],
   }] };
   panel.selectedDeviceId = "ha-device";
   panel.selectedZoneId = "2";
@@ -253,6 +257,9 @@ test("dry-run UI uses only reported zones and sends no live-control fields", asy
   assert.match(panel.shadowRoot.innerHTML, /Geräte-Testvorschau/);
   assert.match(panel.shadowRoot.innerHTML, /Küche &lt;oben&gt;/);
   assert.match(panel.shadowRoot.innerHTML, /Fach 2 · Gart/);
+  assert.match(panel.shadowRoot.innerHTML, /Heißluft-Frittieren · geschätzt · Senden ungeprüft/);
+  assert.match(panel.shadowRoot.innerHTML, /Backen · bestätigt · Senden bestätigt/);
+  assert.match(panel.shadowRoot.innerHTML, /Meldezeit geliefert/);
   assert.match(panel.shadowRoot.innerHTML, /Testvorschau prüfen/);
   assert.match(panel.shadowRoot.innerHTML, /Es wird kein Gerätebefehl ausgeführt/);
   assert.doesNotMatch(panel.shadowRoot.innerHTML, /confirm_send|Einstellungen senden/);
@@ -276,6 +283,27 @@ test("dry-run UI uses only reported zones and sends no live-control fields", asy
   assert.match(panel.shadowRoot.innerHTML, /Device test preview/);
   assert.match(panel.shadowRoot.innerHTML, /Nothing was transmitted to the appliance/);
   assert.match(panel.shadowRoot.innerHTML, /The upstream send contract is not verified/);
+  assert.match(panel.shadowRoot.innerHTML, /Air Fry · estimated · sending unverified/);
+});
+
+test("saved recipe program absent from adapter remains unchanged and is marked", async () => {
+  const panel = panelWith(async () => ({ recipes: [] }));
+  panel.recipes = [{ id: "proof-recipe", name: "Teig", phases: [{
+    program: "proof", temperature_c: 35, duration_minutes: 60,
+  }] }];
+  panel.deviceState = { status: "adapter_beta", live_send_enabled: false, devices: [{
+    device_id: "ha-device", name: "Kitchen", model: "CAF-DC111S-AEU",
+    connectivity: "reported_online", freshness: "reported",
+    zones: [{ zone_id: 1, status: "idle" }],
+    programs: [{ id: "airfry", limits_status: "estimated", send_status: "unverified" }],
+  }] };
+  panel.selectedDeviceId = "ha-device";
+  panel.selectedZoneId = "1";
+  panel.previewRecipeId = "proof-recipe";
+  panel.render();
+  assert.match(panel.shadowRoot.innerHTML, /Gären · von diesem Gerät nicht gemeldet/);
+  assert.match(panel.shadowRoot.innerHTML, /<input type="hidden" name="program" value="proof">/);
+  assert.match(panel.shadowRoot.innerHTML, /<select id="preview-program" name="program" required disabled>/);
 });
 
 test("manual dry-run converts Fahrenheit and target errors stay in device section", async () => {

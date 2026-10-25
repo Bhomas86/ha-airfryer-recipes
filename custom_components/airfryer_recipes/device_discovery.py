@@ -1,15 +1,17 @@
-"""Read existing Airfryer Control state without refreshing or controlling it.
+"""Read existing Airfryer Control state and its public capability service.
 
-Upstream 5a3c530 has no per-device successful-report timestamp. A loaded
-coordinator or an available HA entity does not prove fresh device telemetry.
-This module deliberately cannot authorize transmission.
+Registry/runtime inspection identifies only actually reported zones. The
+``airfryer_control.faehigkeiten`` service is read-only and supplies program
+metadata from the optional adapter. Neither source can authorize transmission.
 """
 
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Any
 
 UPSTREAM_DOMAIN = "airfryer_control"
+CAPABILITIES_SERVICE = "faehigkeiten"
 STATUS_MAP = {
     "aus": "off", "bereit": "idle", "wartet_auf_start": "ready",
     "vorheizen": "preheating", "vorgeheizt": "preheated", "gart": "cooking",
@@ -17,6 +19,90 @@ STATUS_MAP = {
     "schublade_offen": "drawer_open", "fertig": "finished",
     "warmhalten": "keeping_warm", "offline": "offline",
 }
+
+
+def _bounded_int(value: Any, minimum: int, maximum: int) -> int | None:
+    """Return an ordinary integer inside a public, defensive bound."""
+    return value if type(value) is int and minimum <= value <= maximum else None
+
+
+def _range(value: Any, minimum: int, maximum: int) -> dict[str, int] | None:
+    """Normalize one two-value upstream range without clamping it."""
+    if not isinstance(value, list) or len(value) != 2:
+        return None
+    low = _bounded_int(value[0], minimum, maximum)
+    high = _bounded_int(value[1], minimum, maximum)
+    if low is None or high is None or low > high:
+        return None
+    return {"min": low, "max": high}
+
+
+def _reported_at(value: Any) -> str | None:
+    """Allow only a short parseable ISO timestamp through the API."""
+    if not isinstance(value, str) or len(value) > 64:
+        return None
+    try:
+        datetime.fromisoformat(value)
+    except ValueError:
+        return None
+    return value
+
+
+def normalize_capabilities(payload: Any) -> dict[str, Any] | None:
+    """Allowlist the beta capability response and discard malformed fields."""
+    if not isinstance(payload, dict) or not isinstance(payload.get("programme"), dict):
+        return None
+    programs = []
+    for program_id, raw in payload["programme"].items():
+        if (
+            not isinstance(program_id, str)
+            or not program_id
+            or program_id != program_id.strip()
+            or len(program_id) > 64
+            or not isinstance(raw, dict)
+        ):
+            continue
+        temperature = _range(raw.get("temperatur"), 0, 400)
+        duration = _range(raw.get("minuten"), 1, 5000)
+        suggestion = raw.get("vorschlag")
+        suggested_temperature = (
+            _bounded_int(suggestion.get("temperatur"), 0, 400)
+            if isinstance(suggestion, dict) else None
+        )
+        suggested_duration = (
+            _bounded_int(suggestion.get("minuten"), 1, 5000)
+            if isinstance(suggestion, dict) else None
+        )
+        if temperature is None or duration is None:
+            continue
+        limits = {
+            "vesync_app": "confirmed",
+            "geschaetzt": "estimated",
+        }.get(raw.get("grenzen"), "unknown")
+        send = {
+            "bestaetigt": "confirmed",
+            "ungeprueft": "unverified",
+        }.get(raw.get("senden"), "unknown")
+        programs.append({
+            "id": program_id,
+            "temperature_c": temperature,
+            "duration_minutes": duration,
+            "suggested": {
+                "temperature_c": suggested_temperature,
+                "duration_minutes": suggested_duration,
+            },
+            "limits_status": limits,
+            "send_status": send,
+        })
+    revision = _bounded_int(payload.get("revision"), 0, 2**63 - 1)
+    return {
+        "programs": programs,
+        "model_known": payload.get("modell_bekannt") is True,
+        "reported_at": _reported_at(payload.get("letzte_meldung")),
+        "revision": revision,
+        "connection": payload.get("verbindung")
+        if payload.get("verbindung") in {"ok", "offline", "fehler"} else "unknown",
+    }
 
 
 def describe_devices(devices: Any, entries: Any) -> list[dict[str, Any]]:
@@ -78,8 +164,8 @@ def describe_devices(devices: Any, entries: Any) -> list[dict[str, Any]]:
     return sorted(result, key=lambda device: device["device_id"])
 
 
-def discover_devices(hass: Any) -> dict[str, Any]:
-    """Read registries and loaded entries only; never request an upstream refresh."""
+async def discover_devices(hass: Any) -> dict[str, Any]:
+    """Read reported zones and enrich them through the public read-only service."""
     from homeassistant.helpers import device_registry as dr
 
     try:
@@ -89,8 +175,43 @@ def discover_devices(hass: Any) -> dict[str, Any]:
     except (AttributeError, KeyError, TypeError, ValueError):
         # An incompatible optional adapter must not break recipe management.
         return {"status": "adapter_incompatible", "devices": [], "live_send_enabled": False}
+    if not entries:
+        return {"status": "adapter_missing", "devices": [], "live_send_enabled": False}
+    try:
+        service_available = hass.services.has_service(UPSTREAM_DOMAIN, CAPABILITIES_SERVICE)
+    except (AttributeError, TypeError, ValueError):
+        service_available = False
+    if not service_available:
+        return {"status": "adapter_outdated", "devices": devices, "live_send_enabled": False}
+
+    capability_failures = 0
+    for device in devices:
+        try:
+            payload = await hass.services.async_call(
+                UPSTREAM_DOMAIN,
+                CAPABILITIES_SERVICE,
+                {"geraet": device["device_id"]},
+                blocking=True,
+                return_response=True,
+            )
+        except Exception:  # Optional adapter failures must not break recipe management.
+            capability_failures += 1
+            continue
+        capabilities = normalize_capabilities(payload)
+        if capabilities is None:
+            capability_failures += 1
+            continue
+        device.update(capabilities)
+        connection = capabilities["connection"]
+        device["connectivity"] = {
+            "ok": "reported_online", "offline": "offline",
+        }.get(connection, "unknown")
+        device["freshness"] = "reported" if capabilities["reported_at"] else "unverified"
+        device["send_block_reason"] = "upstream_contract_beta"
+
     return {
-        "status": "adapter_loaded" if entries else "adapter_missing",
+        "status": "adapter_capabilities_error" if devices and capability_failures == len(devices)
+        else "adapter_beta",
         "devices": devices,
         "live_send_enabled": False,
     }

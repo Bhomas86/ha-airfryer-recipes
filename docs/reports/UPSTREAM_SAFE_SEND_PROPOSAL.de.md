@@ -2,7 +2,7 @@
 
 [Deutsch](UPSTREAM_SAFE_SEND_PROPOSAL.de.md) | [English](UPSTREAM_SAFE_SEND_PROPOSAL.md)
 
-**Status: nicht veröffentlicht.** Die Nachricht an den Entwickler soll auf Wunsch des Eigentümers ausschließlich deutsch erscheinen. Die englische Begleitdatei dient nur der internen Projektdokumentation.
+**Status: vom Eigentümer auf Deutsch veröffentlicht und vom Entwickler beantwortet.** Die englische Begleitdatei dient der internen zweisprachigen Projektdokumentation.
 
 **Vorgeschlagener Titel:** Rezeptverwaltung für Airfryer Control – Anbindung und benötigte Schnittstellen
 
@@ -33,3 +33,15 @@ Wären solche Ergänzungen für dich grundsätzlich denkbar, oder gibt es dafür
 Bis zur Klärung bleibt die echte Übertragung bei uns deaktiviert. Vorhanden sind eine lesende Geräteerkennung und eine Testvorschau ohne Steuerbefehle. Änderungen während eines laufenden Garvorgangs bleiben zunächst ebenfalls gesperrt. Das sind Anforderungen an unsere geplante Anbindung; damit möchte ich keinen bestätigten Sicherheitsfehler deiner Integration behaupten.
 
 Danke dir für deine bisherige Unterstützung!
+
+## Ergebnis vom 25.10.2026
+
+Der Entwickler bestätigte alle vier Beobachtungen und stellte anschließend Airfryer Control `1.0.2-beta.1` im Branch `beta` bereit. Der Stand `f43a9bf8ddb7cc65e27897dd92158cc06840bc08` enthält:
+
+- `variante` und `einmal: true` für genau eine sichere Schreibweise ohne automatische Wiederholung,
+- `letzte_meldung`, `verbindung`, `revision` und das Fachattribut `gemeldet`,
+- den öffentlichen lesenden Dienst `airfryer_control.faehigkeiten`,
+- `streng: true` gegen stille Begrenzung,
+- `ergebnis` mit `angenommen`, `abgelehnt` oder `unbekannt` sowie optional `bestaetigt`.
+
+Für die CAF-DC111S-AEU bleiben alle Programme und Grenzen geschätzt/ungeprüft. Der Dienst liefert sechs Programme; das am Gerät sichtbare `proof` fehlt noch. Airfryer Recipes nutzt zunächst ausschließlich `faehigkeiten` für die Testvorschau. Eine echte Übertragung bleibt getrennt und gesperrt.

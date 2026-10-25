@@ -47,4 +47,4 @@ Local HA and appliance: **NOT TESTED**. After a backup and installation of the e
 
 ## Decision on next steps
 
-Live transmission remains blocked until a verifiable upstream contract and model-specific safety evidence exist. The next useful step is deciding whether to coordinate the contract above with the Airfryer Control project. Contact or changes to the third-party repository are not authorized and were not performed. A read-only test UI can be prepared independently; it must not imply verified programs or transmission permission. Model for further adapter/coordinator work: GPT-6 Sol – High. Pause before a new package as agreed.
+This section records the decision at the original review revision. The owner subsequently contacted the developer. Airfryer Control `1.0.2-beta.1` now provides the requested public beta contract; details are recorded in the [upstream coordination outcome](UPSTREAM_SAFE_SEND_PROPOSAL.md#outcome-on-25-october-2026). PR #19 initially consumes only the read-only `faehigkeiten` service. Live transmission remains blocked until local contract acceptance and sufficient model-specific evidence exist.

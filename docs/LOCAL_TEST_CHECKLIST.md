@@ -21,6 +21,7 @@ the local network or real VeSync device.
 ## Independent zone testing
 
 - [ ] Select a reported device/zone in the administrator panel; preview explicitly says nothing was transmitted.
+- [ ] With Airfryer Control `1.0.2-beta.1` or newer, verify the program dropdown matches `faehigkeiten`; estimated/unverified entries are visibly labeled and an unreported saved-recipe program is not silently replaced.
 - [ ] Check a saved recipe and manual values separately in preview; desired values remain unchanged.
 - [ ] Device discovery without/broken Airfryer Control does not affect recipe management.
 - [ ] Check preview in German and English and with °C/°F user settings.

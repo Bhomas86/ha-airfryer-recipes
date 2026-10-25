@@ -17,14 +17,14 @@ class PreviewTargetNotFound(ValueError):
     """The device or actually reported zone is no longer available."""
 
 
-def prepare_preview(
+async def prepare_preview(
     hass: Any, *, device_id: str, zone_id: int, settings: dict[str, Any]
 ) -> dict[str, Any]:
     """Validate exact desired settings and read the target again on every request.
 
-    No settings are clamped, persisted, queued, or transmitted. Limits and
-    cooking programs cannot be verified against the current upstream contract.
-    Only the device-independent recipe bounds are validated here.
+    No settings are clamped, persisted, queued, or transmitted. Read-only beta
+    capability metadata can explain a blocker but cannot authorize a send.
+    Device-independent recipe bounds are always validated first.
     """
     if not isinstance(device_id, str) or not device_id or len(device_id) > 128:
         raise RecipeValidationError("Invalid device ID")
@@ -37,7 +37,7 @@ def prepare_preview(
     phase = CookingPhase(**settings)
     if phase.program != settings["program"]:
         raise RecipeValidationError("Program must not contain surrounding whitespace")
-    discovery = discover_devices(hass)
+    discovery = await discover_devices(hass)
     device = next((item for item in discovery["devices"] if item["device_id"] == device_id), None)
     if device is None:
         raise PreviewTargetNotFound
@@ -45,7 +45,18 @@ def prepare_preview(
     if zone is None:
         raise PreviewTargetNotFound
 
-    reasons = ["upstream_contract_unverified", "freshness_unverified", "program_limits_unverified"]
+    reasons = ["upstream_contract_unverified", "freshness_unverified"]
+    program = next(
+        (item for item in device.get("programs", []) if item.get("id") == phase.program),
+        None,
+    )
+    if program is None:
+        reasons.append("program_not_reported")
+    elif (
+        program.get("limits_status") != "confirmed"
+        or program.get("send_status") != "confirmed"
+    ):
+        reasons.append("program_limits_unverified")
     if device["connectivity"] != "reported_online":
         reasons.append("device_offline" if device["connectivity"] == "offline" else "connection_unknown")
     if zone["status"] not in ("idle", "off", "ready", "finished"):

@@ -2,7 +2,7 @@
 
 [English](ROADMAP.md) | [Deutsch](ROADMAP.de.md)
 
-**Status:** Architecture and all **31 requirements approved**. Recipe storage, the authenticated API and the manually accepted administrator panel are merged through PR #16. Issue #7 includes read-only discovery, a server-enforced dry-run preview and its administrator phone UI; live transmission remains blocked by the upstream contract findings in the [review](reports/ISSUE_7_DISCOVERY.md). No tested HACS release exists. The [architecture specification](ARCHITECTURE.md) defines implementation boundaries.
+**Status:** Architecture and all **31 requirements approved**. Recipe storage, the authenticated API and the manually accepted administrator panel are merged through PR #16. Issue #7 includes read-only discovery, a server-enforced dry-run preview and its administrator phone UI. Public HACS prerelease `0.1.0b1` supports phone acceptance from open PR #19. Airfryer Control `1.0.2-beta.1` now supplies a public capability contract; PR #19 is being extended with its read-only program dropdown. Live transmission remains blocked while this beta contract and model-specific capabilities are unverified. The [architecture specification](ARCHITECTURE.md) defines implementation boundaries.
 
 ## Implementation priorities and dependency order
 
@@ -21,7 +21,7 @@
 
 **Proposed follow-up to #6:** Rename a category across all affected recipes or merge it into another, for example “Backen” into “Aufbacken”. Define the preview, permission check, safe persistence and rollback behavior before implementing it. The current selection list does not change existing categories automatically.
 
-**Program selection after #7:** Once verified device data is available, the recipe editor will offer program choices as entry guidance. At send time, the device controls will show only functions of the selected air fryer and the backend will validate them again. Recipes will not store a fixed device binding.
+**Program selection after #7:** The administrator dry-run preview reads program choices from Airfryer Control's public capability service and visibly labels confirmed, estimated and unreported values. The later recipe-editor guidance and send controls will use only verified device data and validate it again in the backend. Recipes will not store a fixed device binding.
 
 ## Development ownership and workflow
 

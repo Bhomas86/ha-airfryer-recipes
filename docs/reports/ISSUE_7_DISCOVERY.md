@@ -4,6 +4,8 @@
 
 ## Outcome and scope
 
+> **Historical review revision:** The findings below apply to Airfryer Control 1.0.1 at the cited commit. The developer subsequently published `1.0.2-beta.1` with a public beta contract. The [coordination report](UPSTREAM_SAFE_SEND_PROPOSAL.md#outcome-on-25-october-2026) and [current preview UI](ISSUE_7_DRY_RUN_UI.md) describe the follow-up state.
+
 PR #16 promoted storage, the API and manually accepted recipe management to `main` (`2ab457f`). This first part of Issue #7 adds only read-only discovery through `airfryer_recipes/devices`. Issue #7 remains open. The coordinator, dry-run preview, live transmission and program selection remain unimplemented.
 
 Model check: GPT-6 Sol – High for the multi-module adapter/safety review; work paused after the recommendation and the owner resumed it after switching models. A higher model tier is not currently necessary.

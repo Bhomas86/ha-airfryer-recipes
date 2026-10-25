@@ -4,6 +4,8 @@
 
 ## Ergebnis und Umfang
 
+> **Historischer Prüfstand:** Die Befunde unten gelten für Airfryer Control 1.0.1 am genannten Commit. Der Entwickler hat danach `1.0.2-beta.1` mit einem öffentlichen Beta-Vertrag veröffentlicht. Der [Abstimmungsbericht](UPSTREAM_SAFE_SEND_PROPOSAL.de.md#ergebnis-vom-25102026) und die [aktuelle Testoberfläche](ISSUE_7_DRY_RUN_UI.de.md) beschreiben den Folgestand.
+
 PR #16 hat Speicherung, API und manuell abgenommene Rezeptverwaltung nach `main` übernommen (`2ab457f`). Dieses erste Teilpaket zu Issue #7 ergänzt ausschließlich lesende Geräteerkennung über `airfryer_recipes/devices`. Issue #7 bleibt offen. Befehlskoordinator, Testmodus-Vorschau, echte Übertragung und Programmauswahl sind weiterhin nicht implementiert.
 
 Modellprüfung: GPT-6 Sol – High für die mehrteilige Adapter-/Sicherheitsprüfung; nach der Empfehlung wurde die Arbeit für den Modellwechsel unterbrochen und vom Eigentümer fortgesetzt. Eine höhere Modellstufe ist derzeit nicht erforderlich.
