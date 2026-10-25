@@ -78,3 +78,5 @@ Last consolidated: 2026-10-24. Project language policy: English default UI langu
 - This does **not** confirm upstream SYNC/MATCH on the device or any
   functionality in this new project.
 - Code review, tests and documented local test outcomes precede stable releases.
+
+Implementation note for requirements 14/15/26: Issue #7 initially exposes read-only discovery with unverified telemetry freshness and disabled control capabilities. A discovery response is not permission to send, and no dry-run coordinator exists yet. The upstream blockers are documented in the [review](reports/ISSUE_7_DISCOVERY.md).

@@ -2,7 +2,7 @@
 
 [Deutsch](ROADMAP.de.md) | [English](ROADMAP.md)
 
-**Status:** Architektur und alle **31 Anforderungen beschlossen**. Die Integrationsgrundstruktur ist gemergt; Speicherung und API werden in PR #13/#14 geprüft, und die Admin-Verwaltung entsteht in Issue #6. Es gibt noch kein geprüftes HACS-Release. Die [Architekturbeschreibung](ARCHITECTURE.de.md) legt die Grenzen der Umsetzung fest.
+**Status:** Architektur und alle **31 Anforderungen beschlossen**. Rezeptspeicher, authentifizierte API und manuell abgenommene Admin-Verwaltung sind über PR #16 gemergt. Issue #7 beginnt mit lesender Geräteerkennung; echte Übertragung bleibt wegen der Upstream-Vertragsprobleme im [Prüfbericht](reports/ISSUE_7_DISCOVERY.de.md) gesperrt. Es gibt noch kein geprüftes HACS-Release. Die [Architekturbeschreibung](ARCHITECTURE.de.md) legt die Grenzen der Umsetzung fest.
 
 ## Prioritäten und Abhängigkeiten
 

@@ -72,3 +72,5 @@ Letzte Zusammenfassung: 24.10.2026. Projektstandard: Englisch als Fallback; Proj
 - Mit Airfryer Control bereits real getestet: **Cosori Turbo Tower Pro Smart CAF-DC111S-AEU**, Temperatur- und Zeitübertragung an Fach 2.
 - Das bestätigt **noch nicht** SYNC/MATCH oder Funktionen in diesem neuen Projekt.
 - Vor stabilen Releases: Codeprüfung, automatisierte Tests und dokumentierte lokale Testergebnisse.
+
+Umsetzungsstand zu Anforderungen 14/15/26: Issue #7 liefert zunächst lesende Geräteerkennung mit ungeprüfter Statusaktualität und deaktivierten Steuerfähigkeiten. Eine Discovery-Antwort ist keine Sendeerlaubnis; ein Testmodus-Koordinator existiert noch nicht. Die Upstream-Hindernisse stehen im [Prüfbericht](reports/ISSUE_7_DISCOVERY.de.md).

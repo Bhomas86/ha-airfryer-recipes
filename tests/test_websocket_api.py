@@ -163,6 +163,7 @@ class WebsocketTests(unittest.IsolatedAsyncioTestCase):
             ("import_preview", {"payload": '{"schema_version":1,"recipes":[]}'}),
             ("import_confirm", {"token": "a-token"}),
             ("export", {}),
+            ("devices", {}),
         )
         for name, args in calls:
             response = await self.call(name, self.user, **args, is_admin=True)
@@ -269,17 +270,31 @@ class WebsocketTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual((await self.call("favorites", another))[2], {"recipe_ids": []})
         self.assertEqual((await self.call("set_favorite", another, recipe_id="missing", favorite=True))[2], "not_found")
 
+    async def test_device_discovery_is_admin_only_and_requires_loaded_recipes(self):
+        with patch("custom_components.airfryer_recipes.device_discovery.discover_devices",
+                   return_value={"devices": [], "live_send_enabled": False}) as discover:
+            for user in (self.user, FakeConnection(authenticated=False)):
+                self.assertEqual((await self.call("devices", user))[2], "unauthorized")
+            discover.assert_not_called()
+            self.assertEqual((await self.call("devices", self.admin))[2],
+                             {"devices": [], "live_send_enabled": False})
+            discover.assert_called_once_with(self.hass)
+            self.hass.data[DOMAIN].pop("repository")
+            self.assertEqual((await self.call("devices", self.admin))[2], "not_configured")
+            self.assertEqual(discover.call_count, 1)
+
     def test_commands_register_once_per_explicit_call(self):
         ws = self.modules["homeassistant.components.websocket_api"]
         ws.registered.clear()
         self.api.register_commands(self.hass)
         commands = {handler._ws_command for handler in ws.registered}
-        self.assertEqual(len(commands), 11)
+        self.assertEqual(len(commands), 12)
         self.assertEqual(
             commands,
             {f"{DOMAIN}/{name}" for name in (
                 "list", "get", "create", "update", "duplicate", "delete",
                 "import_preview", "import_confirm", "export", "favorites", "set_favorite",
+                "devices",
             )},
         )
 
