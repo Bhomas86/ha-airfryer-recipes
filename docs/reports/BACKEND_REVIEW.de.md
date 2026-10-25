@@ -2,7 +2,7 @@
 
 [Deutsch](BACKEND_REVIEW.de.md) | [English](BACKEND_REVIEW.md)
 
-Stand: 25.10.2026. Prüfung der GitHub-PR-Refs `a9137a6` (#13) und `bfe4f6d` (#14). Die beiden nachgewiesenen Fehler wurden anschließend im lokalen Korrektur-Branch `fix/pr13-storage-review` behoben.
+Stand: 25.10.2026. Prüfung der GitHub-PR-Refs `a9137a6` (#13) und `bfe4f6d` (#14). Die beiden nachgewiesenen Fehler wurden anschließend mit Commit `5b3bfdc` direkt im Feature-Branch von PR #13 behoben.
 
 ## Projektstand
 

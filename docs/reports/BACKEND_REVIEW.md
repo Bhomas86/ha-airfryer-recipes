@@ -2,7 +2,7 @@
 
 [English](BACKEND_REVIEW.md) | [Deutsch](BACKEND_REVIEW.de.md)
 
-As of 25 October 2026. Review of GitHub PR refs `a9137a6` (#13) and `bfe4f6d` (#14). The two confirmed defects were subsequently fixed on the local `fix/pr13-storage-review` branch.
+As of 25 October 2026. Review of GitHub PR refs `a9137a6` (#13) and `bfe4f6d` (#14). The two confirmed defects were subsequently fixed by commit `5b3bfdc` directly on PR #13's feature branch.
 
 ## Project status
 
