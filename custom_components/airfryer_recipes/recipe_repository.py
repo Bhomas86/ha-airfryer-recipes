@@ -19,6 +19,7 @@ from .recipe_model import (
     RecipeValidationError,
     export_library_json,
     import_library_json,
+    load_library_json,
 )
 
 LoadCallback = Callable[[], Awaitable[dict[str, Any] | None]]
@@ -100,7 +101,7 @@ class RecipeRepository:
                 recipes: list[Recipe] = []
             else:
                 # Reject unknown schemas instead of returning an empty library.
-                recipes = import_library_json(json.dumps(raw, ensure_ascii=False))
+                recipes = load_library_json(json.dumps(raw, ensure_ascii=False))
             _validate_unique(tuple(recipes))
             self._records = {recipe.id: recipe for recipe in recipes}
             self._loaded = True
@@ -212,7 +213,7 @@ class RecipeRepository:
             raise ValueError("unsupported import conflict policy")
         async with self._lock:
             self._require_loaded()
-            pending = self._pending.pop(token, None)
+            pending = self._pending.get(token)
             if (
                 pending is None
                 or monotonic() - pending.created_at >= PREVIEW_TTL_SECONDS
@@ -241,4 +242,6 @@ class RecipeRepository:
                 changed += 1
             if changed:
                 await self._commit(next_records)
+            else:
+                self._pending.pop(token, None)
             return changed
