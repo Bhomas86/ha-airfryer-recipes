@@ -73,4 +73,4 @@ Letzte Zusammenfassung: 24.10.2026. Projektstandard: Englisch als Fallback; Proj
 - Das bestätigt **noch nicht** SYNC/MATCH oder Funktionen in diesem neuen Projekt.
 - Vor stabilen Releases: Codeprüfung, automatisierte Tests und dokumentierte lokale Testergebnisse.
 
-Umsetzungsstand zu Anforderungen 14/15/26: Issue #7 liefert zunächst lesende Geräteerkennung mit ungeprüfter Statusaktualität und deaktivierten Steuerfähigkeiten. Eine Discovery-Antwort ist keine Sendeerlaubnis; ein Testmodus-Koordinator existiert noch nicht. Die Upstream-Hindernisse stehen im [Prüfbericht](reports/ISSUE_7_DISCOVERY.de.md).
+Umsetzungsstand zu Anforderungen 14/15/26: Issue #7 liefert zunächst lesende Geräteerkennung mit ungeprüfter Statusaktualität und deaktivierten Steuerfähigkeiten. Eine Discovery-Antwort ist keine Sendeerlaubnis. Die adminpflichtige API `prepare_send` liefert jetzt eine serverseitig erzwungene Testvorschau; sie kann nicht übertragen und bestätigt keine modellbezogenen Grenzen. Siehe [Sendevertrag](reports/ISSUE_7_COMMAND_CONTRACT.de.md). Die Upstream-Hindernisse stehen im [Prüfbericht](reports/ISSUE_7_DISCOVERY.de.md).

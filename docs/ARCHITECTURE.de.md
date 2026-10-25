@@ -2,7 +2,7 @@
 
 [Deutsch](ARCHITECTURE.de.md) | [English](ARCHITECTURE.md)
 
-**Architekturentscheidung ADR-001 / Anforderung 31: Modulare Home-Assistant-Integration.** Beschlossen am 24.10.2026. Dieses Dokument beschreibt die Zielarchitektur. Rezeptspeicher, WebSocket-API und Admin-Verwaltung sind über PR #16 gemergt. Lesende Geräteerkennung ist der erste Teil von Issue #7; Gerätesteuerung, Dashboard und Diagnose bleiben geplant. Siehe [Prüfung des Upstream-Vertrags](reports/ISSUE_7_DISCOVERY.de.md).
+**Architekturentscheidung ADR-001 / Anforderung 31: Modulare Home-Assistant-Integration.** Beschlossen am 24.10.2026. Dieses Dokument beschreibt die Zielarchitektur. Rezeptspeicher, WebSocket-API und Admin-Verwaltung sind über PR #16 gemergt. Lesende Geräteerkennung und eine adminpflichtige, serverseitig erzwungene Testvorschau sind als Teile von Issue #7 implementiert; Gerätesteuerung, Dashboard und Diagnose bleiben geplant. Siehe [Prüfung des Upstream-Vertrags](reports/ISSUE_7_DISCOVERY.de.md).
 
 ## Ziel und Bereitstellung
 
@@ -26,7 +26,7 @@ Die Integrationsdomain lautet `airfryer_recipes`. Home Assistant OS auf Proxmox 
 
 ## Schnittstelle zwischen Frontend und Backend
 
-Für Rezeptlisten, Änderungen, Gerätefähigkeiten, Status, Testmodus-Vorschauen und Sendebefehle verwenden wir **authentifizierte Home-Assistant-WebSocket-Befehle** unter `airfryer_recipes/*`. Die folgenden Namen sind **Vorschläge**, noch keine implementierten Aktionen:
+Für Rezeptlisten, Änderungen, Gerätefähigkeiten, Status, Testmodus-Vorschauen und Sendebefehle verwenden wir **authentifizierte Home-Assistant-WebSocket-Befehle** unter `airfryer_recipes/*`. Die folgenden Namen beschreiben das Zielprotokoll. Rezeptoperationen, adminpflichtiges `devices` und `prepare_send` als Testvorschau sind implementiert. `device_state`, `confirm_send`, Gerätepräferenzen und Diagnose bleiben geplant:
 
 - `airfryer_recipes/list`, `get`, `create`, `update`, `duplicate`, `delete`
 - `airfryer_recipes/import_preview`, `import_confirm`, `export`

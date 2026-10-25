@@ -19,6 +19,7 @@ import probatio
 from homeassistant.components import websocket_api
 
 from .const import DOMAIN, EXPORT_FILENAME, EXPORT_URL
+from .command_preview import PreviewTargetNotFound
 from .recipe_model import (
     MAX_IMPORT_BYTES,
     RecipeValidationError,
@@ -62,6 +63,8 @@ async def _respond(
         return
     try:
         result = await action(repository)
+    except PreviewTargetNotFound:
+        connection.send_error(msg["id"], "target_not_found", "Device or reported zone not found")
     except RecipePreviewExpiredError:
         connection.send_error(msg["id"], "preview_expired", "Import preview expired or library changed")
     except RecipeNotFoundError:
@@ -255,6 +258,28 @@ async def ws_devices(hass: Any, connection: Any, msg: dict[str, Any]) -> None:
     await _respond(hass, connection, msg, run)
 
 
+@websocket_api.require_admin
+@websocket_api.websocket_command({
+    probatio.Required("type"): f"{DOMAIN}/prepare_send",
+    probatio.Required("device_id"): str,
+    probatio.Required("zone_id"): int,
+    probatio.Required("settings"): dict,
+})
+@websocket_api.async_response
+async def ws_prepare_send(hass: Any, connection: Any, msg: dict[str, Any]) -> None:
+    """Preview only; no client field can enable live transmission."""
+    from .command_preview import prepare_preview
+
+    async def run(repo: RecipeRepository) -> dict[str, Any]:
+        # Also guard direct invocation: live flags must never be silently accepted.
+        if set(msg) - {"id", "type", "device_id", "zone_id", "settings"}:
+            raise RecipeValidationError("Unexpected preview parameter")
+        return prepare_preview(
+            hass, device_id=msg["device_id"], zone_id=msg["zone_id"], settings=msg["settings"]
+        )
+    await _respond(hass, connection, msg, run)
+
+
 COMMANDS = (
     ws_list,
     ws_get,
@@ -268,6 +293,7 @@ COMMANDS = (
     ws_favorites,
     ws_set_favorite,
     ws_devices,
+    ws_prepare_send,
 )
 
 

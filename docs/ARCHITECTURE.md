@@ -2,7 +2,7 @@
 
 [English](ARCHITECTURE.md) | [Deutsch](ARCHITECTURE.de.md)
 
-**Decision ADR-001 / Requirement 31: Modular Home Assistant custom integration.** Approved 2026-10-24. This document defines the target architecture. Recipe storage, the WebSocket API and the administrator panel are merged through PR #16. Read-only discovery is the first part of Issue #7; device control, dashboard and diagnostics remain planned. See the [upstream contract review](reports/ISSUE_7_DISCOVERY.md).
+**Decision ADR-001 / Requirement 31: Modular Home Assistant custom integration.** Approved 2026-10-24. This document defines the target architecture. Recipe storage, the WebSocket API and the administrator panel are merged through PR #16. Read-only discovery and an administrator-only server-enforced dry-run preview are implemented as parts of Issue #7; device control, dashboard and diagnostics remain planned. See the [upstream contract review](reports/ISSUE_7_DISCOVERY.md).
 
 ## Objectives and deployment
 
@@ -26,7 +26,7 @@ The domain is `airfryer_recipes`. Home Assistant OS on Proxmox is a target deplo
 
 ## Frontend/backend contract
 
-Use **authenticated Home Assistant WebSocket commands** under `airfryer_recipes/*` for recipe lists, mutations, device capabilities, status, dry-run previews and send requests. Names below are **proposals** and are not implemented:
+Use **authenticated Home Assistant WebSocket commands** under `airfryer_recipes/*` for recipe lists, mutations, device capabilities, status, dry-run previews and send requests. The names below describe the target protocol. Recipe operations, administrator-only `devices`, and `prepare_send` as a dry-run preview are implemented. `device_state`, `confirm_send`, device preferences and diagnostics remain planned:
 
 - `airfryer_recipes/list`, `get`, `create`, `update`, `duplicate`, `delete`
 - `airfryer_recipes/import_preview`, `import_confirm`, `export`
