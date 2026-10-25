@@ -10,10 +10,12 @@ Im Rezepteditor stehen vorhandene Kategorien zur Auswahl. „Neue Kategorie hinz
 
 Gemeinsame Favoriten sind Teil des Rezeptdatensatzes und bleiben mit älteren Rezepten kompatibel. Persönliche Favoriten werden separat und nach der authentifizierten HA-Benutzer-ID gespeichert. Normale Nutzer erhalten keinen Admin-Panelzugang; das Backend erlaubt ihnen nur die Änderung ihrer eigenen persönlichen Favoriten. Geräte- und Fachsteuerung gehört nicht zu diesem Panel.
 
+Die Panel-Einbindung nutzt Home Assistants `frontend`, `http`, `panel_custom` und `websocket_api`. Diese benötigten Komponenten sind im Integrationsmanifest deklariert; ein zuvor fehlender Eintrag für `http` wurde nach einem Hassfest-Fehler ergänzt.
+
 ## Prüfungen und Grenzen
 
 Automatische Offline-Tests prüfen Python-Lebenszyklus, Datenmodell, Favoriten-Persistenz, WebSocket-Rechte und die wichtigsten Frontend-Abläufe. Die Tests benutzen keine echte HA-Instanz und kein Gerät. Der Projektinhaber hat die Einrichtung und die Admin-Seite auf Home Assistant OS/Core 2026.10.3 am Smartphone geöffnet. Er hat ein Rezept angelegt und bestätigt, dass Rezept und persönlicher Favorit nach einem HA-Neustart erhalten blieben. Bearbeiten, Kopieren, bestätigtes Löschen der Kopie sowie Suche nach Name, Kategorie und Favorit funktionierten ebenfalls. JSON-Export/-Import, Berechtigungen und die neue Kategorieauswahl sind lokal noch nicht geprüft.
 
 Beim Smartphone-Test fehlten ein Ausstieg und die Möglichkeit, das HA-Seitenmenü zu öffnen. Der Panel-Kopf enthält nun „Verlassen“ zur HA-Startseite und einen Menüknopf, der das HA-Ereignis `hass-toggle-menu` auslöst. Der Projektinhaber bestätigte anschließend, dass beide Bedienelemente auf dem Smartphone funktionieren. Für die aktuelle Revision bestanden 9 Frontend- und 55 Python-Offline-Tests.
 
-Für die weitere lokale Abnahme: Nach Backup den aktualisierten Branch installieren, HA neu starten und [die lokale Testcheckliste](../LOCAL_TEST_CHECKLIST.de.md) fortsetzen. Besonders wichtig sind Rezeptänderungen mit anschließendem Neustart, persönlicher Favorit mit zweitem Nutzer, Berechtigung des normalen Nutzers und Importkonflikte. Bitte keine echte Geräteübertragung testen. HACS-/Hassfest-Checks für die aktualisierte Fassung stehen noch aus.
+Für die weitere lokale Abnahme: Nach Backup den aktualisierten Branch installieren, HA neu starten und [die lokale Testcheckliste](../LOCAL_TEST_CHECKLIST.de.md) fortsetzen. Besonders wichtig sind die neue Kategorieauswahl, persönlicher Favorit mit zweitem Nutzer, Berechtigung des normalen Nutzers und Importkonflikte. Bitte keine echte Geräteübertragung testen. HACS-/Hassfest-Checks für die aktualisierte Fassung stehen noch aus.

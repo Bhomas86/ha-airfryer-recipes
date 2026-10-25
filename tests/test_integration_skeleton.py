@@ -129,7 +129,10 @@ class TestPackagedMetadata(unittest.TestCase):
         self.assertEqual(manifest["integration_type"], "hub")
         self.assertEqual(manifest["iot_class"], "calculated")
         self.assertEqual(manifest["requirements"], [])
-        self.assertNotIn("dependencies", manifest)
+        self.assertEqual(
+            manifest["dependencies"],
+            ["frontend", "http", "panel_custom", "websocket_api"],
+        )
         self.assertTrue(manifest["version"])
 
     def test_hacs_metadata(self):

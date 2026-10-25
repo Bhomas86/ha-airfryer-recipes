@@ -10,10 +10,12 @@ The recipe editor offers existing categories. “Add new category” is the fina
 
 Shared favorites are stored in recipe records, remaining compatible with older recipes. Personal favorites are stored separately under the authenticated HA user ID. Regular users cannot access the admin panel; the backend permits them to change only their own personal favorites. Device and zone control are outside this panel.
 
+The panel uses Home Assistant's `frontend`, `http`, `panel_custom` and `websocket_api` components. These required components are declared in the integration manifest; a missing `http` entry was added after a Hassfest failure.
+
 ## Verification and limits
 
 Automated offline tests cover the Python lifecycle, data model, favorite persistence, WebSocket authorization and key frontend flows. They use neither a real HA instance nor an appliance. The project owner opened the integration and admin panel on a phone running Home Assistant OS/Core 2026.10.3. They created a recipe and confirmed that both the recipe and personal favorite survived an HA restart. Editing, duplication, confirmed deletion of the copy, and filtering by name, category and favorite also worked. JSON export/import, permissions and the new category selector have not yet been checked locally.
 
 The phone test exposed a missing exit control and no way to open HA's sidebar. The panel header now provides a “Leave” link to the HA home page and a menu button that fires HA's `hass-toggle-menu` event. The project owner then confirmed that both controls work on the phone. The current revision passed 9 frontend and 55 Python offline tests.
 
-For further local acceptance: after a backup, install the updated branch, restart HA and continue the [local test checklist](../LOCAL_TEST_CHECKLIST.md). Pay particular attention to recipe edits followed by restart, personal favorites with a second user, regular-user permissions and import conflicts. Do not test live appliance transmission. HACS/Hassfest checks for the updated revision are still pending.
+For further local acceptance: after a backup, install the updated branch, restart HA and continue the [local test checklist](../LOCAL_TEST_CHECKLIST.md). Pay particular attention to the new category selector, personal favorites with a second user, regular-user permissions and import conflicts. Do not test live appliance transmission. HACS/Hassfest checks for the updated revision are still pending.
