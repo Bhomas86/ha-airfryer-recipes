@@ -34,7 +34,8 @@ Automated offline tests cover the Python lifecycle, data model, favorite persist
 | Direct panel URL as a regular user redirects to that user's home page | **PASSED** |
 | Separate personal favorites with a second administrator | **PASSED** |
 | Recipe changes by one administrator are visible to the other | **PASSED** |
+| Complete English UI when the user's language is English | **PASSED** |
 
-The English UI remains open for further local acceptance. Do not test live appliance transmission.
+All recipe-management checks listed in this table passed on HA OS/Core 2026.10.3. Live appliance transmission was outside this work package and was not tested.
 
 Program entry is currently free text because no air fryer adapter supplies verified device functions yet. After Issue #7, the recipe editor should offer these programs as choices; Issue #8 will show only functions of the selected air fryer at send time. The necessary backend validation is not implemented yet.

@@ -34,7 +34,8 @@ Automatische Offline-Tests prüfen Python-Lebenszyklus, Datenmodell, Favoriten-P
 | Direkter Panel-Aufruf als normaler Benutzer leitet auf dessen Startseite um | **BESTANDEN** |
 | Getrennte persönliche Favoriten mit einem zweiten Administrator | **BESTANDEN** |
 | Rezeptänderungen eines Administrators sind für den anderen sichtbar | **BESTANDEN** |
+| Vollständige englische Oberfläche bei englischer Benutzersprache | **BESTANDEN** |
 
-Für die weitere lokale Abnahme bleibt die englische Oberfläche offen. Bitte keine echte Geräteübertragung testen.
+Alle in dieser Tabelle aufgeführten Prüfungen der Rezeptverwaltung wurden auf HA OS/Core 2026.10.3 bestanden. Eine echte Geräteübertragung war nicht Teil dieses Arbeitspakets und wurde nicht getestet.
 
 Die Programmeingabe ist derzeit frei, weil noch kein Airfryer-Adapter verifizierte Gerätefunktionen liefert. Nach Issue #7 soll der Rezepteditor solche Programme als Auswahl anbieten; Issue #8 zeigt beim Senden nur Funktionen des gewählten Airfryers. Die dafür notwendige Backend-Validierung ist noch nicht implementiert.
