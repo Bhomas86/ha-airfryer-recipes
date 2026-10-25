@@ -2,7 +2,7 @@
 
 [Deutsch](ROADMAP.de.md) | [English](ROADMAP.md)
 
-**Status:** Architektur und alle **31 Anforderungen beschlossen**. Die Projektgrundlage liegt in [PR #2](https://github.com/Bhomas86/ha-airfryer-recipes/pull/2), ist aber **weder gemergt noch über HACS installierbar**. Die [Architekturbeschreibung](ARCHITECTURE.de.md) ist die Grundlage für die technische Umsetzung.
+**Status:** Architektur und alle **31 Anforderungen beschlossen**. Die Integrationsgrundstruktur ist gemergt; Speicherung und API werden in PR #13/#14 geprüft, und die Admin-Verwaltung entsteht in Issue #6. Es gibt noch kein geprüftes HACS-Release. Die [Architekturbeschreibung](ARCHITECTURE.de.md) legt die Grenzen der Umsetzung fest.
 
 ## Prioritäten und Abhängigkeiten
 
@@ -13,11 +13,15 @@
 | 2 · Datenspeicherung | [#4](https://github.com/Bhomas86/ha-airfryer-recipes/issues/4) | Versionierter Speicher, CRUD, Migration, JSON-Import/-Export | #3 | Neustart, Migration, ungültige Daten |
 | 3 · Berechtigte API | [#5](https://github.com/Bhomas86/ha-airfryer-recipes/issues/5) | Rechtegeprüfte WebSocket-Befehle | #3, #4 | Admin/Benutzer und manipulierte Requests |
 | 4 · Rezeptverwaltung | [#6](https://github.com/Bhomas86/ha-airfryer-recipes/issues/6) | Responsive Admin-Seite, Deutsch und Englisch | #4, #5 | Bearbeitung ohne Airfryer, Rechte |
-| 5 · Sichere Anbindung | [#7](https://github.com/Bhomas86/ha-airfryer-recipes/issues/7) | Airfryer-Control-Adapter, Gerätefähigkeiten, Befehlskoordinator, Testmodus | #3, #5 | Simulierte Sicherheitstests, lokale Cosori-Checkliste |
-| 6 · Dashboard | [#8](https://github.com/Bhomas86/ha-airfryer-recipes/issues/8) | Interaktive Fächer, Rezept/Manuell, Rückmeldungen und Karteneditor | #4, #5, #7 | Smartphone/Tablet, beide Fächer, Offline |
+| 5 · Sichere Anbindung | [#7](https://github.com/Bhomas86/ha-airfryer-recipes/issues/7) | Airfryer-Control-Adapter, verifizierte Geräteliste mit Programmfunktionen, Befehlskoordinator, Testmodus | #3, #5 | Simulierte Sicherheitstests, lokale Cosori-Checkliste |
+| 6 · Dashboard | [#8](https://github.com/Bhomas86/ha-airfryer-recipes/issues/8) | Interaktive Fächer, Rezept/Manuell, gerätespezifische Programmauswahl, Rückmeldungen und Karteneditor | #4, #5, #7 | Smartphone/Tablet, beide Fächer und Programmfunktionen, Offline |
 | 7 · Individualisierung | [#9](https://github.com/Bhomas86/ha-airfryer-recipes/issues/9) | Bildergalerie, sichere Uploads, verschiebbare Fachpositionen | #8 | Skalierung, Rechte und Bildvalidierung |
 | 8 · Beta-Freigabe | [#10](https://github.com/Bhomas86/ha-airfryer-recipes/issues/10) | HACS-Beta, zweisprachige Release Notes, Diagnose, optionale Fertigmeldung | #3–#8, ggf. #9 | CI, echtes HA und Gerätetests |
 | Später | [#1](https://github.com/Bhomas86/ha-airfryer-recipes/issues/1) | SYNC/MATCH in Dashboard unter Verwendung vorhandener Aktionen | #7, #8 | Sicherheit und echte Gerätebestätigung |
+
+**Vorgemerkter Folgepunkt zu #6:** Eine Kategorie über alle betroffenen Rezepte hinweg umbenennen oder mit einer anderen zusammenführen, etwa „Backen“ zu „Aufbacken“. Vor der Umsetzung sind Vorschau, Rechteprüfung, sichere Speicherung und Rückfallverhalten festzulegen. Die aktuelle Auswahlliste ändert bestehende Kategorien nicht automatisch.
+
+**Programmwahl nach #7:** Sobald verifizierte Gerätedaten verfügbar sind, erhält der Rezepteditor eine Programmauswahl als Eingabehilfe. Beim Senden zeigt die Bedienoberfläche nur Funktionen des gewählten Airfryers und prüft sie erneut im Backend. Ein Rezept speichert weiterhin keine feste Gerätebindung.
 
 ## Arbeitsteilung
 

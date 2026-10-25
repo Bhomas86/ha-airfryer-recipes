@@ -4,7 +4,7 @@
 
 Geplante benutzerdefinierte Home-Assistant-Integration zur Verwaltung wiederverwendbarer Heißluftfritteusen-Rezepte. Die gespeicherten Einstellungen sollen über bestehende Home-Assistant-Integrationen an unterstützte Geräte übertragen werden.
 
-> **Projektstatus: Frühe Entwicklungsphase.** Die Home-Assistant-Grundstruktur aus [Issue #3](https://github.com/Bhomas86/ha-airfryer-recipes/issues/3) wurde gemergt. Ein geräteunabhängiger, versionierter Rezeptdatenspeicher entsteht in [Issue #4](https://github.com/Bhomas86/ha-airfryer-recipes/issues/4) / [PR #13](https://github.com/Bhomas86/ha-airfryer-recipes/pull/13). Grafische Verwaltung, Dashboard, Geräteadapter und reale Home-Assistant-Installationstests sind **noch nicht abgeschlossen**.
+> **Projektstatus: Frühe Entwicklungsphase.** Die Home-Assistant-Grundstruktur aus Issue #3 ist gemergt. Rezeptspeicher und WebSocket-API werden in PR #13 und PR #14 geprüft. Dieser Branch ergänzt die Admin-Rezeptverwaltung für Issue #6. Die Ersteinrichtung gelang auf Home Assistant OS 2026.10.3; Rezeptfunktionen, Rechte und Speicherung nach Neustart müssen lokal geprüft werden. Dashboard und Geräteadapter sind nicht implementiert.
 
 ## Ziele
 
@@ -35,9 +35,9 @@ Als erstes Zielgerät dient die **Cosori Turbo Tower Pro Smart (CAF-DC111S-AEU)*
 
 ## Geplante Meilensteine
 
-- [x] Code-Grundstruktur und Einrichtungsdialog ([Issue #3](https://github.com/Bhomas86/ha-airfryer-recipes/issues/3); reale HA-Prüfung weiterhin offen)
-- [ ] Dauerhafte Speicherung mit Plausibilitätsprüfung ([Issue #4](https://github.com/Bhomas86/ha-airfryer-recipes/issues/4); Backend in PR #13 entwickelt, lokale Abnahme noch offen)
-- [ ] Grafische Rezeptverwaltung
+- [x] Code-Grundstruktur und Einrichtungsdialog ([Issue #3](https://github.com/Bhomas86/ha-airfryer-recipes/issues/3); Einrichtung auf HA 2026.10.3 bestätigt)
+- [ ] Dauerhafte Speicherung mit Plausibilitätsprüfung ([Issue #4](https://github.com/Bhomas86/ha-airfryer-recipes/issues/4); Rezept und persönlicher Favorit überstanden einen lokalen Neustart, weitere Abnahme offen)
+- [ ] Grafische Rezeptverwaltung (Code im Issue-#6-Branch; Anlegen auf dem Smartphone bestätigt, weitere Abnahme offen)
 - [ ] Lovelace-Dashboard-Karte
 - [ ] Anbindung an Airfryer Control
 - [ ] Geräte-/Zonenunterstützung und Fehlerbehandlung
@@ -46,9 +46,9 @@ Als erstes Zielgerät dient die **Cosori Turbo Tower Pro Smart (CAF-DC111S-AEU)*
 
 ## Installation
 
-**Noch keine vollständig geprüfte Veröffentlichung verfügbar.** HACS-/Hassfest-Metadatenprüfungen sind erfolgreich und die Einrichtungs-Grundstruktur ist gemergt. Eine tatsächliche Installation und ein Test der Rezeptspeicherung **innerhalb von Home Assistant stehen noch aus**. Bitte nicht in einer produktiven HACS-Installation hinzufügen, bevor die erste geprüfte Version veröffentlicht wurde.
+**Noch keine vollständig geprüfte Veröffentlichung verfügbar.** Einrichtung, Rezeptanlage sowie Speicherung von Rezept und persönlichem Favoriten über einen Neustart wurden auf Home Assistant 2026.10.3 bestätigt. Weitere Rezeptabläufe und Berechtigungen müssen lokal noch geprüft werden. Bitte vor der ersten geprüften Version keine stabile Nutzung annehmen.
 
-Der vorgesehene Einrichtungsdialog benötigt weder Airfryer noch Cloud-Zugangsdaten oder eine Internetverbindung. Der vollständige Assistent und die Rezeptverwaltung folgen in späteren Issues.
+Der Einrichtungsdialog benötigt weder Airfryer noch Cloud-Zugangsdaten oder eine Internetverbindung. Die Admin-Rezeptverwaltung wird in Issue #6 getestet; der vollständige Geräteassistent folgt später.
 
 ## Sicherheit und Datenschutz
 

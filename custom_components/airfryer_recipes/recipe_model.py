@@ -64,6 +64,7 @@ class Recipe:
     description: str = ""
     category: str = ""
     tags: tuple[str, ...] = ()
+    favorite: bool = False
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "id", _validated_text(self.id, "id", 128))
@@ -84,6 +85,8 @@ class Recipe:
         if len({tag.casefold() for tag in tags}) != len(tags):
             raise RecipeValidationError("duplicate tags are not allowed")
         object.__setattr__(self, "tags", tags)
+        if type(self.favorite) is not bool:
+            raise RecipeValidationError("favorite must be a boolean")
 
 
 def create_recipe(
@@ -115,6 +118,7 @@ def recipe_to_dict(recipe: Recipe) -> dict[str, Any]:
         "description": recipe.description,
         "category": recipe.category,
         "tags": list(recipe.tags),
+        "favorite": recipe.favorite,
         "phases": [
             {
                 "program": phase.program,
@@ -130,7 +134,7 @@ def recipe_from_dict(raw: object) -> Recipe:
     """Validate all fields and reject ambiguous/unsupported structures."""
     if not isinstance(raw, dict):
         raise RecipeValidationError("recipe must be an object")
-    allowed = {"id", "name", "description", "category", "tags", "phases"}
+    allowed = {"id", "name", "description", "category", "tags", "phases", "favorite"}
     if unknown := set(raw) - allowed:
         raise RecipeValidationError(f"unknown recipe fields: {sorted(unknown)}")
     phases = raw.get("phases")
@@ -155,6 +159,7 @@ def recipe_from_dict(raw: object) -> Recipe:
             description=raw.get("description", ""),
             category=raw.get("category", ""),
             tags=tuple(tags),
+            favorite=raw.get("favorite", False),
             phases=tuple(converted),
         )
     except KeyError as exc:

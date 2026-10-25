@@ -19,16 +19,16 @@ Last consolidated: 2026-10-24. Project language policy: English default UI langu
 | 8 | Remember manual values (C) | Remember most recent manual values per device and zone across restarts; optionally save as a new recipe; never overwrite existing recipe silently. |
 | 9 | Independent multi-zone operation (B) | Both zones remain independently selectable/visible; later optional SYNC/MATCH UI. **Upstream Airfryer Control already exposes SYNC and MATCH actions, but not in its device overview**. Verify signatures and behavior. See issue #1. |
 | 10 | Optional completion notifications (B) | Disabled by default; opt into mobile push to chosen recipient/device; only on reliable completion signal. |
-| 11 | Rich recipe organization (C) | Categories, favorites, search, free-form tags, recently used. |
-| 12 | JSON import and export (B) | Single or all recipes; validate schema and detect duplicates. Keep local HA backups. |
+| 11 | Rich recipe organization (C) | Categories, favorites, search, free-form tags, recently used. In the recipe editor, choose an existing category or add a new one as the final option; reuse names that differ only in letter case. |
+| 12 | JSON import and export (B) | Single or all recipes; validate schema and detect duplicates; use a human-readable export filename. Keep local HA backups. |
 | 13 | Visual card editor + device personalization (B+) | Toggle labels/status/timer, choose graphic size; 'Customize Airfryer' opens gallery, own image upload, drag/drop zone hotspot positions stored in relative coordinates per device, and reset. Include a 'Missing your model?' GitHub issue link. |
-| 14 | Automatic discovery + profile fallback (B) | Detect model, zones and supported capabilities from adapters where possible; verified profiles fill gaps. Unknown controls remain off. |
+| 14 | Automatic discovery + profile fallback (B) | Detect model, zones and supported capabilities from adapters where possible; verified profiles fill gaps. Once the adapter exists, offer verified cooking programs as choices in the recipe editor while keeping recipes device-independent. Unknown controls remain off. |
 | 15 | Manual retry, offline UI (B+) | Show sending/error details; preserve selected settings; never auto-retry. Offline graphic grayed out and sending disabled; show distinct unknown state. |
 | 16 | Independent recipe library (B) | Missing or broken Airfryer Control must not prevent editing/importing/exporting recipes. |
 | 17 | Two permission levels (B) | Administrators edit/delete recipes and configure safety; normal HA users may select recipes and manually control permitted zones. Enforce in backend. |
 | 18 | Localization and units | English and German as for Battery Flow Card; **English default/fallback**. Use HA user language; temperature displayed according to HA °C/°F setting, stored in Celsius. User recipe names are not auto-translated. |
 | 19 | Versioned data with migrations (B) | Persist locally; migrate on updates only after backup; preserve originals on failure; HACS updates do not replace storage. |
-| 20 | Device compatibility adaptation (B) | If program/time/temp is unsupported, warn and propose available substitutions; require explicit user approval; original recipe unchanged. |
+| 20 | Device compatibility adaptation (B) | Offer only verified cooking programs of the selected air fryer in device controls. If program/time/temp is unsupported, warn and propose available substitutions; require explicit user approval; original recipe unchanged. |
 | 21 | Shared and personal preferences (C) | Shared recipes and default favorites; optional personal favorites; recent-use history per device and zone. |
 | 22 | Responsive UI with configurable size (B) | Auto layout for phone/tablet/desktop; compact/default/large options; proportional graphics/hotspots. |
 | 23 | Simple recipes only (A) | Name, optional description, category/tags, favorite, program, temperature and duration; no recipe photos, ingredients or detailed cooking instructions. |

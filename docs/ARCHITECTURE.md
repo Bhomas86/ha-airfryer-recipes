@@ -2,7 +2,7 @@
 
 [English](ARCHITECTURE.md) | [Deutsch](ARCHITECTURE.de.md)
 
-**Decision ADR-001 / Requirement 31: Modular Home Assistant custom integration.** Approved 2026-10-24. **Design specification only: except for the device-independent recipe model, the components below have not been implemented.**
+**Decision ADR-001 / Requirement 31: Modular Home Assistant custom integration.** Approved 2026-10-24. This document defines the target architecture. The integration shell is merged; the recipe store and WebSocket API are under review in PR #13/#14; the administrator panel is being built in Issue #6. Device control, dashboard and diagnostics remain planned.
 
 ## Objectives and deployment
 
@@ -39,7 +39,7 @@ Admin-only commands: create/edit/delete/import, shared defaults and security/car
 
 ## Recipe storage and migration
 
-Store recipe collections using Home Assistant's async `Store` helper under integration-specific storage keys, not inside the source directory. Include a schema version, atomic writes via the helper, and a migration plan that preserves a backup of original data and rejects unsupported newer versions. Separate device-independent recipes from per-device/per-zone last manual settings and per-user favorites. Internally store temperature in Celsius, display using the HA unit preference. JSON export/import is versioned and must validate content and preview duplicate conflicts without changing live storage until confirmation.
+Store recipe collections using Home Assistant's async `Store` helper under integration-specific storage keys, not inside the source directory. Include a schema version, atomic writes via the helper, and a migration plan that preserves a backup of original data and rejects unsupported newer versions. Separate device-independent recipes from per-device/per-zone last manual settings and per-user favorites. Internally store temperature in Celsius, display using the HA unit preference. JSON export/import is versioned and must validate content and preview duplicate conflicts without changing live storage until confirmation. Export uses a short-lived download path bound to the authenticated HA session; the HTTP endpoint rechecks administrator access and sends a human-readable filename with caching disabled.
 
 **Keep storage and adapter lifecycles independent.** Inability to discover Airfryer Control must not block setup, recipe CRUD, or JSON import/export.
 
