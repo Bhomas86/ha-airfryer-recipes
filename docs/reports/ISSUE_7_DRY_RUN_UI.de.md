@@ -43,7 +43,9 @@ Nach Backup den vollständigen Ordner `custom_components/airfryer_recipes` aus d
 7. Airfryer oder Fach zwischen Auswahl und Vorschau aus der Upstream-Anzeige verschwinden lassen, sofern gefahrlos möglich, anschließend erneut prüfen. Erwartet: Hinweis zum nicht mehr verfügbaren Ziel, keine Wiederholung und keine Geräteänderung.
 8. Oberfläche mit deutscher und englischer Benutzersprache prüfen. Ein normaler Benutzer darf die Admin-Seite weiterhin nicht öffnen.
 
-Bei irgendeiner Änderung am Airfryer gilt der Test als **FEHLGESCHLAGEN**; dann keine weiteren Vorschauen ausführen und Home-Assistant-Protokolle sichern. Echte Übertragung, laufende Fächer, SYNC/MATCH und Heizstart werden nicht getestet. Geräte- und Facherkennung sowie die bisherige Testvorschau aus `0.1.0b1` wurden vom Eigentümer auf dem Handy erfolgreich geöffnet; das neue Fähigkeits-Dropdown aus `0.1.0b2` ist **NICHT GETESTET**.
+Lokale Handy-Abnahme von `0.1.0b2` am 25.10.2026: **BESTANDEN**. Der Eigentümer bestätigte, dass der irreführende HACS-Standardbranch nach PR #20 nicht mehr angeboten wird, Gerät und Fächer erkannt werden, alle sechs gelieferten Programme im Dropdown als „geschätzt · Senden ungeprüft“ erscheinen, ein nicht gemeldetes Programm nicht still ersetzt wird und die Testvorschau unveränderte Werte sowie die drei erwarteten Sperrgründe zeigt. Die Vorschau meldete ausdrücklich, dass nichts übertragen wurde; der Airfryer blieb unverändert. Die beigefügten Handy-Screenshots belegen Dropdown und Vorschauergebnis.
+
+Echte Übertragung, Änderungen laufender Fächer, SYNC/MATCH und Heizstart wurden **NICHT GETESTET**, weil diese Version dafür keine Bedienung enthält. Falls sich bei einer späteren Testvorschau doch etwas am Airfryer ändert, gilt der Test als **FEHLGESCHLAGEN**; dann keine weiteren Vorschauen ausführen und Home-Assistant-Protokolle sichern.
 
 ## Grenzen und nächster Schritt
 

@@ -43,7 +43,9 @@ After a backup, install the complete `custom_components/airfryer_recipes` direct
 7. If safely possible, make the appliance or zone disappear from the upstream display between selection and preview, then check again. Expect a vanished-target message, no retry and no device change.
 8. Check German and English user languages. A regular user must remain unable to open the administrator page.
 
-If anything changes on the air fryer, mark the test **FAILED**, stop further previews and preserve Home Assistant logs. Live transmission, active-zone changes, SYNC/MATCH and heater start are not tested. The owner successfully opened device/zone discovery and the existing `0.1.0b1` dry-run preview on a phone; the new `0.1.0b2` capability dropdown is **NOT TESTED**.
+Local phone acceptance of `0.1.0b2` on 25 October 2026: **PASSED**. The owner confirmed that the misleading HACS default-branch offer disappeared after PR #20, device and zones were detected, all six supplied programs appeared in the dropdown as “estimated · sending unverified”, an unreported program was not silently replaced, and dry-run preview showed unchanged values and the three expected blockers. Preview explicitly stated that nothing was transmitted; the air fryer remained unchanged. Attached phone screenshots show the dropdown and preview result.
+
+Live transmission, active-zone changes, SYNC/MATCH and heater start were **NOT TESTED**, because this version contains no controls for them. If a later dry-run preview changes anything on the air fryer, mark the test **FAILED**, stop further previews and preserve Home Assistant logs.
 
 ## Limits and next step
 
