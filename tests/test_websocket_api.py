@@ -164,6 +164,7 @@ class WebsocketTests(unittest.IsolatedAsyncioTestCase):
             ("import_confirm", {"token": "a-token"}),
             ("export", {}),
             ("devices", {}),
+            ("prepare_send", {"device_id": "ha-device", "zone_id": 1, "settings": {}}),
         )
         for name, args in calls:
             response = await self.call(name, self.user, **args, is_admin=True)
@@ -283,18 +284,44 @@ class WebsocketTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual((await self.call("devices", self.admin))[2], "not_configured")
             self.assertEqual(discover.call_count, 1)
 
+    async def test_prepare_send_validates_and_always_returns_dry_run(self):
+        discovery = {"devices": [{"device_id": "ha-device", "connectivity": "reported_online",
+                                 "zones": [{"zone_id": 1, "status": "idle"}]}]}
+        params = {"device_id": "ha-device", "zone_id": 1,
+                  "settings": {"program": "airfry", "temperature_c": 180, "duration_minutes": 10}}
+        with patch("custom_components.airfryer_recipes.command_preview.discover_devices",
+                   return_value=discovery) as read:
+            for user in (self.user, FakeConnection(authenticated=False)):
+                self.assertEqual((await self.call("prepare_send", user, **params))[2], "unauthorized")
+            read.assert_not_called()
+            result = await self.call("prepare_send", self.admin, **params)
+            self.assertEqual(result[2]["mode"], "dry_run")
+            self.assertFalse(result[2]["transmitted"])
+            self.assertFalse(result[2]["accepted_by_adapter"])
+            for flag in ("dry_run", "live_send_enabled", "is_admin"):
+                response = await self.call("prepare_send", self.admin, **params, **{flag: False})
+                self.assertEqual(response[2], "invalid_format")
+            self.assertEqual(read.call_count, 1)
+            discovery["devices"] = []
+            self.assertEqual((await self.call("prepare_send", self.admin, **params))[2], "target_not_found")
+            self.hass.data[DOMAIN].pop("repository")
+            self.assertEqual((await self.call("prepare_send", self.admin, **params))[2], "not_configured")
+            self.assertEqual(read.call_count, 2)
+        self.assertEqual(self.writes, 0)
+
     def test_commands_register_once_per_explicit_call(self):
         ws = self.modules["homeassistant.components.websocket_api"]
         ws.registered.clear()
         self.api.register_commands(self.hass)
         commands = {handler._ws_command for handler in ws.registered}
-        self.assertEqual(len(commands), 12)
+        self.assertEqual(len(commands), 13)
         self.assertEqual(
             commands,
             {f"{DOMAIN}/{name}" for name in (
                 "list", "get", "create", "update", "duplicate", "delete",
                 "import_preview", "import_confirm", "export", "favorites", "set_favorite",
                 "devices",
+                "prepare_send",
             )},
         )
 

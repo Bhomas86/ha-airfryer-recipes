@@ -79,4 +79,4 @@ Last consolidated: 2026-10-24. Project language policy: English default UI langu
   functionality in this new project.
 - Code review, tests and documented local test outcomes precede stable releases.
 
-Implementation note for requirements 14/15/26: Issue #7 initially exposes read-only discovery with unverified telemetry freshness and disabled control capabilities. A discovery response is not permission to send, and no dry-run coordinator exists yet. The upstream blockers are documented in the [review](reports/ISSUE_7_DISCOVERY.md).
+Implementation note for requirements 14/15/26: Issue #7 initially exposes read-only discovery with unverified telemetry freshness and disabled control capabilities. A discovery response is not permission to send. The administrator-only `prepare_send` API now returns a server-enforced dry-run preview; it cannot transmit and does not verify model-specific limits. See the [send contract](reports/ISSUE_7_COMMAND_CONTRACT.md). The upstream blockers are documented in the [review](reports/ISSUE_7_DISCOVERY.md).
