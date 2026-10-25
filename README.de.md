@@ -4,7 +4,7 @@
 
 Geplante benutzerdefinierte Home-Assistant-Integration zur Verwaltung wiederverwendbarer Heißluftfritteusen-Rezepte. Die gespeicherten Einstellungen sollen über bestehende Home-Assistant-Integrationen an unterstützte Geräte übertragen werden.
 
-> **Projektstatus: Frühe Entwicklungsphase.** Eine Home-Assistant-Grundstruktur und ein bestätigungsbasierter Einrichtungsdialog werden in [Issue #3](https://github.com/Bhomas86/ha-airfryer-recipes/issues/3) entwickelt. Rezeptdaten-Speicherung, grafische Verwaltung, Dashboard, Geräteadapter und eine getestete HACS-Installation sind **noch nicht implementiert beziehungsweise verifiziert**.
+> **Projektstatus: Frühe Entwicklungsphase.** Die Home-Assistant-Grundstruktur aus [Issue #3](https://github.com/Bhomas86/ha-airfryer-recipes/issues/3) wurde gemergt. Ein geräteunabhängiger, versionierter Rezeptdatenspeicher entsteht in [Issue #4](https://github.com/Bhomas86/ha-airfryer-recipes/issues/4) / [PR #13](https://github.com/Bhomas86/ha-airfryer-recipes/pull/13). Grafische Verwaltung, Dashboard, Geräteadapter und reale Home-Assistant-Installationstests sind **noch nicht abgeschlossen**.
 
 ## Ziele
 
@@ -35,8 +35,8 @@ Als erstes Zielgerät dient die **Cosori Turbo Tower Pro Smart (CAF-DC111S-AEU)*
 
 ## Geplante Meilensteine
 
-- [ ] Grundstruktur der Home-Assistant-Integration und Einrichtung ([Issue #3](https://github.com/Bhomas86/ha-airfryer-recipes/issues/3); erste Implementierung vorbereitet, reale HA-Prüfung fehlt)
-- [ ] Dauerhafte Speicherung mit Plausibilitätsprüfung
+- [x] Code-Grundstruktur und Einrichtungsdialog ([Issue #3](https://github.com/Bhomas86/ha-airfryer-recipes/issues/3); reale HA-Prüfung weiterhin offen)
+- [ ] Dauerhafte Speicherung mit Plausibilitätsprüfung ([Issue #4](https://github.com/Bhomas86/ha-airfryer-recipes/issues/4); Backend in PR #13 entwickelt, lokale Abnahme noch offen)
 - [ ] Grafische Rezeptverwaltung
 - [ ] Lovelace-Dashboard-Karte
 - [ ] Anbindung an Airfryer Control
@@ -46,7 +46,7 @@ Als erstes Zielgerät dient die **Cosori Turbo Tower Pro Smart (CAF-DC111S-AEU)*
 
 ## Installation
 
-**Noch keine getestete und installierbare Version verfügbar.** Erste HACS-Metadaten und die Einrichtungs-Grundstruktur sind vorhanden, wurden aber **noch nicht innerhalb von Home Assistant getestet**. Bitte nicht in einer produktiven HACS-Installation hinzufügen, bevor die erste geprüfte Version veröffentlicht wurde.
+**Noch keine vollständig geprüfte Veröffentlichung verfügbar.** HACS-/Hassfest-Metadatenprüfungen sind erfolgreich und die Einrichtungs-Grundstruktur ist gemergt. Eine tatsächliche Installation und ein Test der Rezeptspeicherung **innerhalb von Home Assistant stehen noch aus**. Bitte nicht in einer produktiven HACS-Installation hinzufügen, bevor die erste geprüfte Version veröffentlicht wurde.
 
 Der vorgesehene Einrichtungsdialog benötigt weder Airfryer noch Cloud-Zugangsdaten oder eine Internetverbindung. Der vollständige Assistent und die Rezeptverwaltung folgen in späteren Issues.
 

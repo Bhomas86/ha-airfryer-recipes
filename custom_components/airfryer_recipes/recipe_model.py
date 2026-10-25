@@ -176,6 +176,11 @@ def import_library_json(payload: str) -> list[Recipe]:
     """Read a versioned JSON collection without modifying persistent storage."""
     if not isinstance(payload, str) or len(payload.encode("utf-8")) > MAX_IMPORT_BYTES:
         raise RecipeValidationError("invalid or oversized JSON input")
+    return load_library_json(payload)
+
+
+def load_library_json(payload: str) -> list[Recipe]:
+    """Validate trusted local storage without applying the upload size limit."""
     try:
         data = json.loads(payload)
     except (ValueError, TypeError) as exc:
