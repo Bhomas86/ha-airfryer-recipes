@@ -35,12 +35,21 @@ class TestIntegrationLifecycle(unittest.TestCase):
 
         async def run():
             entry = SimpleNamespace(runtime_data=None)
+            hass = SimpleNamespace(data={})
             fake = RecipeRepository(load, save)
-            with patch("custom_components.airfryer_recipes.storage.create_repository", return_value=fake):
-                self.assertTrue(await async_setup_entry(SimpleNamespace(), entry))
+            calls = []
+            api_stub = types.ModuleType("custom_components.airfryer_recipes.websocket_api")
+            api_stub.register_commands = lambda hass: calls.append("registered")
+            with patch.dict(sys.modules, {"custom_components.airfryer_recipes.websocket_api": api_stub}):
+                with patch("custom_components.airfryer_recipes.storage.create_repository", return_value=fake):
+                    self.assertTrue(await async_setup_entry(hass, entry))
+                    self.assertEqual(calls, ["registered"])
+                    self.assertTrue(await async_unload_entry(hass, entry))
+                    self.assertNotIn("repository", hass.data[DOMAIN])
+                    self.assertTrue(await async_setup_entry(hass, entry))
+                    self.assertEqual(calls, ["registered"])
             self.assertIsInstance(entry.runtime_data, AirfryerRecipesRuntime)
             self.assertEqual(await entry.runtime_data.recipes.async_list(), ())
-            self.assertTrue(await async_unload_entry(SimpleNamespace(), entry))
 
         asyncio.run(run())
 
