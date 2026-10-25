@@ -2,7 +2,7 @@
 
 [English](ROADMAP.md) | [Deutsch](ROADMAP.de.md)
 
-**Status:** Architecture and all **31 requirements approved**. Foundation is in [PR #2](https://github.com/Bhomas86/ha-airfryer-recipes/pull/2); it is **not merged or installable via HACS**. The separate [architecture specification](ARCHITECTURE.md) is authoritative for implementation boundaries.
+**Status:** Architecture and all **31 requirements approved**. The integration shell is merged; persistence and API are under review in PR #13/#14, and the administrator panel is in development in Issue #6. No tested HACS release exists. The [architecture specification](ARCHITECTURE.md) defines implementation boundaries.
 
 ## Implementation priorities and dependency order
 

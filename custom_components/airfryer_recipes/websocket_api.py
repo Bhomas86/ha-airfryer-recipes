@@ -1,8 +1,9 @@
 """Authenticated Home Assistant WebSocket API for device-independent recipes.
 
 Read access: authenticated HA users.
-Mutations and imports: administrators only, enforced by Home Assistant's
-built-in require_admin decorator. No appliance calls or external endpoints.
+Shared recipe mutations and imports: administrators only, enforced by Home
+Assistant's built-in require_admin decorator. Each authenticated user may
+change only their own personal favorites. No appliance calls.
 """
 
 from __future__ import annotations
@@ -204,6 +205,32 @@ async def ws_export(hass: Any, connection: Any, msg: dict[str, Any]) -> None:
     await _respond(hass, connection, msg, run)
 
 
+@websocket_api.websocket_command({probatio.Required("type"): f"{DOMAIN}/favorites"})
+@websocket_api.async_response
+async def ws_favorites(hass: Any, connection: Any, msg: dict[str, Any]) -> None:
+    """Return favorites of the authenticated user only."""
+    async def run(repo: RecipeRepository) -> dict[str, Any]:
+        favorites = hass.data[DOMAIN]["favorites"]
+        return {"recipe_ids": await favorites.async_get(connection.user.id)}
+    await _respond(hass, connection, msg, run)
+
+
+@websocket_api.websocket_command({
+    probatio.Required("type"): f"{DOMAIN}/set_favorite",
+    probatio.Required("recipe_id"): str,
+    probatio.Required("favorite"): bool,
+})
+@websocket_api.async_response
+async def ws_set_favorite(hass: Any, connection: Any, msg: dict[str, Any]) -> None:
+    """Update only the authenticated user's preference for an existing recipe."""
+    async def run(repo: RecipeRepository) -> dict[str, Any]:
+        await repo.async_get(msg["recipe_id"])
+        favorites = hass.data[DOMAIN]["favorites"]
+        await favorites.async_set(connection.user.id, msg["recipe_id"], msg["favorite"])
+        return {"recipe_id": msg["recipe_id"], "favorite": msg["favorite"]}
+    await _respond(hass, connection, msg, run)
+
+
 COMMANDS = (
     ws_list,
     ws_get,
@@ -214,6 +241,8 @@ COMMANDS = (
     ws_import_preview,
     ws_import_confirm,
     ws_export,
+    ws_favorites,
+    ws_set_favorite,
 )
 
 

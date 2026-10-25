@@ -40,14 +40,32 @@ class TestIntegrationLifecycle(unittest.TestCase):
             calls = []
             api_stub = types.ModuleType("custom_components.airfryer_recipes.websocket_api")
             api_stub.register_commands = lambda hass: calls.append("registered")
-            with patch.dict(sys.modules, {"custom_components.airfryer_recipes.websocket_api": api_stub}):
+            panel_stub = types.ModuleType("custom_components.airfryer_recipes.panel")
+
+            async def register_panel(hass):
+                calls.append("panel_registered")
+
+            panel_stub.async_register_panel = register_panel
+            panel_stub.async_remove_panel = lambda hass: calls.append("panel_removed")
+            favorites_stub = types.ModuleType("custom_components.airfryer_recipes.favorites")
+
+            class Favorites:
+                async def async_load(self):
+                    calls.append("favorites_loaded")
+
+            favorites_stub.create_favorites = lambda hass: Favorites()
+            with patch.dict(sys.modules, {
+                "custom_components.airfryer_recipes.websocket_api": api_stub,
+                "custom_components.airfryer_recipes.panel": panel_stub,
+            }):
                 with patch("custom_components.airfryer_recipes.storage.create_repository", return_value=fake):
-                    self.assertTrue(await async_setup_entry(hass, entry))
-                    self.assertEqual(calls, ["registered"])
-                    self.assertTrue(await async_unload_entry(hass, entry))
-                    self.assertNotIn("repository", hass.data[DOMAIN])
-                    self.assertTrue(await async_setup_entry(hass, entry))
-                    self.assertEqual(calls, ["registered"])
+                    with patch("custom_components.airfryer_recipes.favorites.create_favorites", return_value=Favorites()):
+                        self.assertTrue(await async_setup_entry(hass, entry))
+                        self.assertEqual(calls, ["favorites_loaded", "registered", "panel_registered"])
+                        self.assertTrue(await async_unload_entry(hass, entry))
+                        self.assertNotIn("repository", hass.data[DOMAIN])
+                        self.assertTrue(await async_setup_entry(hass, entry))
+                        self.assertEqual(calls, ["favorites_loaded", "registered", "panel_registered", "panel_removed", "favorites_loaded", "panel_registered"])
             self.assertIsInstance(entry.runtime_data, AirfryerRecipesRuntime)
             self.assertEqual(await entry.runtime_data.recipes.async_list(), ())
 

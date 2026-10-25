@@ -2,7 +2,7 @@
 
 [Deutsch](ARCHITECTURE.de.md) | [English](ARCHITECTURE.md)
 
-**Architekturentscheidung ADR-001 / Anforderung 31: Modulare Home-Assistant-Integration.** Beschlossen am 24.10.2026. **Dies ist eine Spezifikation: Abgesehen vom geräteunabhängigen Rezeptmodell sind die folgenden Komponenten noch nicht implementiert.**
+**Architekturentscheidung ADR-001 / Anforderung 31: Modulare Home-Assistant-Integration.** Beschlossen am 24.10.2026. Dieses Dokument beschreibt die Zielarchitektur. Die Integrationsgrundstruktur ist gemergt; Rezeptspeicher und WebSocket-API werden in PR #13/#14 geprüft; die Admin-Verwaltung entsteht in Issue #6. Gerätesteuerung, Dashboard und Diagnose bleiben geplant.
 
 ## Ziel und Bereitstellung
 

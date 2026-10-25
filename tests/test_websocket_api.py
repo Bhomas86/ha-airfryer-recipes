@@ -14,6 +14,7 @@ from unittest.mock import patch
 from custom_components.airfryer_recipes.const import DOMAIN
 from custom_components.airfryer_recipes.recipe_model import create_recipe, recipe_to_dict
 from custom_components.airfryer_recipes.recipe_repository import RecipeRepository
+from custom_components.airfryer_recipes.favorites import FavoriteRepository
 
 
 class FakeConnection:
@@ -105,6 +106,18 @@ class WebsocketTests(unittest.IsolatedAsyncioTestCase):
         self.repo = RecipeRepository(load, save)
         await self.repo.async_load()
         self.hass = SimpleNamespace(data={DOMAIN: {"repository": self.repo}})
+        class FavoriteStore:
+            value = None
+
+            async def async_load(self):
+                return self.value
+
+            async def async_save(self, data):
+                self.value = data
+
+        self.favorites = FavoriteRepository(FavoriteStore())
+        await self.favorites.async_load()
+        self.hass.data[DOMAIN]["favorites"] = self.favorites
         self.admin = FakeConnection(is_admin=True)
         self.user = FakeConnection()
 
@@ -223,17 +236,29 @@ class WebsocketTests(unittest.IsolatedAsyncioTestCase):
         response = await self.call("list", self.user)
         self.assertEqual(response[2], "not_configured")
 
+    async def test_personal_favorites_are_bound_to_authenticated_user(self):
+        recipe = make_recipe()
+        await self.repo.async_create(recipe)
+        self.assertEqual((await self.call("favorites", self.user))[2], {"recipe_ids": []})
+        result = await self.call("set_favorite", self.user, recipe_id=recipe.id, favorite=True)
+        self.assertEqual(result[0], "result")
+        self.assertEqual((await self.call("favorites", self.user))[2], {"recipe_ids": [recipe.id]})
+        another = FakeConnection()
+        another.user.id = "u2"
+        self.assertEqual((await self.call("favorites", another))[2], {"recipe_ids": []})
+        self.assertEqual((await self.call("set_favorite", another, recipe_id="missing", favorite=True))[2], "not_found")
+
     def test_commands_register_once_per_explicit_call(self):
         ws = self.modules["homeassistant.components.websocket_api"]
         ws.registered.clear()
         self.api.register_commands(self.hass)
         commands = {handler._ws_command for handler in ws.registered}
-        self.assertEqual(len(commands), 9)
+        self.assertEqual(len(commands), 11)
         self.assertEqual(
             commands,
             {f"{DOMAIN}/{name}" for name in (
                 "list", "get", "create", "update", "duplicate", "delete",
-                "import_preview", "import_confirm", "export",
+                "import_preview", "import_confirm", "export", "favorites", "set_favorite",
             )},
         )
 

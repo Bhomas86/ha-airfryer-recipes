@@ -2,7 +2,7 @@
 
 [Deutsch](ROADMAP.de.md) | [English](ROADMAP.md)
 
-**Status:** Architektur und alle **31 Anforderungen beschlossen**. Die Projektgrundlage liegt in [PR #2](https://github.com/Bhomas86/ha-airfryer-recipes/pull/2), ist aber **weder gemergt noch über HACS installierbar**. Die [Architekturbeschreibung](ARCHITECTURE.de.md) ist die Grundlage für die technische Umsetzung.
+**Status:** Architektur und alle **31 Anforderungen beschlossen**. Die Integrationsgrundstruktur ist gemergt; Speicherung und API werden in PR #13/#14 geprüft, und die Admin-Verwaltung entsteht in Issue #6. Es gibt noch kein geprüftes HACS-Release. Die [Architekturbeschreibung](ARCHITECTURE.de.md) legt die Grenzen der Umsetzung fest.
 
 ## Prioritäten und Abhängigkeiten
 

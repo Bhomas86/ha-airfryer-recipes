@@ -27,3 +27,5 @@ jobs:
         run: python -m compileall -q custom_components tests
       - name: Unit tests (offline; no device access)
         run: python -m unittest discover -s tests -v
+      - name: Recipe panel tests (offline)
+        run: node --test tests/test_panel.mjs
