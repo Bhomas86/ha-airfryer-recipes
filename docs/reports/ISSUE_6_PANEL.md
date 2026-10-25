@@ -29,9 +29,9 @@ Automated offline tests cover the Python lifecycle, data model, favorite persist
 | Export JSON, select it again and detect three matching IDs/names in preview | **PASSED** |
 | New Android filename `Airfryer-Rezepte-Home-Assistant.json` | **PASSED** |
 | Confirm import with `skip`; matching recipes remain unchanged and are not added again | **PASSED** |
-| Confirm import with `replace_ids` | **NOT TESTED** |
+| Import with `replace_ids`; replace existing recipes without creating duplicates | **PASSED** |
 | Second/regular user and separate personal favorites | **NOT TESTED** |
 
-Import confirmation with `replace_ids`, a personal favorite with a second user and regular-user permissions remain open for further local acceptance. Do not test live appliance transmission.
+A personal favorite with a second user, regular-user permissions and the English UI remain open for further local acceptance. Do not test live appliance transmission.
 
 Program entry is currently free text because no air fryer adapter supplies verified device functions yet. After Issue #7, the recipe editor should offer these programs as choices; Issue #8 will show only functions of the selected air fryer at send time. The necessary backend validation is not implemented yet.
