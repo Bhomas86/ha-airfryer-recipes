@@ -5,8 +5,8 @@
     "@Bhomas86"
   ],
   "config_flow": true,
-  "documentation": "https://github.com/Bhomas86/ha-airfryer-recipes#readme",
   "dependencies": ["frontend", "http", "panel_custom", "websocket_api"],
+  "documentation": "https://github.com/Bhomas86/ha-airfryer-recipes#readme",
   "integration_type": "hub",
   "iot_class": "calculated",
   "issue_tracker": "https://github.com/Bhomas86/ha-airfryer-recipes/issues",

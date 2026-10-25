@@ -123,6 +123,10 @@ class TestConfigFlow(unittest.TestCase):
 class TestPackagedMetadata(unittest.TestCase):
     def test_manifest(self):
         manifest = json.loads((INTEGRATION / "manifest.json").read_text(encoding="utf-8"))
+        self.assertEqual(
+            list(manifest),
+            ["domain", "name", *sorted(key for key in manifest if key not in {"domain", "name"})],
+        )
         self.assertEqual(manifest["domain"], DOMAIN)
         self.assertTrue(manifest["config_flow"])
         self.assertTrue(manifest["single_config_entry"])
