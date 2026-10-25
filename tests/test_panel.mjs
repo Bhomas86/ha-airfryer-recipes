@@ -207,3 +207,135 @@ test("Fahrenheit display converts back to Celsius for storage", async () => {
   } } });
   assert.equal(calls[0].recipe.phases[0].temperature_c, 180);
 });
+
+test("device discovery failure does not break recipe management", async () => {
+  const panel = panelWith(async (request) => {
+    if (request.type.endsWith("/list")) return { recipes: [{
+      id: "one", name: "Rolls", description: "", category: "", tags: [],
+      phases: [{ program: "airfry", temperature_c: 180, duration_minutes: 8 }],
+    }] };
+    if (request.type.endsWith("/favorites")) return { recipe_ids: [] };
+    if (request.type.endsWith("/devices")) throw { code: "storage_error" };
+    throw new Error(request.type);
+  });
+  await panel.load();
+  assert.equal(panel.recipes.length, 1);
+  assert.match(panel.shadowRoot.innerHTML, /Rolls/);
+  assert.match(panel.shadowRoot.innerHTML, /Die Anfrage ist fehlgeschlagen/);
+  assert.match(panel.shadowRoot.innerHTML, /Daten von Airfryer Control konnten nicht sicher gelesen/);
+});
+
+test("dry-run UI uses only reported zones and sends no live-control fields", async () => {
+  const calls = [];
+  const panel = panelWith(async (request) => {
+    calls.push(request);
+    if (request.type.endsWith("prepare_send")) return {
+      mode: "dry_run", live_send_enabled: false, transmitted: false,
+      accepted_by_adapter: false, confirmed_on_device: false,
+      device_id: "ha-device", zone_id: 2,
+      settings: request.settings, zone_status: "cooking",
+      blocking_reasons: ["upstream_contract_unverified", "freshness_unverified", "zone_not_idle"],
+    };
+    throw new Error(request.type);
+  });
+  panel.recipes = [{ id: "recipe-one", name: "Testbrötchen", phases: [{
+    program: "airfry", temperature_c: 160, duration_minutes: 8,
+  }] }];
+  panel.deviceState = { status: "adapter_loaded", live_send_enabled: false, devices: [{
+    device_id: "ha-device", name: "Küche <oben>", model: "CAF-DC111S-AEU",
+    connectivity: "reported_online", freshness: "reported",
+    zones: [{ zone_id: 2, status: "cooking" }],
+    programs: [
+      { id: "airfry", limits_status: "estimated", send_status: "unverified" },
+      { id: "bake", limits_status: "confirmed", send_status: "confirmed" },
+    ],
+  }] };
+  panel.selectedDeviceId = "ha-device";
+  panel.selectedZoneId = "2";
+  panel.previewRecipeId = "recipe-one";
+  panel.render();
+  assert.match(panel.shadowRoot.innerHTML, /Geräte-Testvorschau/);
+  assert.match(panel.shadowRoot.innerHTML, /Küche &lt;oben&gt;/);
+  assert.match(panel.shadowRoot.innerHTML, /Fach 2 · Gart/);
+  assert.match(panel.shadowRoot.innerHTML, /Heißluft-Frittieren · geschätzt · Senden ungeprüft/);
+  assert.match(panel.shadowRoot.innerHTML, /Backen · bestätigt · Senden bestätigt/);
+  assert.match(panel.shadowRoot.innerHTML, /Meldezeit geliefert/);
+  assert.match(panel.shadowRoot.innerHTML, /Testvorschau prüfen/);
+  assert.match(panel.shadowRoot.innerHTML, /Es wird kein Gerätebefehl ausgeführt/);
+  assert.doesNotMatch(panel.shadowRoot.innerHTML, /confirm_send|Einstellungen senden/);
+
+  await panel.onSubmit({ preventDefault() {}, target: { id: "device-preview-form", values: {
+    device_id: "ha-device", zone_id: "2", recipe_id: "recipe-one",
+    program: "airfry", temperature_c: "160", duration_minutes: "8",
+  } } });
+  assert.equal(calls.length, 1);
+  assert.deepEqual(Object.keys(calls[0]).sort(), ["device_id", "settings", "type", "zone_id"]);
+  assert.equal(calls[0].type, "airfryer_recipes/prepare_send");
+  assert.deepEqual({ ...calls[0].settings }, {
+    program: "airfry", temperature_c: 160, duration_minutes: 8,
+  });
+  assert.match(panel.shadowRoot.innerHTML, /Es wurde nichts an das Gerät übertragen/);
+  assert.match(panel.shadowRoot.innerHTML, /Das Fach ist nicht sicher bereit/);
+  const germanKeys = Object.keys(panel.words).sort();
+  panel._hass.language = "en";
+  panel.render();
+  assert.deepEqual(Object.keys(panel.words).sort(), germanKeys);
+  assert.match(panel.shadowRoot.innerHTML, /Device test preview/);
+  assert.match(panel.shadowRoot.innerHTML, /Nothing was transmitted to the appliance/);
+  assert.match(panel.shadowRoot.innerHTML, /The upstream send contract is not verified/);
+  assert.match(panel.shadowRoot.innerHTML, /Air Fry · estimated · sending unverified/);
+});
+
+test("saved recipe program absent from adapter remains unchanged and is marked", async () => {
+  const panel = panelWith(async () => ({ recipes: [] }));
+  panel.recipes = [{ id: "proof-recipe", name: "Teig", phases: [{
+    program: "proof", temperature_c: 35, duration_minutes: 60,
+  }] }];
+  panel.deviceState = { status: "adapter_beta", live_send_enabled: false, devices: [{
+    device_id: "ha-device", name: "Kitchen", model: "CAF-DC111S-AEU",
+    connectivity: "reported_online", freshness: "reported",
+    zones: [{ zone_id: 1, status: "idle" }],
+    programs: [{ id: "airfry", limits_status: "estimated", send_status: "unverified" }],
+  }] };
+  panel.selectedDeviceId = "ha-device";
+  panel.selectedZoneId = "1";
+  panel.previewRecipeId = "proof-recipe";
+  panel.render();
+  assert.match(panel.shadowRoot.innerHTML, /Gären · von diesem Gerät nicht gemeldet/);
+  assert.match(panel.shadowRoot.innerHTML, /<input type="hidden" name="program" value="proof">/);
+  assert.match(panel.shadowRoot.innerHTML, /<select id="preview-program" name="program" required disabled>/);
+});
+
+test("manual dry-run converts Fahrenheit and target errors stay in device section", async () => {
+  const calls = [];
+  const panel = panelWith(async (request) => {
+    calls.push(request);
+    throw { code: "target_not_found" };
+  });
+  panel._hass.config = { unit_system: { temperature: "°F" } };
+  panel.deviceState = { status: "adapter_loaded", live_send_enabled: false, devices: [{
+    device_id: "ha-device", name: "Kitchen", model: null, connectivity: "unknown",
+    zones: [{ zone_id: 1, status: "unknown" }],
+  }] };
+  panel.selectedDeviceId = "ha-device";
+  panel.selectedZoneId = "1";
+  await panel.onSubmit({ preventDefault() {}, target: { id: "device-preview-form", values: {
+    device_id: "ha-device", zone_id: "1", program: " airfry ",
+    temperature_c: "356", duration_minutes: "10",
+  } } });
+  assert.equal(calls[0].settings.program, "airfry");
+  assert.equal(calls[0].settings.temperature_c, 180);
+  assert.match(panel.shadowRoot.innerHTML, /nicht mehr verfügbar/);
+  assert.equal(panel.error, "");
+});
+
+test("regular users see neither device preview nor device discovery requests", async () => {
+  const calls = [];
+  const panel = panelWith(async (request) => {
+    calls.push(request.type);
+    return request.type.endsWith("/list") ? { recipes: [] } : { recipe_ids: [] };
+  }, false);
+  await panel.load();
+  assert.deepEqual(calls.sort(), ["airfryer_recipes/favorites", "airfryer_recipes/list"]);
+  assert.doesNotMatch(panel.shadowRoot.innerHTML, /id="device-preview"/);
+});

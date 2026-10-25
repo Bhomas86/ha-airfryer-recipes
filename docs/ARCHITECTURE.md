@@ -2,7 +2,7 @@
 
 [English](ARCHITECTURE.md) | [Deutsch](ARCHITECTURE.de.md)
 
-**Decision ADR-001 / Requirement 31: Modular Home Assistant custom integration.** Approved 2026-10-24. This document defines the target architecture. Recipe storage, the WebSocket API and the administrator panel are merged through PR #16. Read-only discovery and an administrator-only server-enforced dry-run preview are implemented as parts of Issue #7; device control, dashboard and diagnostics remain planned. See the [upstream contract review](reports/ISSUE_7_DISCOVERY.md).
+**Decision ADR-001 / Requirement 31: Modular Home Assistant custom integration.** Approved 2026-10-24. This document defines the target architecture. Recipe storage, the WebSocket API and the administrator panel are merged through PR #16. Read-only discovery, an administrator-only server-enforced dry-run preview and its administrator-panel view are implemented as parts of Issue #7; device control, dashboard and diagnostics remain planned. See the [upstream contract review](reports/ISSUE_7_DISCOVERY.md).
 
 ## Objectives and deployment
 
@@ -45,7 +45,7 @@ Store recipe collections using Home Assistant's async `Store` helper under integ
 
 ## Device integration and fail-safe controls
 
-The adapter contract should expose typed device IDs, model identifiers, zone IDs, programs and limits, connectivity, zone status, reporting freshness and capability flags (`sync_finish`, `match_zones`, supported setting updates). Unknown or stale state is distinct from offline and **blocks live sends**. Offline devices render in grayscale with disabled send controls. Verified profiles may fill missing descriptive capabilities but cannot authorize a dangerous feature.
+The adapter contract should expose typed device IDs, model identifiers, zone IDs, programs and limits, connectivity, zone status, reporting freshness and capability flags (`sync_finish`, `match_zones`, supported setting updates). Airfryer Control `1.0.2-beta.1` is consumed only through its public read-only `faehigkeiten` service; the response is allowlisted and normalized before reaching the frontend. Actually reported zones still come from current runtime state because a capability list is not a current zone report. Unknown or stale state is distinct from offline and **blocks live sends**. Offline devices render in grayscale with disabled send controls. Verified profiles may fill missing descriptive capabilities but cannot authorize a dangerous feature.
 
 All device-control operations are routed through the command coordinator. By default, never change an active cooking zone; an administrator may enable confirmation-based changes only if the adapter/device allows it. Never remotely start heating as a side effect of configuration; respect appliance manual-start rules. Never queue or replay commands after reconnection, never silently retry. Server-side dry-run must make **zero real device-control calls**. Send results should distinguish `accepted_by_adapter` from `confirmed_on_device` when confirmation cannot be obtained.
 

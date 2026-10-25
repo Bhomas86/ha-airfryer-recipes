@@ -2,7 +2,7 @@
 
 [Deutsch](ARCHITECTURE.de.md) | [English](ARCHITECTURE.md)
 
-**Architekturentscheidung ADR-001 / Anforderung 31: Modulare Home-Assistant-Integration.** Beschlossen am 24.10.2026. Dieses Dokument beschreibt die Zielarchitektur. Rezeptspeicher, WebSocket-API und Admin-Verwaltung sind über PR #16 gemergt. Lesende Geräteerkennung und eine adminpflichtige, serverseitig erzwungene Testvorschau sind als Teile von Issue #7 implementiert; Gerätesteuerung, Dashboard und Diagnose bleiben geplant. Siehe [Prüfung des Upstream-Vertrags](reports/ISSUE_7_DISCOVERY.de.md).
+**Architekturentscheidung ADR-001 / Anforderung 31: Modulare Home-Assistant-Integration.** Beschlossen am 24.10.2026. Dieses Dokument beschreibt die Zielarchitektur. Rezeptspeicher, WebSocket-API und Admin-Verwaltung sind über PR #16 gemergt. Lesende Geräteerkennung, eine adminpflichtige serverseitige Testvorschau und ihre Ansicht im Admin-Panel sind als Teile von Issue #7 implementiert; Gerätesteuerung, Dashboard und Diagnose bleiben geplant. Siehe [Prüfung des Upstream-Vertrags](reports/ISSUE_7_DISCOVERY.de.md).
 
 ## Ziel und Bereitstellung
 
@@ -45,7 +45,7 @@ Die Rezeptbibliothek liegt über Home Assistants asynchronem `Store` in integrat
 
 ## Geräteadapter und sichere Steuerung
 
-Der Adapter liefert Geräte-ID, Modell, Fach-IDs, Programme/Grenzen, Verbindungsstatus, Betriebszustand, Aktualität der Statusmeldung und Funktionskennzeichen (`sync_finish`, `match_zones`, zulässige Änderungen). „Unbekannt“ und „veraltet“ sind nicht gleich „offline“ und **sperren reale Sendeaktionen**. Offline-Geräte werden ausgegraut und das Senden deaktiviert. Bestätigte Modellprofile dürfen fehlende beschreibende Informationen ergänzen, aber keine riskanten Befehle ungeprüft aktivieren.
+Der Adapter liefert Geräte-ID, Modell, Fach-IDs, Programme/Grenzen, Verbindungsstatus, Betriebszustand, Aktualität der Statusmeldung und Funktionskennzeichen (`sync_finish`, `match_zones`, zulässige Änderungen). Airfryer Control `1.0.2-beta.1` wird ausschließlich über den öffentlichen lesenden Dienst `faehigkeiten` verwendet; dessen Antwort wird vor der Oberfläche auf erlaubte Felder begrenzt und vereinheitlicht. Tatsächlich gemeldete Fächer stammen weiterhin aus dem aktuellen Laufzeitzustand, weil eine Fähigkeitsliste keine aktuelle Fachmeldung ist. „Unbekannt“ und „veraltet“ sind nicht gleich „offline“ und **sperren reale Sendeaktionen**. Offline-Geräte werden ausgegraut und das Senden deaktiviert. Bestätigte Modellprofile dürfen fehlende beschreibende Informationen ergänzen, aber keine riskanten Befehle ungeprüft aktivieren.
 
 Jeder echte Gerätebefehl läuft über den Befehlskoordinator. Während des Garens sind Änderungen standardmäßig gesperrt; ein Administrator kann die Bestätigung erlauben, sofern der Adapter und das Gerät dies unterstützen. Nie unbeabsichtigt aus der Ferne heizen, manuelle Startpflicht respektieren. Keine Warteschlange nach Verbindungsrückkehr und keine automatische Wiederholung. Im serverseitigen Testmodus erfolgen **null reale Gerätesteuerungsaufrufe**. Rückmeldungen unterscheiden „vom Adapter angenommen“ und „vom Gerät bestätigt“, wenn Letzteres nicht prüfbar ist.
 

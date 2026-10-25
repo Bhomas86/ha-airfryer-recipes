@@ -2,7 +2,7 @@
 
 [Deutsch](ROADMAP.de.md) | [English](ROADMAP.md)
 
-**Status:** Architektur und alle **31 Anforderungen beschlossen**. Rezeptspeicher, authentifizierte API und manuell abgenommene Admin-Verwaltung sind über PR #16 gemergt. Issue #7 umfasst lesende Geräteerkennung und eine serverseitig erzwungene Testvorschau; echte Übertragung bleibt wegen der Upstream-Vertragsprobleme im [Prüfbericht](reports/ISSUE_7_DISCOVERY.de.md) gesperrt. Es gibt noch kein geprüftes HACS-Release. Die [Architekturbeschreibung](ARCHITECTURE.de.md) legt die Grenzen der Umsetzung fest.
+**Status:** Architektur und alle **31 Anforderungen beschlossen**. Rezeptspeicher, authentifizierte API und manuell abgenommene Admin-Verwaltung sind über PR #16 gemergt. Issue #7 umfasst lesende Geräteerkennung, eine serverseitig erzwungene Testvorschau und deren Admin-Handy-Oberfläche. Die öffentliche HACS-Vorabversion `0.1.0b1` ermöglicht die Handy-Abnahme des offenen PR #19. Airfryer Control `1.0.2-beta.1` liefert inzwischen einen öffentlichen Fähigkeitsvertrag; PR #19 wird um dessen lesende Programmauswahl ergänzt. Echte Übertragung bleibt gesperrt, solange dieser Beta-Vertrag und die modellspezifischen Fähigkeiten ungeprüft sind. Die [Architekturbeschreibung](ARCHITECTURE.de.md) legt die Grenzen der Umsetzung fest.
 
 ## Prioritäten und Abhängigkeiten
 
@@ -21,7 +21,7 @@
 
 **Vorgemerkter Folgepunkt zu #6:** Eine Kategorie über alle betroffenen Rezepte hinweg umbenennen oder mit einer anderen zusammenführen, etwa „Backen“ zu „Aufbacken“. Vor der Umsetzung sind Vorschau, Rechteprüfung, sichere Speicherung und Rückfallverhalten festzulegen. Die aktuelle Auswahlliste ändert bestehende Kategorien nicht automatisch.
 
-**Programmwahl nach #7:** Sobald verifizierte Gerätedaten verfügbar sind, erhält der Rezepteditor eine Programmauswahl als Eingabehilfe. Beim Senden zeigt die Bedienoberfläche nur Funktionen des gewählten Airfryers und prüft sie erneut im Backend. Ein Rezept speichert weiterhin keine feste Gerätebindung.
+**Programmwahl nach #7:** Die Administrator-Testvorschau liest die Programmauswahl aus dem öffentlichen Fähigkeitsdienst von Airfryer Control und kennzeichnet bestätigte, geschätzte und nicht gemeldete Werte sichtbar. Die spätere Eingabehilfe im Rezepteditor und die Sendebedienung verwenden ausschließlich verifizierte Gerätedaten und prüfen sie erneut im Backend. Ein Rezept speichert weiterhin keine feste Gerätebindung.
 
 ## Arbeitsteilung
 

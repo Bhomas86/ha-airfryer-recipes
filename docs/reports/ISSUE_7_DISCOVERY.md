@@ -4,6 +4,8 @@
 
 ## Outcome and scope
 
+> **Historical review revision:** The findings below apply to Airfryer Control 1.0.1 at the cited commit. The developer subsequently published `1.0.2-beta.1` with a public beta contract. The [coordination report](UPSTREAM_SAFE_SEND_PROPOSAL.md#outcome-on-25-october-2026) and [current preview UI](ISSUE_7_DRY_RUN_UI.md) describe the follow-up state.
+
 PR #16 promoted storage, the API and manually accepted recipe management to `main` (`2ab457f`). This first part of Issue #7 adds only read-only discovery through `airfryer_recipes/devices`. Issue #7 remains open. The coordinator, dry-run preview, live transmission and program selection remain unimplemented.
 
 Model check: GPT-6 Sol – High for the multi-module adapter/safety review; work paused after the recommendation and the owner resumed it after switching models. A higher model tier is not currently necessary.
@@ -37,6 +39,6 @@ Local Home Assistant: **NOT TESTED** for this new API. Earlier recipe-management
 
 ## Local acceptance and next decision
 
-After a backup, install the entire integration directory from this feature branch and restart HA. Reopen recipe management without Airfryer Control. An administrator can read `{"id":1,"type":"airfryer_recipes/devices"}` through an authenticated HA WebSocket connection; without the adapter an empty list is expected. With the adapter, compare model/zones against its display. When the appliance is off, even an old reported state must never grant send permission. A regular user must receive `unauthorized`. This API has no new phone UI yet; acceptance can wait until that UI is implemented. Do not execute device commands for this package.
+After a backup, install the entire integration directory from this feature branch and restart HA. Reopen recipe management without Airfryer Control. An administrator can read `{"id":1,"type":"airfryer_recipes/devices"}` through an authenticated HA WebSocket connection; without the adapter an empty list is expected. With the adapter, compare model/zones against its display. When the appliance is off, even an old reported state must never grant send permission. A regular user must receive `unauthorized`. A [follow-up administrator UI](ISSUE_7_DRY_RUN_UI.md) makes discovery and dry-run preview available on a phone. Do not execute device commands for this package.
 
 Before live transmission, a verifiable adapter contract is needed: exactly one control call without variant fallback, reliable successful-report timestamps per device/zone, confirmed model-specific programs/limits and proven preparation without heater start. Then implement the coordinator, user/device permissions, bound single-use confirmations, race-condition tests and server-side dry run. Recommended model for that follow-up: GPT-6 Sol – High; pause beforehand as agreed.

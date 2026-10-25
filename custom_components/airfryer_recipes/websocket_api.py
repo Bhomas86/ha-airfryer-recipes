@@ -254,7 +254,7 @@ async def ws_devices(hass: Any, connection: Any, msg: dict[str, Any]) -> None:
     from .device_discovery import discover_devices
 
     async def run(repo: RecipeRepository) -> dict[str, Any]:
-        return discover_devices(hass)
+        return await discover_devices(hass)
     await _respond(hass, connection, msg, run)
 
 
@@ -274,7 +274,7 @@ async def ws_prepare_send(hass: Any, connection: Any, msg: dict[str, Any]) -> No
         # Also guard direct invocation: live flags must never be silently accepted.
         if set(msg) - {"id", "type", "device_id", "zone_id", "settings"}:
             raise RecipeValidationError("Unexpected preview parameter")
-        return prepare_preview(
+        return await prepare_preview(
             hass, device_id=msg["device_id"], zone_id=msg["zone_id"], settings=msg["settings"]
         )
     await _respond(hass, connection, msg, run)

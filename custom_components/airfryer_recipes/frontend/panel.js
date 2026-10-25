@@ -19,11 +19,32 @@ const WORDS = {
     unauthorized: "Administrator permission is required.", conflict: "A recipe with that ID or name already exists.",
     invalid: "Check the recipe values and try again.", expired: "The preview expired. Select the file again.",
     storage: "Saving failed. Check the Home Assistant logs.", notConfigured: "The integration is not configured.",
-    phases: "Cooking phase", refresh: "Refresh", devicesNote: "Device controls are not available in this panel.",
+    phases: "Cooking phase", refresh: "Refresh", devicesNote: "Live device transmission is not available.",
     sharedFavorite: "Shared favorite", myFavorite: "My favorite", allFavorites: "All recipes",
     onlyMine: "My favorites", onlyShared: "Shared favorites",
     sample: "Create sample recipe", sampleConfirm: "Create one sample recipe?",
     sampleName: "Frozen bread rolls", sampleDescription: "Example recipe; no appliance is connected.",
+    devicePreview: "Device test preview", devicePreviewInfo: "Checks the selected settings on the server. No device command is executed.",
+    device: "Air fryer", zone: "Zone", recipeChoice: "Settings source", manualValues: "Manual values",
+    checkPreview: "Check test preview", refreshDevices: "Refresh devices", noDevices: "No supported air fryer was reported.",
+    adapterMissing: "Airfryer Control is not loaded. Recipe management remains available.",
+    adapterIncompatible: "Airfryer Control data could not be read safely.", reportedOnline: "Reported online",
+    adapterOutdated: "Install Airfryer Control 1.0.2-beta.1 or newer to load device programs.",
+    capabilitiesError: "Airfryer Control did not return usable device programs.",
+    offline: "Offline", unknown: "Unknown", unverifiedFreshness: "Status freshness is not verified.",
+    reportedFreshness: "Airfryer Control supplied a report time; freshness is not yet used for sending.",
+    estimatedProgram: "estimated", confirmedProgram: "confirmed", unknownProgram: "not reported by this device",
+    sendUnverified: "sending unverified", sendConfirmed: "sending confirmed",
+    dryRunResult: "Test preview result", noTransmission: "Nothing was transmitted to the appliance.",
+    desiredSettings: "Requested settings", blockingReasons: "Live transmission remains blocked for these reasons",
+    targetMissing: "The selected device or reported zone is no longer available. Refresh the device list.",
+    reasonContract: "The upstream send contract is not verified.", reasonFreshness: "Status freshness is not verified.",
+    reasonLimits: "Programs and limits are not verified for this model.",
+    reasonProgramMissing: "This program was not reported for the selected appliance.", reasonOffline: "The appliance is offline.",
+    reasonConnection: "The connection state is unknown.", reasonZone: "The zone is not safely idle.",
+    statusIdle: "Idle", statusOff: "Off", statusReady: "Waiting for manual start", statusFinished: "Finished",
+    statusCooking: "Cooking", statusPreheating: "Preheating", statusPaused: "Paused",
+    statusDrawerOpen: "Drawer open", statusHolding: "Holding", statusKeepingWarm: "Keeping warm", statusPreheated: "Preheated",
   },
   de: {
     title: "Rezeptbibliothek", subtitle: "Rezepte unabhängig von einem Gerät verwalten.",
@@ -44,11 +65,32 @@ const WORDS = {
     unauthorized: "Administratorrechte sind erforderlich.", conflict: "Ein Rezept mit dieser ID oder diesem Namen existiert bereits.",
     invalid: "Bitte die Rezeptwerte prüfen.", expired: "Die Vorschau ist abgelaufen. Datei erneut auswählen.",
     storage: "Speichern fehlgeschlagen. Bitte die Home-Assistant-Protokolle prüfen.", notConfigured: "Die Integration ist nicht eingerichtet.",
-    phases: "Garphase", refresh: "Aktualisieren", devicesNote: "Gerätesteuerung ist in dieser Ansicht nicht verfügbar.",
+    phases: "Garphase", refresh: "Aktualisieren", devicesNote: "Echte Geräteübertragung ist nicht verfügbar.",
     sharedFavorite: "Gemeinsamer Favorit", myFavorite: "Mein Favorit", allFavorites: "Alle Rezepte",
     onlyMine: "Meine Favoriten", onlyShared: "Gemeinsame Favoriten",
     sample: "Beispielrezept anlegen", sampleConfirm: "Ein Beispielrezept anlegen?",
     sampleName: "Tiefkühlbrötchen", sampleDescription: "Beispielrezept; kein Gerät ist verbunden.",
+    devicePreview: "Geräte-Testvorschau", devicePreviewInfo: "Prüft die gewählten Werte auf dem Server. Es wird kein Gerätebefehl ausgeführt.",
+    device: "Airfryer", zone: "Fach", recipeChoice: "Quelle der Werte", manualValues: "Manuelle Werte",
+    checkPreview: "Testvorschau prüfen", refreshDevices: "Geräte aktualisieren", noDevices: "Es wurde kein unterstützter Airfryer gemeldet.",
+    adapterMissing: "Airfryer Control ist nicht geladen. Die Rezeptverwaltung bleibt verfügbar.",
+    adapterIncompatible: "Die Daten von Airfryer Control konnten nicht sicher gelesen werden.", reportedOnline: "Als online gemeldet",
+    adapterOutdated: "Zum Laden der Geräteprogramme wird Airfryer Control 1.0.2-beta.1 oder neuer benötigt.",
+    capabilitiesError: "Airfryer Control hat keine verwendbaren Geräteprogramme geliefert.",
+    offline: "Offline", unknown: "Unbekannt", unverifiedFreshness: "Die Aktualität des Zustands ist nicht bestätigt.",
+    reportedFreshness: "Airfryer Control hat eine Meldezeit geliefert; sie wird noch nicht zum Senden verwendet.",
+    estimatedProgram: "geschätzt", confirmedProgram: "bestätigt", unknownProgram: "von diesem Gerät nicht gemeldet",
+    sendUnverified: "Senden ungeprüft", sendConfirmed: "Senden bestätigt",
+    dryRunResult: "Ergebnis der Testvorschau", noTransmission: "Es wurde nichts an das Gerät übertragen.",
+    desiredSettings: "Gewünschte Werte", blockingReasons: "Echte Übertragung bleibt aus diesen Gründen gesperrt",
+    targetMissing: "Das gewählte Gerät oder das gemeldete Fach ist nicht mehr verfügbar. Bitte Geräteliste aktualisieren.",
+    reasonContract: "Der Upstream-Sendevertrag ist nicht bestätigt.", reasonFreshness: "Die Aktualität des Zustands ist nicht bestätigt.",
+    reasonLimits: "Programme und Grenzen sind für dieses Modell nicht bestätigt.",
+    reasonProgramMissing: "Dieses Programm wurde für das gewählte Gerät nicht gemeldet.", reasonOffline: "Das Gerät ist offline.",
+    reasonConnection: "Der Verbindungszustand ist unbekannt.", reasonZone: "Das Fach ist nicht sicher bereit.",
+    statusIdle: "Bereit", statusOff: "Aus", statusReady: "Wartet auf manuellen Start", statusFinished: "Fertig",
+    statusCooking: "Gart", statusPreheating: "Heizt vor", statusPaused: "Pausiert",
+    statusDrawerOpen: "Fach offen", statusHolding: "Wartet", statusKeepingWarm: "Hält warm", statusPreheated: "Vorgeheizt",
   },
 };
 
@@ -67,6 +109,14 @@ class AirfryerRecipesPanel extends HTMLElement {
     this.favorites = new Set();
     this.editor = null;
     this.preview = null;
+    this.deviceState = { status: "adapter_missing", devices: [], live_send_enabled: false };
+    this.selectedDeviceId = "";
+    this.selectedZoneId = "";
+    this.previewRecipeId = "";
+    this.manualPreviewProgram = "airfry";
+    this.sendPreview = null;
+    this.deviceError = "";
+    this.devicesBusy = false;
     this.busy = false;
     this.notice = "";
     this.error = "";
@@ -135,12 +185,96 @@ class AirfryerRecipesPanel extends HTMLElement {
       this.recipes = list.recipes;
       this.favorites = new Set(favorites.recipe_ids);
       this.error = "";
+      await this.loadDevices();
     } catch (error) {
       this.showError(error);
     } finally {
       this.busy = false;
       this.render();
     }
+  }
+
+  selectedDevice() {
+    return this.deviceState.devices.find((device) => device.device_id === this.selectedDeviceId) || null;
+  }
+
+  selectedZone() {
+    const wanted = Number(this.selectedZoneId);
+    return this.selectedDevice()?.zones?.find((zone) => zone.zone_id === wanted) || null;
+  }
+
+  selectedPreviewRecipe() {
+    return this.recipes.find((recipe) => recipe.id === this.previewRecipeId && recipe.phases?.length === 1) || null;
+  }
+
+  programName(program) {
+    const names = {
+      airfry: { de: "Heißluft-Frittieren", en: "Air Fry" },
+      roast: { de: "Braten", en: "Roast" }, bake: { de: "Backen", en: "Bake" },
+      grill: { de: "Grillen", en: "Grill" }, reheat: { de: "Aufwärmen", en: "Reheat" },
+      dry: { de: "Dörren", en: "Dry" }, proof: { de: "Gären", en: "Proof" },
+    };
+    const language = this._hass?.language?.toLowerCase().startsWith("de") ? "de" : "en";
+    return names[program]?.[language] || program;
+  }
+
+  programOption(program) {
+    const limits = program.limits_status === "confirmed" ? this.words.confirmedProgram
+      : program.limits_status === "estimated" ? this.words.estimatedProgram : this.words.unknown;
+    const send = program.send_status === "confirmed" ? this.words.sendConfirmed : this.words.sendUnverified;
+    return `${this.programName(program.id)} · ${limits} · ${send}`;
+  }
+
+  async loadDevices() {
+    if (!this.admin) return;
+    this.devicesBusy = true;
+    this.deviceError = "";
+    this.render();
+    try {
+      const result = await this.request("devices");
+      this.deviceState = {
+        status: result.status || "adapter_incompatible",
+        devices: Array.isArray(result.devices) ? result.devices : [],
+        live_send_enabled: false,
+      };
+      if (!this.deviceState.devices.some((device) => device.device_id === this.selectedDeviceId)) {
+        this.selectedDeviceId = this.deviceState.devices[0]?.device_id || "";
+      }
+      const programs = this.selectedDevice()?.programs || [];
+      if (!programs.some((program) => program.id === this.manualPreviewProgram)) {
+        this.manualPreviewProgram = programs[0]?.id || "airfry";
+      }
+      const zones = this.selectedDevice()?.zones || [];
+      if (!zones.some((zone) => String(zone.zone_id) === String(this.selectedZoneId))) {
+        this.selectedZoneId = zones[0] ? String(zones[0].zone_id) : "";
+      }
+      this.sendPreview = null;
+    } catch (error) {
+      this.deviceState = { status: "adapter_incompatible", devices: [], live_send_enabled: false };
+      this.deviceError = this.words.genericError;
+    } finally {
+      this.devicesBusy = false;
+    }
+  }
+
+  statusLabel(status) {
+    const key = {
+      idle: "statusIdle", off: "statusOff", ready: "statusReady", finished: "statusFinished",
+      cooking: "statusCooking", preheating: "statusPreheating", preheated: "statusPreheated",
+      paused: "statusPaused", drawer_open: "statusDrawerOpen", holding: "statusHolding",
+      keeping_warm: "statusKeepingWarm", offline: "offline",
+    }[status] || "unknown";
+    return this.words[key];
+  }
+
+  reasonLabel(reason) {
+    const key = {
+      upstream_contract_unverified: "reasonContract", freshness_unverified: "reasonFreshness",
+      program_limits_unverified: "reasonLimits", program_not_reported: "reasonProgramMissing",
+      device_offline: "reasonOffline",
+      connection_unknown: "reasonConnection", zone_not_idle: "reasonZone",
+    }[reason];
+    return key ? this.words[key] : this.words.unknown;
   }
 
   async action(task, success) {
@@ -185,6 +319,23 @@ class AirfryerRecipesPanel extends HTMLElement {
     const selected = this.editor;
     const phase = selected?.phases?.[0] || {};
     const multiple = selected?.phases?.length > 1;
+    const device = this.selectedDevice();
+    const zones = device?.zones || [];
+    const previewRecipe = this.selectedPreviewRecipe();
+    const previewPhase = previewRecipe?.phases?.[0] || {
+      program: this.manualPreviewProgram, temperature_c: 180, duration_minutes: 10,
+    };
+    const programs = device?.programs || [];
+    const programReported = programs.some((program) => program.id === previewPhase.program);
+    const programOptions = programs.length ? [
+      ...(!programReported && previewPhase.program ? [{ id: previewPhase.program, missing: true }] : []),
+      ...programs,
+    ] : [];
+    const deviceMessage = this.deviceState.status === "adapter_missing" ? t.adapterMissing
+      : this.deviceState.status === "adapter_incompatible" ? t.adapterIncompatible
+      : this.deviceState.status === "adapter_outdated" ? t.adapterOutdated
+      : this.deviceState.status === "adapter_capabilities_error" ? t.capabilitiesError
+      : !this.deviceState.devices.length ? t.noDevices : "";
     this.shadowRoot.innerHTML = `
       <style>
         :host{display:block;box-sizing:border-box;color:var(--primary-text-color);background:var(--primary-background-color);min-height:100%;font:inherit}
@@ -233,6 +384,28 @@ class AirfryerRecipesPanel extends HTMLElement {
           <div class="actions"><button class="primary" type="submit" ${this.busy || multiple ? "disabled" : ""}>${t.save}</button><button type="button" data-action="cancel">${t.cancel}</button></div></form>` : ""}
         ${this.preview ? `<section class="preview"><h2>${t.preview}</h2><p>${t.incoming}: ${this.preview.incoming_count}</p><p>${t.duplicateIds}: ${this.preview.duplicate_ids.length}${this.preview.duplicate_ids.length ? ` (${escapeHtml(this.preview.duplicate_ids.join(", "))})` : ""}</p><p>${t.duplicateNames}: ${this.preview.duplicate_names.length}${this.preview.duplicate_names.length ? ` (${escapeHtml(this.preview.duplicate_names.join(", "))})` : ""}</p>
           <div class="actions"><button class="primary" data-action="import-skip" ${this.busy ? "disabled" : ""}>${t.skip}</button><button data-action="import-replace" ${this.busy ? "disabled" : ""}>${t.replace}</button><button data-action="cancel-preview">${t.cancel}</button></div></section>` : ""}
+        ${this.admin ? `<section class="preview" id="device-preview"><h2>${t.devicePreview}</h2>
+          <p>${t.devicePreviewInfo}</p>
+          ${this.deviceError ? `<p class="message error" role="alert">${escapeHtml(this.deviceError)}</p>` : ""}
+          ${deviceMessage ? `<p class="message">${deviceMessage}</p>` : ""}
+          <div class="actions"><button type="button" data-action="refresh-devices" ${this.devicesBusy || this.busy ? "disabled" : ""}>${t.refreshDevices}</button></div>
+          ${device ? `<form id="device-preview-form">
+            <div class="grid"><div><label for="preview-device">${t.device}</label><select id="preview-device" name="device_id">${this.deviceState.devices.map((item) => `<option value="${escapeHtml(item.device_id)}" ${item.device_id === this.selectedDeviceId ? "selected" : ""}>${escapeHtml(item.name)}${item.model ? ` · ${escapeHtml(item.model)}` : ""}</option>`).join("")}</select>
+            <p class="muted">${device.connectivity === "reported_online" ? t.reportedOnline : device.connectivity === "offline" ? t.offline : t.unknown} · ${device.freshness === "reported" ? t.reportedFreshness : t.unverifiedFreshness}</p></div>
+            <div><label for="preview-zone">${t.zone}</label><select id="preview-zone" name="zone_id" ${!zones.length ? "disabled" : ""}>${zones.map((item) => `<option value="${item.zone_id}" ${String(item.zone_id) === String(this.selectedZoneId) ? "selected" : ""}>${t.zone} ${item.zone_id} · ${escapeHtml(this.statusLabel(item.status))}</option>`).join("")}</select></div>
+            <div><label for="preview-recipe">${t.recipeChoice}</label><select id="preview-recipe" name="recipe_id"><option value="">${t.manualValues}</option>${this.recipes.filter((item) => item.phases?.length === 1).map((item) => `<option value="${escapeHtml(item.id)}" ${item.id === this.previewRecipeId ? "selected" : ""}>${escapeHtml(item.name)}</option>`).join("")}</select></div></div>
+            <div class="grid"><div><label for="preview-program">${t.program}</label>${programOptions.length
+              ? `<select id="preview-program" name="program" required ${previewRecipe ? "disabled" : ""}>${programOptions.map((program) => `<option value="${escapeHtml(program.id)}" ${program.id === previewPhase.program ? "selected" : ""}>${escapeHtml(program.missing ? `${this.programName(program.id)} · ${t.unknownProgram}` : this.programOption(program))}</option>`).join("")}</select>${previewRecipe ? `<input type="hidden" name="program" value="${escapeHtml(previewPhase.program)}">` : ""}`
+              : `<input id="preview-program" name="program" maxlength="64" required ${previewRecipe ? "readonly" : ""} value="${escapeHtml(previewPhase.program)}">`}</div>
+            <div><label for="preview-temperature">${t.temperature} (${this.unit})</label><input id="preview-temperature" name="temperature_c" type="number" min="${this.unit === "°F" ? 32 : 0}" max="${this.unit === "°F" ? 752 : 400}" step="1" required ${previewRecipe ? "readonly" : ""} value="${escapeHtml(this.toDisplay(previewPhase.temperature_c))}"></div>
+            <div><label for="preview-duration">${t.duration}</label><input id="preview-duration" name="duration_minutes" type="number" min="1" max="1440" step="1" required ${previewRecipe ? "readonly" : ""} value="${escapeHtml(previewPhase.duration_minutes)}"></div></div>
+            <div class="actions"><button class="primary" type="submit" ${this.busy || this.devicesBusy || !zones.length ? "disabled" : ""}>${t.checkPreview}</button></div>
+          </form>` : ""}
+          ${this.sendPreview ? `<section class="message" role="status"><h3>${t.dryRunResult}</h3><p><strong>${t.noTransmission}</strong></p>
+            <p>${t.desiredSettings}: ${escapeHtml(this.sendPreview.settings.program)} · ${escapeHtml(this.toDisplay(this.sendPreview.settings.temperature_c))} ${this.unit} · ${escapeHtml(this.sendPreview.settings.duration_minutes)} min</p>
+            <p>${t.zone}: ${escapeHtml(this.sendPreview.zone_id)} · ${escapeHtml(this.statusLabel(this.sendPreview.zone_status))}</p>
+            <p>${t.blockingReasons}:</p><ul>${this.sendPreview.blocking_reasons.map((reason) => `<li>${escapeHtml(this.reasonLabel(reason))}</li>`).join("")}</ul></section>` : ""}
+        </section>` : ""}
         ${this.busy && !this.recipes.length ? `<p>${t.loading}</p>` : ""}
         <section class="cards">${this.filtered().map((recipe) => `<article><h2>${escapeHtml(recipe.name)}</h2>
           ${recipe.description ? `<p>${escapeHtml(recipe.description)}</p>` : ""}
@@ -269,6 +442,24 @@ class AirfryerRecipesPanel extends HTMLElement {
     } else if (event.target.id === "favorite-filter") {
       this.favoriteFilter = event.target.value;
       this.render();
+    } else if (event.target.id === "preview-device") {
+      this.selectedDeviceId = event.target.value;
+      this.selectedZoneId = this.selectedDevice()?.zones?.[0]
+        ? String(this.selectedDevice().zones[0].zone_id) : "";
+      this.manualPreviewProgram = this.selectedDevice()?.programs?.[0]?.id || "airfry";
+      this.sendPreview = null;
+      this.render();
+    } else if (event.target.id === "preview-zone") {
+      this.selectedZoneId = event.target.value;
+      this.sendPreview = null;
+      this.render();
+    } else if (event.target.id === "preview-recipe") {
+      this.previewRecipeId = event.target.value;
+      this.sendPreview = null;
+      this.render();
+    } else if (event.target.id === "preview-program") {
+      this.manualPreviewProgram = event.target.value;
+      this.sendPreview = null;
     } else if (event.target.id === "import-file") {
       this.previewFile(event.target.files?.[0]);
     }
@@ -301,11 +492,16 @@ class AirfryerRecipesPanel extends HTMLElement {
       this.dispatchEvent(new Event("hass-toggle-menu", { bubbles: true, composed: true }));
       return;
     }
-    if (this.busy) return;
+    if (this.busy || this.devicesBusy) return;
     const recipe = this.recipes.find((item) => item.id === button.dataset.id);
     const t = this.words;
     if (type === "refresh") return this.load();
     if (!this.admin) return;
+    if (type === "refresh-devices") {
+      await this.loadDevices();
+      this.render();
+      return;
+    }
     if (type === "new") this.editor = { name: "", description: "", category: "", tags: [], phases: [{}] };
     if (type === "sample" && !this.recipes.length && confirm(t.sampleConfirm)) {
       const recipe = {
@@ -355,6 +551,10 @@ class AirfryerRecipesPanel extends HTMLElement {
   }
 
   onSubmit(event) {
+    if (event.target.id === "device-preview-form") {
+      event.preventDefault();
+      return this.submitDevicePreview(event.target);
+    }
     if (event.target.id !== "editor") return;
     event.preventDefault();
     if (!this.admin || this.editor?.phases?.length > 1) return;
@@ -380,6 +580,34 @@ class AirfryerRecipesPanel extends HTMLElement {
     if (this.editor.id) recipe.id = this.editor.id;
     const command = this.editor.id ? "update" : "create";
     return this.action(() => this.request(command, { recipe }), this.words.saved);
+  }
+
+  async submitDevicePreview(formElement) {
+    if (!this.admin || this.busy || this.devicesBusy) return;
+    const form = new FormData(formElement);
+    const request = {
+      device_id: String(form.get("device_id") || ""),
+      zone_id: Number(form.get("zone_id")),
+      settings: {
+        program: String(form.get("program") || "").trim(),
+        temperature_c: this.fromDisplay(Number(form.get("temperature_c"))),
+        duration_minutes: Number(form.get("duration_minutes")),
+      },
+    };
+    this.busy = true;
+    this.deviceError = "";
+    this.sendPreview = null;
+    this.render();
+    try {
+      this.sendPreview = await this.request("prepare_send", request);
+    } catch (error) {
+      this.deviceError = error?.code === "target_not_found" ? this.words.targetMissing
+        : error?.code === "unauthorized" ? this.words.unauthorized
+        : error?.code === "invalid_format" ? this.words.invalid : this.words.genericError;
+    } finally {
+      this.busy = false;
+      this.render();
+    }
   }
 }
 

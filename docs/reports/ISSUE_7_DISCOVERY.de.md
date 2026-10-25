@@ -4,6 +4,8 @@
 
 ## Ergebnis und Umfang
 
+> **Historischer Prüfstand:** Die Befunde unten gelten für Airfryer Control 1.0.1 am genannten Commit. Der Entwickler hat danach `1.0.2-beta.1` mit einem öffentlichen Beta-Vertrag veröffentlicht. Der [Abstimmungsbericht](UPSTREAM_SAFE_SEND_PROPOSAL.de.md#ergebnis-vom-25102026) und die [aktuelle Testoberfläche](ISSUE_7_DRY_RUN_UI.de.md) beschreiben den Folgestand.
+
 PR #16 hat Speicherung, API und manuell abgenommene Rezeptverwaltung nach `main` übernommen (`2ab457f`). Dieses erste Teilpaket zu Issue #7 ergänzt ausschließlich lesende Geräteerkennung über `airfryer_recipes/devices`. Issue #7 bleibt offen. Befehlskoordinator, Testmodus-Vorschau, echte Übertragung und Programmauswahl sind weiterhin nicht implementiert.
 
 Modellprüfung: GPT-6 Sol – High für die mehrteilige Adapter-/Sicherheitsprüfung; nach der Empfehlung wurde die Arbeit für den Modellwechsel unterbrochen und vom Eigentümer fortgesetzt. Eine höhere Modellstufe ist derzeit nicht erforderlich.
@@ -37,6 +39,6 @@ Lokales Home Assistant: **NICHT GETESTET** für diese neue API. Die frühere Abn
 
 ## Lokale Abnahme und nächste Entscheidung
 
-Nach Backup den gesamten Integrationsordner aus diesem Feature-Branch installieren und HA neu starten. Rezeptverwaltung ohne Airfryer Control erneut öffnen. Ein Administrator kann über eine authentifizierte HA-WebSocket-Verbindung `{"id":1,"type":"airfryer_recipes/devices"}` lesen; ohne Adapter wird eine leere Liste erwartet. Mit Adapter Modell/Fächer gegen dessen Anzeige vergleichen. Bei ausgeschaltetem Gerät darf auch ein alter gemeldeter Zustand keine Sendeerlaubnis erzeugen. Ein normaler Benutzer muss `unauthorized` erhalten. Diese API hat noch keine neue Handy-Oberfläche; die Abnahme kann bis zu deren Umsetzung zurückgestellt werden. Keine Gerätebefehle für dieses Teilpaket ausführen.
+Nach Backup den gesamten Integrationsordner aus diesem Feature-Branch installieren und HA neu starten. Rezeptverwaltung ohne Airfryer Control erneut öffnen. Ein Administrator kann über eine authentifizierte HA-WebSocket-Verbindung `{"id":1,"type":"airfryer_recipes/devices"}` lesen; ohne Adapter wird eine leere Liste erwartet. Mit Adapter Modell/Fächer gegen dessen Anzeige vergleichen. Bei ausgeschaltetem Gerät darf auch ein alter gemeldeter Zustand keine Sendeerlaubnis erzeugen. Ein normaler Benutzer muss `unauthorized` erhalten. Eine [nachfolgende Admin-Oberfläche](ISSUE_7_DRY_RUN_UI.de.md) macht Geräteerkennung und Testvorschau auf dem Handy zugänglich. Keine Gerätebefehle für dieses Teilpaket ausführen.
 
 Vor echter Übertragung ist ein überprüfbarer Adaptervertrag nötig: genau ein Steueraufruf ohne Varianten-Fallback, verlässliche erfolgreiche Meldungszeitpunkte je Gerät/Fach, bestätigte modellbezogene Programme/Grenzen und nachgewiesenes Bereitstellen ohne Heizstart. Danach folgen Koordinator, Benutzer-/Geräterechte, gebundene Einmalbestätigungen, Race-Condition-Tests und serverseitiger Testmodus. Empfehlung für dieses Folgepaket: GPT-6 Sol – High; vorher wie vereinbart pausieren.

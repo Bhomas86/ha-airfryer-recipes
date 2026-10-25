@@ -2,7 +2,7 @@
 
 [Deutsch](UPSTREAM_SAFE_SEND_PROPOSAL.de.md) | [English](UPSTREAM_SAFE_SEND_PROPOSAL.md)
 
-**Status: unpublished.** At the owner's request, the message to the developer will be German only. This English companion is for internal project documentation only.
+**Status: published in German by the owner and answered by the developer.** This English companion provides the internal bilingual project record.
 
 **Proposed title:** Recipe management for Airfryer Control – integration and required interfaces
 
@@ -33,3 +33,15 @@ Would such additions be feasible for you, or is there already a planned approach
 Until this is clarified, our live transmission remains disabled. We have read-only discovery and a test preview without control commands. Changes during an active cooking cycle also remain blocked for now. These are requirements for our planned integration; I do not mean to claim a confirmed security defect in your integration.
 
 Thank you for your support so far!
+
+## Outcome on 25 October 2026
+
+The developer confirmed all four observations and subsequently published Airfryer Control `1.0.2-beta.1` on the `beta` branch. Revision `f43a9bf8ddb7cc65e27897dd92158cc06840bc08` contains:
+
+- `variante` and `einmal: true` for exactly one safe spelling without automatic retry,
+- `letzte_meldung`, `verbindung`, `revision` and the zone attribute `gemeldet`,
+- the public read-only `airfryer_control.faehigkeiten` service,
+- `streng: true` to prevent silent clamping,
+- `ergebnis` with `angenommen`, `abgelehnt` or `unbekannt`, plus optional `bestaetigt`.
+
+All programs and limits remain estimated/unverified for CAF-DC111S-AEU. The service supplies six programs; the appliance's visible `proof` program is still absent. Airfryer Recipes initially consumes only `faehigkeiten` for dry-run preview. Live transmission remains separate and blocked.

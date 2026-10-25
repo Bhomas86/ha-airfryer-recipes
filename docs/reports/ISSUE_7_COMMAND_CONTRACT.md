@@ -37,7 +37,7 @@ Authenticated administrator, integration loaded:
 
 The response contains `mode=dry_run`, `live_send_enabled=false`, `transmitted=false`, `accepted_by_adapter=false`, `confirmed_on_device=false`, validated desired settings and `blocking_reasons`. Unverified contract, freshness and program limits always remain blocking reasons. Additional reasons cover offline/unknown connectivity and non-ready zones. Even reported idle state cannot authorize sending. Desired settings are not verified device payloads and are neither adapted to supported values nor persisted.
 
-Extra fields such as `dry_run=false`, `live_send_enabled=true`, raw device commands or forged `is_admin` are rejected. Regular and unauthenticated users cannot request previews; regular-user control with device permissions follows later. A missing device or unreported zone returns `target_not_found`; after unload, `not_configured`. There is still no `confirm_send` command or confirmation token capable of enabling transmission. The API has no new phone UI yet.
+Extra fields such as `dry_run=false`, `live_send_enabled=true`, raw device commands or forged `is_admin` are rejected. Regular and unauthenticated users cannot request previews; regular-user control with device permissions follows later. A missing device or unreported zone returns `target_not_found`; after unload, `not_configured`. There is still no `confirm_send` command or confirmation token capable of enabling transmission. A [follow-up administrator UI](ISSUE_7_DRY_RUN_UI.md) makes this exact dry-run preview available on a phone.
 
 ## Verification and local acceptance
 
@@ -47,4 +47,4 @@ Local HA and appliance: **NOT TESTED**. After a backup and installation of the e
 
 ## Decision on next steps
 
-Live transmission remains blocked until a verifiable upstream contract and model-specific safety evidence exist. The next useful step is deciding whether to coordinate the contract above with the Airfryer Control project. Contact or changes to the third-party repository are not authorized and were not performed. A read-only test UI can be prepared independently; it must not imply verified programs or transmission permission. Model for further adapter/coordinator work: GPT-6 Sol – High. Pause before a new package as agreed.
+This section records the decision at the original review revision. The owner subsequently contacted the developer. Airfryer Control `1.0.2-beta.1` now provides the requested public beta contract; details are recorded in the [upstream coordination outcome](UPSTREAM_SAFE_SEND_PROPOSAL.md#outcome-on-25-october-2026). PR #19 initially consumes only the read-only `faehigkeiten` service. Live transmission remains blocked until local contract acceptance and sufficient model-specific evidence exist.
