@@ -19,6 +19,28 @@ from custom_components.airfryer_recipes.recipe_repository import RecipeRepositor
 class ExportHttpTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        aiohttp = types.ModuleType("aiohttp")
+        aiohttp_web = types.ModuleType("aiohttp.web")
+
+        class Response:
+            def __init__(
+                self, *, body=None, content_type=None, charset=None, headers=None,
+                status=200,
+            ):
+                self.body = body
+                self.content_type = content_type
+                self.charset = charset
+                self.headers = headers or {}
+                self.status = status
+
+        aiohttp.hdrs = SimpleNamespace(
+            CACHE_CONTROL="Cache-Control",
+            CONTENT_DISPOSITION="Content-Disposition",
+        )
+        aiohttp.web = aiohttp_web
+        aiohttp_web.Request = dict
+        aiohttp_web.Response = Response
+
         ha = types.ModuleType("homeassistant")
         components = types.ModuleType("homeassistant.components")
         http = types.ModuleType("homeassistant.components.http")
@@ -31,6 +53,8 @@ class ExportHttpTests(unittest.TestCase):
         components.http = http
         ha.components = components
         cls.modules_patch = patch.dict(sys.modules, {
+            "aiohttp": aiohttp,
+            "aiohttp.web": aiohttp_web,
             "homeassistant": ha,
             "homeassistant.components": components,
             "homeassistant.components.http": http,
