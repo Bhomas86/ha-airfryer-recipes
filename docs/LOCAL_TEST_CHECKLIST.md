@@ -20,6 +20,10 @@ the local network or real VeSync device.
 
 ## Independent zone testing
 
+- [ ] Select a reported device/zone in the administrator panel; preview explicitly says nothing was transmitted.
+- [ ] Check a saved recipe and manual values separately in preview; desired values remain unchanged.
+- [ ] Device discovery without/broken Airfryer Control does not affect recipe management.
+- [ ] Check preview in German and English and with °C/°F user settings.
 - [ ] Send test mode settings to zone 1; no real transmission occurs.
 - [ ] Send test mode settings to zone 2; no real transmission occurs.
 - [ ] Send simple supported settings to idle zone 1 and inspect appliance display.

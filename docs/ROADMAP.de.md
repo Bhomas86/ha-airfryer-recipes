@@ -2,7 +2,7 @@
 
 [Deutsch](ROADMAP.de.md) | [English](ROADMAP.md)
 
-**Status:** Architektur und alle **31 Anforderungen beschlossen**. Rezeptspeicher, authentifizierte API und manuell abgenommene Admin-Verwaltung sind über PR #16 gemergt. Issue #7 umfasst lesende Geräteerkennung und eine serverseitig erzwungene Testvorschau; echte Übertragung bleibt wegen der Upstream-Vertragsprobleme im [Prüfbericht](reports/ISSUE_7_DISCOVERY.de.md) gesperrt. Es gibt noch kein geprüftes HACS-Release. Die [Architekturbeschreibung](ARCHITECTURE.de.md) legt die Grenzen der Umsetzung fest.
+**Status:** Architektur und alle **31 Anforderungen beschlossen**. Rezeptspeicher, authentifizierte API und manuell abgenommene Admin-Verwaltung sind über PR #16 gemergt. Issue #7 umfasst lesende Geräteerkennung, eine serverseitig erzwungene Testvorschau und deren Admin-Handy-Oberfläche; echte Übertragung bleibt wegen der Upstream-Vertragsprobleme im [Prüfbericht](reports/ISSUE_7_DISCOVERY.de.md) gesperrt. Es gibt noch kein geprüftes HACS-Release. Die [Architekturbeschreibung](ARCHITECTURE.de.md) legt die Grenzen der Umsetzung fest.
 
 ## Prioritäten und Abhängigkeiten
 

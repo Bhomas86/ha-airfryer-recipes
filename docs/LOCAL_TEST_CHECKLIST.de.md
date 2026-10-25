@@ -20,6 +20,10 @@ erhalten keinen Zugriff auf Heimnetz oder echte VeSync-Geräte.
 
 ## Unabhängige Fächer prüfen
 
+- [ ] Im Admin-Panel gemeldetes Gerät/Fach wählen; Testvorschau zeigt ausdrücklich, dass nichts übertragen wurde.
+- [ ] Gespeichertes Rezept und manuelle Werte getrennt in der Testvorschau prüfen; Wunschwerte bleiben unverändert.
+- [ ] Geräteabfrage ohne/mit fehlerhaftem Airfryer Control beeinträchtigt die Rezeptverwaltung nicht.
+- [ ] Testvorschau auf Deutsch und Englisch sowie mit °C/°F-Benutzereinstellung prüfen.
 - [ ] Testmodus an Fach 1: keine echte Übertragung.
 - [ ] Testmodus an Fach 2: keine echte Übertragung.
 - [ ] Unterstützte Werte an das ruhende Fach 1 senden und am Gerät prüfen.

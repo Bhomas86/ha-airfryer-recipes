@@ -37,7 +37,7 @@ Authenticated administrator, integration loaded:
 
 The response contains `mode=dry_run`, `live_send_enabled=false`, `transmitted=false`, `accepted_by_adapter=false`, `confirmed_on_device=false`, validated desired settings and `blocking_reasons`. Unverified contract, freshness and program limits always remain blocking reasons. Additional reasons cover offline/unknown connectivity and non-ready zones. Even reported idle state cannot authorize sending. Desired settings are not verified device payloads and are neither adapted to supported values nor persisted.
 
-Extra fields such as `dry_run=false`, `live_send_enabled=true`, raw device commands or forged `is_admin` are rejected. Regular and unauthenticated users cannot request previews; regular-user control with device permissions follows later. A missing device or unreported zone returns `target_not_found`; after unload, `not_configured`. There is still no `confirm_send` command or confirmation token capable of enabling transmission. The API has no new phone UI yet.
+Extra fields such as `dry_run=false`, `live_send_enabled=true`, raw device commands or forged `is_admin` are rejected. Regular and unauthenticated users cannot request previews; regular-user control with device permissions follows later. A missing device or unreported zone returns `target_not_found`; after unload, `not_configured`. There is still no `confirm_send` command or confirmation token capable of enabling transmission. A [follow-up administrator UI](ISSUE_7_DRY_RUN_UI.md) makes this exact dry-run preview available on a phone.
 
 ## Verification and local acceptance
 

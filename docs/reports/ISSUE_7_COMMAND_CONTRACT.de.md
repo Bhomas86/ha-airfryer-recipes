@@ -37,7 +37,7 @@ Authentifizierter Administrator, Integration geladen:
 
 Die Antwort enthält `mode=dry_run`, `live_send_enabled=false`, `transmitted=false`, `accepted_by_adapter=false`, `confirmed_on_device=false`, die validierten Wunschwerte und `blocking_reasons`. Ungeprüfter Vertrag, ungeprüfte Aktualität und unbekannte Programmgrenzen bleiben immer Sperrgründe. Weitere Gründe zeigen Offline-/Unknown-Verbindung und nicht bereite Fächer. Auch bei gemeldetem „bereit“ entsteht keine Sendeerlaubnis. Die Wunschwerte sind keine verifizierten Geräte-Payloads und werden weder auf unterstützte Werte angepasst noch persistiert.
 
-Zusatzfelder wie `dry_run=false`, `live_send_enabled=true`, rohe Gerätebefehle oder ein gefälschtes `is_admin` werden abgewiesen. Normale und nicht angemeldete Benutzer erhalten keine Testvorschau; normale Bedienung mit Geräteberechtigungen folgt später. Fehlendes Gerät oder nicht gemeldetes Fach ergibt `target_not_found`; nach Entladen `not_configured`. Es gibt weiterhin keinen `confirm_send`-Befehl und keine Bestätigungstoken, die eine Übertragung freigeben könnten. Die API enthält noch keine neue Handy-Oberfläche.
+Zusatzfelder wie `dry_run=false`, `live_send_enabled=true`, rohe Gerätebefehle oder ein gefälschtes `is_admin` werden abgewiesen. Normale und nicht angemeldete Benutzer erhalten keine Testvorschau; normale Bedienung mit Geräteberechtigungen folgt später. Fehlendes Gerät oder nicht gemeldetes Fach ergibt `target_not_found`; nach Entladen `not_configured`. Es gibt weiterhin keinen `confirm_send`-Befehl und keine Bestätigungstoken, die eine Übertragung freigeben könnten. Eine [nachfolgende Admin-Oberfläche](ISSUE_7_DRY_RUN_UI.de.md) macht genau diese Testvorschau auf dem Handy zugänglich.
 
 ## Prüfung und lokale Abnahme
 
