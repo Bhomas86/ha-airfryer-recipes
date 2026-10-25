@@ -27,10 +27,10 @@ Automated offline tests cover the Python lifecycle, data model, favorite persist
 | Category selector; `aufBACKen` reuses “Aufbacken” | **PASSED** |
 | Open the HA sidebar and leave the panel | **PASSED** |
 | Export JSON, select it again and detect three matching IDs/names in preview | **PASSED** |
-| New Android filename `Airfryer-Rezepte-Home-Assistant.json` | **NOT TESTED** |
+| New Android filename `Airfryer-Rezepte-Home-Assistant.json` | **PASSED** |
 | Actually confirm import with `skip` or `replace_ids` | **NOT TESTED** |
 | Second/regular user and separate personal favorites | **NOT TESTED** |
 
-For further local acceptance: after a backup, install the updated branch, restart HA and continue the [local test checklist](../LOCAL_TEST_CHECKLIST.md). Check the new export filename first; import confirmation, personal favorites with a second user and regular-user permissions remain open. Do not test live appliance transmission.
+Import confirmation, a personal favorite with a second user and regular-user permissions remain open for further local acceptance. Do not test live appliance transmission.
 
 Program entry is currently free text because no air fryer adapter supplies verified device functions yet. After Issue #7, the recipe editor should offer these programs as choices; Issue #8 will show only functions of the selected air fryer at send time. The necessary backend validation is not implemented yet.
