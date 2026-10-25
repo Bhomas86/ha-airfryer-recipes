@@ -32,8 +32,9 @@ Automatische Offline-Tests prüfen Python-Lebenszyklus, Datenmodell, Favoriten-P
 | Import mit `replace_ids`; vorhandene Rezepte ersetzen, ohne Duplikate anzulegen | **BESTANDEN** |
 | Panel ist für einen normalen Benutzer ohne Administratorrechte nicht sichtbar | **BESTANDEN** |
 | Direkter Panel-Aufruf als normaler Benutzer leitet auf dessen Startseite um | **BESTANDEN** |
-| Getrennte persönliche Favoriten mit einem zweiten Administrator | **NICHT GETESTET** |
+| Getrennte persönliche Favoriten mit einem zweiten Administrator | **BESTANDEN** |
+| Rezeptänderungen eines Administrators sind für den anderen sichtbar | **BESTANDEN** |
 
-Für die weitere lokale Abnahme bleiben getrennte persönliche Favoriten mit einem zweiten Administrator und die englische Oberfläche offen. Bitte keine echte Geräteübertragung testen.
+Für die weitere lokale Abnahme bleibt die englische Oberfläche offen. Bitte keine echte Geräteübertragung testen.
 
 Die Programmeingabe ist derzeit frei, weil noch kein Airfryer-Adapter verifizierte Gerätefunktionen liefert. Nach Issue #7 soll der Rezepteditor solche Programme als Auswahl anbieten; Issue #8 zeigt beim Senden nur Funktionen des gewählten Airfryers. Die dafür notwendige Backend-Validierung ist noch nicht implementiert.

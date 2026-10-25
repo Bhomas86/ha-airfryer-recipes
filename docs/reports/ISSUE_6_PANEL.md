@@ -32,8 +32,9 @@ Automated offline tests cover the Python lifecycle, data model, favorite persist
 | Import with `replace_ids`; replace existing recipes without creating duplicates | **PASSED** |
 | Panel is hidden from a regular user without administrator permission | **PASSED** |
 | Direct panel URL as a regular user redirects to that user's home page | **PASSED** |
-| Separate personal favorites with a second administrator | **NOT TESTED** |
+| Separate personal favorites with a second administrator | **PASSED** |
+| Recipe changes by one administrator are visible to the other | **PASSED** |
 
-Separate personal favorites with a second administrator and the English UI remain open for further local acceptance. Do not test live appliance transmission.
+The English UI remains open for further local acceptance. Do not test live appliance transmission.
 
 Program entry is currently free text because no air fryer adapter supplies verified device functions yet. After Issue #7, the recipe editor should offer these programs as choices; Issue #8 will show only functions of the selected air fryer at send time. The necessary backend validation is not implemented yet.
