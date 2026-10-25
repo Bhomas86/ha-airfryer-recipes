@@ -10,6 +10,8 @@ Shared favorites are stored in recipe records, remaining compatible with older r
 
 ## Verification and limits
 
-Automated offline tests cover the Python lifecycle, data model, favorite persistence, WebSocket authorization and key frontend flows. They use neither a real HA instance nor an appliance. The project owner confirmed initial PR #14 configuration on Home Assistant OS/Core 2026.10.3; this new panel has **not yet** been installed or checked there.
+Automated offline tests cover the Python lifecycle, data model, favorite persistence, WebSocket authorization and key frontend flows. They use neither a real HA instance nor an appliance. The project owner opened the integration and admin panel on a phone running Home Assistant OS/Core 2026.10.3. They created a recipe and confirmed that both the recipe and personal favorite survived an HA restart. Other workflows and permissions have not yet been checked locally.
 
-For local acceptance: after a backup, install this branch manually, restart HA, open the new sidebar on a phone and follow the [local test checklist](../LOCAL_TEST_CHECKLIST.md). Pay particular attention to recipe edits followed by restart, personal favorites with a second user, regular-user permissions and import conflicts. Do not test live appliance transmission. HACS/Hassfest checks and actual phone rendering must be verified separately after the branch is published.
+The phone test exposed a missing exit control and no way to open HA's sidebar. The panel header now provides a “Leave” link to the HA home page and a menu button that fires HA's `hass-toggle-menu` event. This fix passed 6 frontend and 55 Python offline tests. The actual menu behavior on the phone still needs verification after installing the updated branch.
+
+For further local acceptance: after a backup, install the updated branch, restart HA and continue the [local test checklist](../LOCAL_TEST_CHECKLIST.md). Pay particular attention to recipe edits followed by restart, personal favorites with a second user, regular-user permissions and import conflicts. Do not test live appliance transmission. HACS/Hassfest checks for the updated revision are still pending.

@@ -7,13 +7,16 @@ const source = readFileSync(new URL("../custom_components/airfryer_recipes/front
 
 function panelWith(api, admin = true) {
   let Panel;
+  const events = [];
   const context = {
     HTMLElement: class {
       attachShadow() {
         this.shadowRoot = { addEventListener() {}, innerHTML: "", getElementById() {} };
         return this.shadowRoot;
       }
+      dispatchEvent(event) { events.push(event); }
     },
+    Event,
     customElements: { define(name, type) { assert.equal(name, "airfryer-recipes-panel"); Panel = type; } },
     confirm: () => true,
     prompt: () => "Copy",
@@ -31,8 +34,26 @@ function panelWith(api, admin = true) {
   vm.runInNewContext(source, context);
   const panel = new Panel();
   panel._hass = { language: "de", user: { is_admin: admin }, callWS: api };
+  panel.events = events;
   return panel;
 }
+
+test("navigation remains available during loading and uses the HA sidebar event", async () => {
+  const panel = panelWith(async () => ({ recipes: [] }));
+  panel.busy = true;
+  panel.render();
+  assert.match(panel.shadowRoot.innerHTML, /data-action="menu" aria-label="Menü öffnen"/);
+  assert.match(panel.shadowRoot.innerHTML, /<a href="\/">Verlassen<\/a>/);
+  await panel.onClick({ target: { closest: () => ({ dataset: { action: "menu" } }) } });
+  assert.equal(panel.events.length, 1);
+  assert.equal(panel.events[0].type, "hass-toggle-menu");
+  assert.equal(panel.events[0].bubbles, true);
+  assert.equal(panel.events[0].composed, true);
+  panel._hass.language = "en";
+  panel.render();
+  assert.match(panel.shadowRoot.innerHTML, /aria-label="Open menu"/);
+  assert.match(panel.shadowRoot.innerHTML, /<a href="\/">Leave<\/a>/);
+});
 
 test("panel renders recipe names as escaped text and filters by tag", async () => {
   const panel = panelWith(async () => ({ recipes: [{

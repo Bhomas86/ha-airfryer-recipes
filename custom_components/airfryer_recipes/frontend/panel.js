@@ -2,6 +2,7 @@
 const WORDS = {
   en: {
     title: "Recipe library", subtitle: "Manage recipes independently of any appliance.",
+    openMenu: "Open menu", leave: "Leave",
     search: "Search recipes", all: "All categories", new: "New recipe", import: "Import JSON",
     export: "Export JSON", empty: "No recipes found.", loading: "Loading recipes…",
     edit: "Edit", copy: "Duplicate", remove: "Delete", name: "Name", description: "Description",
@@ -25,6 +26,7 @@ const WORDS = {
   },
   de: {
     title: "Rezeptbibliothek", subtitle: "Rezepte unabhängig von einem Gerät verwalten.",
+    openMenu: "Menü öffnen", leave: "Verlassen",
     search: "Rezepte suchen", all: "Alle Kategorien", new: "Neues Rezept", import: "JSON importieren",
     export: "JSON exportieren", empty: "Keine Rezepte gefunden.", loading: "Rezepte werden geladen…",
     edit: "Bearbeiten", copy: "Kopieren", remove: "Löschen", name: "Name", description: "Beschreibung",
@@ -180,6 +182,9 @@ class AirfryerRecipesPanel extends HTMLElement {
       <style>
         :host{display:block;box-sizing:border-box;color:var(--primary-text-color);background:var(--primary-background-color);min-height:100%;font:inherit}
         *{box-sizing:border-box}main{max-width:1100px;margin:auto;padding:20px}h1{margin:0 0 6px;font-size:1.8rem}h2{font-size:1.25rem}
+        header{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:10px;margin:-20px -20px 14px;padding:10px 20px;background:var(--primary-background-color);border-bottom:1px solid var(--divider-color)}
+        header h1{flex:1;min-width:0;margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:1.25rem}
+        header button{flex:none;padding:8px 12px}header a{flex:none;border:1px solid var(--divider-color);background:var(--card-background-color);color:var(--primary-text-color);border-radius:8px;padding:10px 14px;text-decoration:none;min-height:42px}
         .muted{color:var(--secondary-text-color)}.toolbar,.row,.actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
         .toolbar{margin:22px 0}.toolbar input{flex:1 1 180px}.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,280px),1fr));gap:14px}
         article,.editor,.preview{background:var(--card-background-color);border:1px solid var(--divider-color);border-radius:12px;padding:18px;overflow-wrap:anywhere}
@@ -190,10 +195,11 @@ class AirfryerRecipesPanel extends HTMLElement {
         textarea{min-height:82px}label{display:block;margin:12px 0 5px;font-weight:600}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 14px}
         .editor,.preview{margin:18px 0}.message{padding:12px;border-radius:8px;margin:12px 0;background:var(--secondary-background-color)}.error{color:var(--error-color)}
         .visually-hidden{position:absolute;clip:rect(0,0,0,0);width:1px;height:1px;overflow:hidden}
-        @media(max-width:600px){main{padding:14px}.grid{grid-template-columns:1fr}.toolbar>*{flex:1 1 100%}.actions button{flex:1 1 auto}}
+        @media(max-width:600px){main{padding:14px}header{margin:-14px -14px 14px;padding:10px 14px}.grid{grid-template-columns:1fr}.toolbar>*{flex:1 1 100%}.actions button{flex:1 1 auto}}
       </style>
       <main>
-        <h1>${t.title}</h1><p class="muted">${t.subtitle}</p>
+        <header><button type="button" data-action="menu" aria-label="${t.openMenu}" title="${t.openMenu}">☰</button><h1>${t.title}</h1><a href="/">${t.leave}</a></header>
+        <p class="muted">${t.subtitle}</p>
         ${!this.admin ? `<p class="message error">${t.noAdmin}</p>` : ""}
         ${this.error ? `<p class="message error" role="alert">${this.error}</p>` : ""}
         ${this.notice ? `<p class="message" role="status">${escapeHtml(this.notice)}</p>` : ""}
@@ -275,8 +281,13 @@ class AirfryerRecipesPanel extends HTMLElement {
 
   async onClick(event) {
     const button = event.target.closest("button[data-action]");
-    if (!button || this.busy) return;
+    if (!button) return;
     const type = button.dataset.action;
+    if (type === "menu") {
+      this.dispatchEvent(new Event("hass-toggle-menu", { bubbles: true, composed: true }));
+      return;
+    }
+    if (this.busy) return;
     const recipe = this.recipes.find((item) => item.id === button.dataset.id);
     const t = this.words;
     if (type === "refresh") return this.load();

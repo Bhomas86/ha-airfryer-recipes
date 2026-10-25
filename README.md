@@ -35,9 +35,9 @@ The first target device is the **Cosori Turbo Tower Pro Smart (CAF-DC111S-AEU)**
 
 ## Planned milestones
 
-- [x] Custom integration skeleton and configuration flow code ([Issue #3](https://github.com/Bhomas86/ha-airfryer-recipes/issues/3); real HA validation remains pending)
-- [ ] Persistent, validated recipe storage ([Issue #4](https://github.com/Bhomas86/ha-airfryer-recipes/issues/4); initial backend implementation in PR #13, local acceptance pending)
-- [ ] Recipe management interface (code in the Issue #6 branch; real HA acceptance pending)
+- [x] Custom integration skeleton and configuration flow code ([Issue #3](https://github.com/Bhomas86/ha-airfryer-recipes/issues/3); setup confirmed on HA 2026.10.3)
+- [ ] Persistent, validated recipe storage ([Issue #4](https://github.com/Bhomas86/ha-airfryer-recipes/issues/4); a recipe and personal favorite survived a local restart, further acceptance pending)
+- [ ] Recipe management interface (code in the Issue #6 branch; creation confirmed on a phone, further acceptance pending)
 - [ ] Lovelace dashboard card
 - [ ] Adapter for Airfryer Control
 - [ ] Device/zone compatibility and error handling
@@ -46,9 +46,9 @@ The first target device is the **Cosori Turbo Tower Pro Smart (CAF-DC111S-AEU)**
 
 ## Installation
 
-**No fully tested release is available yet.** Initial Home Assistant configuration was confirmed on 2026.10.3, but the recipe panel, persistence and permissions still require local testing. Do not add it to a production HACS installation until the first verified release is published.
+**No fully tested release is available yet.** Setup, recipe creation, and persistence of a recipe and personal favorite across a restart were confirmed on Home Assistant 2026.10.3. Other recipe workflows and permissions still require local testing. Do not assume stable use before the first verified release.
 
-The setup flow requires no device, cloud credentials or network access. The administrator recipe panel is being developed in Issue #6; the full device onboarding wizard follows later.
+The setup flow requires no device, cloud credentials or network access. The administrator recipe panel is being tested in Issue #6; the full device onboarding wizard follows later.
 
 ## Safety and privacy
 
