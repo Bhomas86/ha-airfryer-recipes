@@ -1,5 +1,6 @@
 {
   "name": "Airfryer Recipes",
   "homeassistant": "2026.10.0",
+  "hide_default_branch": true,
   "render_readme": true
 }
