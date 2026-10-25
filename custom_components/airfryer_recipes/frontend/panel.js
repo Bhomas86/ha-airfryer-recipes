@@ -6,7 +6,8 @@ const WORDS = {
     search: "Search recipes", all: "All categories", new: "New recipe", import: "Import JSON",
     export: "Export JSON", empty: "No recipes found.", loading: "Loading recipes…",
     edit: "Edit", copy: "Duplicate", remove: "Delete", name: "Name", description: "Description",
-    category: "Category", tags: "Tags (comma-separated)", program: "Program",
+    category: "Category", noCategory: "No category", addCategory: "Add new category…",
+    newCategory: "New category", tags: "Tags (comma-separated)", program: "Program",
     temperature: "Temperature", duration: "Duration (minutes)", save: "Save",
     cancel: "Cancel", deleteConfirm: "Delete this recipe? This cannot be undone.",
     copyName: "Name for the duplicate", preview: "Import preview", incoming: "Recipes in file",
@@ -30,7 +31,8 @@ const WORDS = {
     search: "Rezepte suchen", all: "Alle Kategorien", new: "Neues Rezept", import: "JSON importieren",
     export: "JSON exportieren", empty: "Keine Rezepte gefunden.", loading: "Rezepte werden geladen…",
     edit: "Bearbeiten", copy: "Kopieren", remove: "Löschen", name: "Name", description: "Beschreibung",
-    category: "Kategorie", tags: "Tags (durch Komma getrennt)", program: "Programm",
+    category: "Kategorie", noCategory: "Keine Kategorie", addCategory: "Neue Kategorie hinzufügen…",
+    newCategory: "Neue Kategorie", tags: "Tags (durch Komma getrennt)", program: "Programm",
     temperature: "Temperatur", duration: "Dauer (Minuten)", save: "Speichern",
     cancel: "Abbrechen", deleteConfirm: "Dieses Rezept löschen? Das kann nicht rückgängig gemacht werden.",
     copyName: "Name für die Kopie", preview: "Importvorschau", incoming: "Rezepte in der Datei",
@@ -171,10 +173,15 @@ class AirfryerRecipesPanel extends HTMLElement {
         .some((part) => part.toLocaleLowerCase().includes(term))));
   }
 
+  categories() {
+    return [...new Set(this.recipes.map((recipe) => recipe.category).filter(Boolean))]
+      .sort((left, right) => left.localeCompare(right));
+  }
+
   render() {
     if (!this.shadowRoot) return;
     const t = this.words;
-    const categories = [...new Set(this.recipes.map((recipe) => recipe.category).filter(Boolean))].sort();
+    const categories = this.categories();
     const selected = this.editor;
     const phase = selected?.phases?.[0] || {};
     const multiple = selected?.phases?.length > 1;
@@ -214,7 +221,8 @@ class AirfryerRecipesPanel extends HTMLElement {
         ${selected ? `<form id="editor" class="editor"><h2>${selected.id ? t.edit : t.new}</h2>
           ${multiple ? `<p class="message error">${t.multiPhase}</p>` : ""}
           <div class="grid"><div><label for="recipe-name">${t.name}</label><input id="recipe-name" name="name" maxlength="100" required value="${escapeHtml(selected.name)}"></div>
-          <div><label for="recipe-category">${t.category}</label><input id="recipe-category" name="category" maxlength="64" value="${escapeHtml(selected.category)}"></div></div>
+          <div><label for="recipe-category">${t.category}</label><select id="recipe-category" name="category_choice"><option value="" ${!selected.category ? "selected" : ""}>${t.noCategory}</option>${categories.map((name, index) => `<option value="existing-${index}" ${selected.category === name ? "selected" : ""}>${escapeHtml(name)}</option>`).join("")}<option value="new">${t.addCategory}</option></select>
+          <div id="new-category-field" hidden><label for="recipe-category-new">${t.newCategory}</label><input id="recipe-category-new" name="category_new" maxlength="64"></div></div></div>
           <label for="recipe-description">${t.description}</label><textarea id="recipe-description" name="description" maxlength="500">${escapeHtml(selected.description)}</textarea>
           <label for="recipe-tags">${t.tags}</label><input id="recipe-tags" name="tags" value="${escapeHtml((selected.tags || []).join(", "))}">
           <label><input type="checkbox" name="favorite" ${selected.favorite ? "checked" : ""} style="width:auto;min-height:auto"> ${t.sharedFavorite}</label>
@@ -252,6 +260,12 @@ class AirfryerRecipesPanel extends HTMLElement {
     if (event.target.id === "category") {
       this.category = event.target.value;
       this.render();
+    } else if (event.target.id === "recipe-category") {
+      const isNew = event.target.value === "new";
+      this.shadowRoot.getElementById("new-category-field").hidden = !isNew;
+      const input = this.shadowRoot.getElementById("recipe-category-new");
+      input.required = isNew;
+      if (isNew) input.focus();
     } else if (event.target.id === "favorite-filter") {
       this.favoriteFilter = event.target.value;
       this.render();
@@ -347,10 +361,16 @@ class AirfryerRecipesPanel extends HTMLElement {
     event.preventDefault();
     if (!this.admin || this.editor?.phases?.length > 1) return;
     const form = new FormData(event.target);
+    const categoryChoice = String(form.get("category_choice") || "");
+    const categories = this.categories();
+    const newCategory = String(form.get("category_new") || "").trim().replace(/\s+/g, " ");
+    const category = categoryChoice === "new"
+      ? categories.find((name) => name.toLocaleLowerCase() === newCategory.toLocaleLowerCase()) || newCategory
+      : categoryChoice.startsWith("existing-") ? categories[Number(categoryChoice.slice(9))] || "" : "";
     const recipe = {
       name: String(form.get("name") || "").trim(),
       description: String(form.get("description") || "").trim(),
-      category: String(form.get("category") || "").trim(),
+      category,
       tags: String(form.get("tags") || "").split(",").map((tag) => tag.trim()).filter(Boolean),
       favorite: form.has("favorite"),
       phases: [{

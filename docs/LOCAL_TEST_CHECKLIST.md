@@ -37,6 +37,7 @@ the local network or real VeSync device.
 
 - [ ] Without Airfryer Control, open the “Airfryer Recipes” admin sidebar on a phone; verify there is no horizontal overflow.
 - [ ] Create, edit, duplicate and confirm deletion; verify saved recipes remain after restarting HA.
+- [ ] Choose an existing category in the recipe editor; “Add new category” is last and reuses an existing name when only letter case differs.
 - [ ] Test shared and personal favorites separately; a second user's personal favorites remain independent.
 - [ ] Preview JSON imports with matching names/IDs and apply only after deliberate selection; verify export.
 - [ ] As a regular user, verify the admin panel is inaccessible and write WebSocket commands are denied.

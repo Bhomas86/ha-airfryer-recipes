@@ -19,7 +19,7 @@ Last consolidated: 2026-10-24. Project language policy: English default UI langu
 | 8 | Remember manual values (C) | Remember most recent manual values per device and zone across restarts; optionally save as a new recipe; never overwrite existing recipe silently. |
 | 9 | Independent multi-zone operation (B) | Both zones remain independently selectable/visible; later optional SYNC/MATCH UI. **Upstream Airfryer Control already exposes SYNC and MATCH actions, but not in its device overview**. Verify signatures and behavior. See issue #1. |
 | 10 | Optional completion notifications (B) | Disabled by default; opt into mobile push to chosen recipient/device; only on reliable completion signal. |
-| 11 | Rich recipe organization (C) | Categories, favorites, search, free-form tags, recently used. |
+| 11 | Rich recipe organization (C) | Categories, favorites, search, free-form tags, recently used. In the recipe editor, choose an existing category or add a new one as the final option; reuse names that differ only in letter case. |
 | 12 | JSON import and export (B) | Single or all recipes; validate schema and detect duplicates. Keep local HA backups. |
 | 13 | Visual card editor + device personalization (B+) | Toggle labels/status/timer, choose graphic size; 'Customize Airfryer' opens gallery, own image upload, drag/drop zone hotspot positions stored in relative coordinates per device, and reset. Include a 'Missing your model?' GitHub issue link. |
 | 14 | Automatic discovery + profile fallback (B) | Detect model, zones and supported capabilities from adapters where possible; verified profiles fill gaps. Unknown controls remain off. |

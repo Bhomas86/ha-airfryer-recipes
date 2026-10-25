@@ -19,6 +19,8 @@
 | 8 · Beta readiness | [#10](https://github.com/Bhomas86/ha-airfryer-recipes/issues/10) | HACS beta, bilingual release docs, diagnostics, optional completion push | #3–#8, optional #9 | CI + local HA/real-device tests |
 | Later | [#1](https://github.com/Bhomas86/ha-airfryer-recipes/issues/1) | SYNC and MATCH dashboard buttons using existing upstream actions | #7, #8 | Real-device confirmation and safety checks |
 
+**Proposed follow-up to #6:** Rename a category across all affected recipes or merge it into another, for example “Backen” into “Aufbacken”. Define the preview, permission check, safe persistence and rollback behavior before implementing it. The current selection list does not change existing categories automatically.
+
 ## Development ownership and workflow
 
 - **ChatGPT can prepare:** architecture, data models, Python utilities, tests, documentation, reviews, small bounded feature branches and PRs.

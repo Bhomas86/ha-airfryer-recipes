@@ -69,6 +69,29 @@ test("panel renders recipe names as escaped text and filters by tag", async () =
   assert.equal(panel.filtered().length, 0);
 });
 
+test("recipe editor lists saved categories before the new-category choice without resetting other inputs", () => {
+  const panel = panelWith(async () => ({ recipes: [] }));
+  panel.recipes = [
+    { id: "one", name: "Rolls", category: "Aufbacken", phases: [{}] },
+    { id: "two", name: "Cake", category: "Backen", phases: [{}] },
+  ];
+  panel.editor = { name: "Test", category: "Aufbacken", phases: [{}] };
+  panel.render();
+  const markup = panel.shadowRoot.innerHTML;
+  assert.match(markup, /<option value="existing-0" selected>Aufbacken<\/option><option value="existing-1" >Backen<\/option><option value="new">Neue Kategorie hinzufügen…<\/option>/);
+  const field = { hidden: true };
+  const input = { required: false, focused: false, focus() { this.focused = true; } };
+  panel.shadowRoot.getElementById = (id) => id === "new-category-field" ? field : input;
+  panel.onChange({ target: { id: "recipe-category", value: "new" } });
+  assert.equal(field.hidden, false);
+  assert.equal(input.required, true);
+  assert.equal(input.focused, true);
+  assert.equal(panel.shadowRoot.innerHTML, markup);
+  panel.onChange({ target: { id: "recipe-category", value: "existing-0" } });
+  assert.equal(field.hidden, true);
+  assert.equal(input.required, false);
+});
+
 test("non-admin panel cannot invoke a mutation", async () => {
   const calls = [];
   const panel = panelWith(async (request) => { calls.push(request.type); return { recipes: [] }; }, false);
@@ -107,15 +130,46 @@ test("form creates a device-independent recipe through the authenticated API", a
   await panel.onSubmit({
     preventDefault() {},
     target: { id: "editor", values: {
-      name: "Bread rolls", description: "", category: "Breakfast", tags: "quick, frozen",
+      name: "Bread rolls", description: "", category_choice: "new", category_new: "Breakfast", tags: "quick, frozen",
       program: "airfry", temperature_c: "180", duration_minutes: "8", favorite: "on",
     } },
   });
   assert.equal(calls[0].type, "airfryer_recipes/create");
   assert.equal(calls[0].recipe.favorite, true);
+  assert.equal(calls[0].recipe.category, "Breakfast");
   assert.deepEqual([...calls[0].recipe.tags], ["quick", "frozen"]);
   assert.equal(calls[0].recipe.phases[0].temperature_c, 180);
   assert.equal(calls[0].recipe.device_id, undefined);
+});
+
+test("new category with different case reuses the stored spelling", async () => {
+  const calls = [];
+  const panel = panelWith(async (request) => {
+    calls.push(request);
+    return request.type.endsWith("list") ? { recipes: [] } : { recipe: { id: "two" } };
+  });
+  panel.recipes = [{ id: "one", name: "Old rolls", category: "Aufbacken", phases: [{}] }];
+  panel.editor = { name: "", phases: [{}] };
+  await panel.onSubmit({ preventDefault() {}, target: { id: "editor", values: {
+    name: "Rolls", category_choice: "new", category_new: "  aufBACKen  ",
+    program: "airfry", temperature_c: "180", duration_minutes: "8",
+  } } });
+  assert.equal(calls[0].recipe.category, "Aufbacken");
+});
+
+test("selected existing category is saved unchanged", async () => {
+  const calls = [];
+  const panel = panelWith(async (request) => {
+    calls.push(request);
+    return request.type.endsWith("list") ? { recipes: [] } : { recipe: { id: "two" } };
+  });
+  panel.recipes = [{ id: "one", name: "Old rolls", category: "Aufbacken", phases: [{}] }];
+  panel.editor = { name: "", phases: [{}] };
+  await panel.onSubmit({ preventDefault() {}, target: { id: "editor", values: {
+    name: "Rolls", category_choice: "existing-0", category_new: "Unused",
+    program: "airfry", temperature_c: "180", duration_minutes: "8",
+  } } });
+  assert.equal(calls[0].recipe.category, "Aufbacken");
 });
 
 test("Fahrenheit display converts back to Celsius for storage", async () => {

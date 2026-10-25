@@ -19,7 +19,7 @@ Letzte Zusammenfassung: 24.10.2026. Projektstandard: Englisch als Fallback; Proj
 | 8 | Manuelle Werte merken (C) | Letzte Werte pro Gerät und Fach auch nach Neustart behalten; optional als neues Rezept speichern; gespeicherte Rezepte nicht unbemerkt überschreiben. |
 | 9 | Unabhängiger Mehrzonenbetrieb (B) | Beide Fächer gleichzeitig sichtbar und getrennt bedienbar. Später SYNC/MATCH im Dashboard. **Airfryer Control bietet bereits SYNC- und MATCH-Aktionen, aber noch nicht in der Geräteübersicht.** Signaturen und Geräteverhalten prüfen; siehe Issue #1. |
 | 10 | Optionale Fertigmeldung (B) | Standardmäßig aus; Push aufs ausgewählte HA-Mobilgerät optional; nur bei verlässlichem Fertigstatus. |
-| 11 | Erweiterte Organisation (C) | Kategorien, Favoriten, Suche, freie Tags und zuletzt verwendet. |
+| 11 | Erweiterte Organisation (C) | Kategorien, Favoriten, Suche, freie Tags und zuletzt verwendet. Im Rezepteditor vorhandene Kategorien wählen oder als letzte Option eine neue hinzufügen; gleich geschriebene Namen mit anderer Groß-/Kleinschreibung wiederverwenden. |
 | 12 | JSON-Import/-Export (B) | Einzelne oder alle Rezepte, Validierung und Duplikatprüfung; reguläre HA-Backups bleiben bestehen. |
 | 13 | Grafischer Karteneditor und Individualisierung (B+) | Status/Beschriftung/Restzeit/Größe konfigurieren; „Airfryer individualisieren“ für Bildergalerie, eigenes Bild, verschiebbare Fach-Schaltflächen mit relativen Koordinaten und Zurücksetzen. Link „Dein Modell fehlt?“ zu GitHub-Issues. |
 | 14 | Automatische Erkennung und Profil-Fallback (B) | Modell, Fächer und Fähigkeiten nach Möglichkeit automatisch lesen; nur bestätigte Profile ergänzen. Unbekannte Fähigkeiten bleiben deaktiviert. |

@@ -19,6 +19,8 @@
 | 8 · Beta-Freigabe | [#10](https://github.com/Bhomas86/ha-airfryer-recipes/issues/10) | HACS-Beta, zweisprachige Release Notes, Diagnose, optionale Fertigmeldung | #3–#8, ggf. #9 | CI, echtes HA und Gerätetests |
 | Später | [#1](https://github.com/Bhomas86/ha-airfryer-recipes/issues/1) | SYNC/MATCH in Dashboard unter Verwendung vorhandener Aktionen | #7, #8 | Sicherheit und echte Gerätebestätigung |
 
+**Vorgemerkter Folgepunkt zu #6:** Eine Kategorie über alle betroffenen Rezepte hinweg umbenennen oder mit einer anderen zusammenführen, etwa „Backen“ zu „Aufbacken“. Vor der Umsetzung sind Vorschau, Rechteprüfung, sichere Speicherung und Rückfallverhalten festzulegen. Die aktuelle Auswahlliste ändert bestehende Kategorien nicht automatisch.
+
 ## Arbeitsteilung
 
 - **ChatGPT kann übernehmen:** Architektur, Rezeptdatenmodelle, Python-Hilfsfunktionen, Tests, Dokumentation, Reviews sowie kleinere abgegrenzte Branches und Pull Requests.
