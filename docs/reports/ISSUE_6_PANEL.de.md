@@ -28,9 +28,10 @@ Automatische Offline-Tests prüfen Python-Lebenszyklus, Datenmodell, Favoriten-P
 | HA-Seitenmenü öffnen und Panel verlassen | **BESTANDEN** |
 | JSON exportieren, Datei wieder auswählen und drei gleiche IDs/Namen in der Vorschau erkennen | **BESTANDEN** |
 | Neuer Dateiname `Airfryer-Rezepte-Home-Assistant.json` auf Android | **BESTANDEN** |
-| Import tatsächlich mit `skip` oder `replace_ids` bestätigen | **NICHT GETESTET** |
+| Import mit `skip` bestätigen; gleiche Rezepte bleiben unverändert und werden nicht erneut angelegt | **BESTANDEN** |
+| Import mit `replace_ids` bestätigen | **NICHT GETESTET** |
 | Zweiter/normaler Benutzer und getrennte persönliche Favoriten | **NICHT GETESTET** |
 
-Für die weitere lokale Abnahme bleiben die Importbestätigung, ein persönlicher Favorit mit zweitem Nutzer und die Berechtigung des normalen Nutzers offen. Bitte keine echte Geräteübertragung testen.
+Für die weitere lokale Abnahme bleiben die Importbestätigung mit `replace_ids`, ein persönlicher Favorit mit zweitem Nutzer und die Berechtigung des normalen Nutzers offen. Bitte keine echte Geräteübertragung testen.
 
 Die Programmeingabe ist derzeit frei, weil noch kein Airfryer-Adapter verifizierte Gerätefunktionen liefert. Nach Issue #7 soll der Rezepteditor solche Programme als Auswahl anbieten; Issue #8 zeigt beim Senden nur Funktionen des gewählten Airfryers. Die dafür notwendige Backend-Validierung ist noch nicht implementiert.
