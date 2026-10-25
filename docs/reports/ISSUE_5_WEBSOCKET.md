@@ -22,7 +22,7 @@ Use the native Home Assistant WebSocket envelope, for example `{"id": 1, "type":
 | `delete` | Admin | `recipe_id` | `deleted` |
 | `import_preview` | Admin | `payload` as JSON string | Preview, conflicts and short-lived `token` |
 | `import_confirm` | Admin | `token`, optional `policy` | `imported` |
-| `export` | Admin | – | Versioned JSON string in `payload` |
+| `export` | Admin | – | Short-lived signed `url`, `filename` and expiry |
 
 All command names use the `airfryer_recipes/` prefix. Import conflict policies: `skip` (default) or `replace_ids` (only exact matching IDs).
 
@@ -33,8 +33,8 @@ All command names use the `airfryer_recipes/` prefix. Import conflict policies: 
 - Responses return structured error codes without leaking internal storage or credentials.
 - Unloading removes access to the active repository.
 - No Airfryer/VeSync action can be called from this API.
-- **Personal favorites**, device-specific settings and per-zone control permissions remain future work. This API does not expose personal preferences.
-- UI confirmation before deletion belongs to Issue #6.
+- Personal favorites are stored separately by authenticated HA user ID; device-specific settings and per-zone control permissions remain future work.
+- Authenticated administrators receive a download path valid for 30 seconds for JSON exports. The HTTP endpoint rechecks administrator access and serves `Airfryer-Rezepte-Home-Assistant.json` with caching disabled.
 
 ## Testing
 

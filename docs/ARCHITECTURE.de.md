@@ -2,7 +2,7 @@
 
 [Deutsch](ARCHITECTURE.de.md) | [English](ARCHITECTURE.md)
 
-**Architekturentscheidung ADR-001 / Anforderung 31: Modulare Home-Assistant-Integration.** Beschlossen am 24.10.2026. **Dies ist eine Spezifikation: Abgesehen vom geräteunabhängigen Rezeptmodell sind die folgenden Komponenten noch nicht implementiert.**
+**Architekturentscheidung ADR-001 / Anforderung 31: Modulare Home-Assistant-Integration.** Beschlossen am 24.10.2026. Dieses Dokument beschreibt die Zielarchitektur. Die Integrationsgrundstruktur ist gemergt; Rezeptspeicher und WebSocket-API werden in PR #13/#14 geprüft; die Admin-Verwaltung entsteht in Issue #6. Gerätesteuerung, Dashboard und Diagnose bleiben geplant.
 
 ## Ziel und Bereitstellung
 
@@ -39,7 +39,7 @@ Nur Administratoren dürfen Rezepte bearbeiten/löschen/importieren, globale Vor
 
 ## Speicherung und Datenmigration
 
-Die Rezeptbibliothek liegt über Home Assistants asynchronem `Store` in integrationsspezifischen lokalen Speicherdaten, **nicht im Quellcodeverzeichnis**. Das Schema ist versioniert. Vor einer Migration werden die Originaldaten sicherungsfähig erhalten; unbekannte neuere Versionen werden nicht überschrieben. Geräteunabhängige Rezepte, die letzten manuellen Werte je Gerät/Fach und persönliche Favoriten sind getrennte Datenbereiche. Intern verwenden wir Celsius, die Oberfläche zeigt die in HA gewählte Einheit. JSON-Import/Export wird versioniert und validiert; Duplikatkonflikte werden vor jeder tatsächlichen Änderung angezeigt.
+Die Rezeptbibliothek liegt über Home Assistants asynchronem `Store` in integrationsspezifischen lokalen Speicherdaten, **nicht im Quellcodeverzeichnis**. Das Schema ist versioniert. Vor einer Migration werden die Originaldaten sicherungsfähig erhalten; unbekannte neuere Versionen werden nicht überschrieben. Geräteunabhängige Rezepte, die letzten manuellen Werte je Gerät/Fach und persönliche Favoriten sind getrennte Datenbereiche. Intern verwenden wir Celsius, die Oberfläche zeigt die in HA gewählte Einheit. JSON-Import/Export wird versioniert und validiert; Duplikatkonflikte werden vor jeder tatsächlichen Änderung angezeigt. Der Export verwendet einen kurz gültigen, an die authentifizierte HA-Sitzung gebundenen Downloadpfad; der HTTP-Endpunkt prüft die Adminrolle erneut und liefert einen verständlichen Dateinamen ohne Cache-Freigabe.
 
 **Der Lebenszyklus von Rezeptdaten und Geräteadapter bleibt getrennt.** Wenn Airfryer Control nicht verfügbar ist, funktionieren Einrichtung, Bearbeitung und JSON-Import/Export weiter.
 

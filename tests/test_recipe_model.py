@@ -40,6 +40,16 @@ class TestRecipeModel(unittest.TestCase):
         self.assertEqual(restored, [self.recipe])
         self.assertEqual(json.loads(raw)["schema_version"], 1)
 
+    def test_favorite_is_backward_compatible_and_validated(self):
+        encoded = recipe_to_dict(self.recipe)
+        encoded.pop("favorite")
+        self.assertFalse(recipe_from_dict(encoded).favorite)
+        encoded["favorite"] = True
+        self.assertTrue(recipe_from_dict(encoded).favorite)
+        encoded["favorite"] = "yes"
+        with self.assertRaises(RecipeValidationError):
+            recipe_from_dict(encoded)
+
     def test_empty_collection_is_valid(self):
         self.assertEqual(import_library_json(export_library_json([])), [])
 

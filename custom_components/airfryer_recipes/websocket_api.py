@@ -1,12 +1,14 @@
 """Authenticated Home Assistant WebSocket API for device-independent recipes.
 
 Read access: authenticated HA users.
-Mutations and imports: administrators only, enforced by Home Assistant's
-built-in require_admin decorator. No appliance calls or external endpoints.
+Shared recipe mutations and imports: administrators only, enforced by Home
+Assistant's built-in require_admin decorator. Each authenticated user may
+change only their own personal favorites. No appliance calls.
 """
 
 from __future__ import annotations
 
+from datetime import timedelta
 import logging
 from dataclasses import replace
 from typing import Any, Awaitable, Callable
@@ -16,7 +18,7 @@ import probatio
 
 from homeassistant.components import websocket_api
 
-from .const import DOMAIN
+from .const import DOMAIN, EXPORT_FILENAME, EXPORT_URL
 from .recipe_model import (
     MAX_IMPORT_BYTES,
     RecipeValidationError,
@@ -33,6 +35,7 @@ from .recipe_repository import (
 
 _LOGGER = logging.getLogger(__name__)
 _ACTION = Callable[[RecipeRepository], Awaitable[dict[str, Any]]]
+EXPORT_LINK_TTL_SECONDS = 30
 
 
 def _repository(hass: Any, connection: Any, msg: dict[str, Any]) -> RecipeRepository | None:
@@ -198,9 +201,45 @@ async def ws_import_confirm(hass: Any, connection: Any, msg: dict[str, Any]) -> 
 @websocket_api.websocket_command({probatio.Required("type"): f"{DOMAIN}/export"})
 @websocket_api.async_response
 async def ws_export(hass: Any, connection: Any, msg: dict[str, Any]) -> None:
-    """Export the library as versioned JSON (admin only)."""
+    """Create a short-lived authenticated JSON download URL (admins only)."""
     async def run(repo: RecipeRepository) -> dict[str, Any]:
-        return {"payload": await repo.async_export_json()}
+        from homeassistant.components.http.auth import async_sign_path
+
+        return {
+            "url": async_sign_path(
+                hass,
+                EXPORT_URL,
+                timedelta(seconds=EXPORT_LINK_TTL_SECONDS),
+            ),
+            "filename": EXPORT_FILENAME,
+            "expires_seconds": EXPORT_LINK_TTL_SECONDS,
+        }
+    await _respond(hass, connection, msg, run)
+
+
+@websocket_api.websocket_command({probatio.Required("type"): f"{DOMAIN}/favorites"})
+@websocket_api.async_response
+async def ws_favorites(hass: Any, connection: Any, msg: dict[str, Any]) -> None:
+    """Return favorites of the authenticated user only."""
+    async def run(repo: RecipeRepository) -> dict[str, Any]:
+        favorites = hass.data[DOMAIN]["favorites"]
+        return {"recipe_ids": await favorites.async_get(connection.user.id)}
+    await _respond(hass, connection, msg, run)
+
+
+@websocket_api.websocket_command({
+    probatio.Required("type"): f"{DOMAIN}/set_favorite",
+    probatio.Required("recipe_id"): str,
+    probatio.Required("favorite"): bool,
+})
+@websocket_api.async_response
+async def ws_set_favorite(hass: Any, connection: Any, msg: dict[str, Any]) -> None:
+    """Update only the authenticated user's preference for an existing recipe."""
+    async def run(repo: RecipeRepository) -> dict[str, Any]:
+        await repo.async_get(msg["recipe_id"])
+        favorites = hass.data[DOMAIN]["favorites"]
+        await favorites.async_set(connection.user.id, msg["recipe_id"], msg["favorite"])
+        return {"recipe_id": msg["recipe_id"], "favorite": msg["favorite"]}
     await _respond(hass, connection, msg, run)
 
 
@@ -214,6 +253,8 @@ COMMANDS = (
     ws_import_preview,
     ws_import_confirm,
     ws_export,
+    ws_favorites,
+    ws_set_favorite,
 )
 
 

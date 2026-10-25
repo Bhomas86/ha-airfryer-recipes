@@ -40,14 +40,42 @@ class TestIntegrationLifecycle(unittest.TestCase):
             calls = []
             api_stub = types.ModuleType("custom_components.airfryer_recipes.websocket_api")
             api_stub.register_commands = lambda hass: calls.append("registered")
-            with patch.dict(sys.modules, {"custom_components.airfryer_recipes.websocket_api": api_stub}):
+            http_stub = types.ModuleType("custom_components.airfryer_recipes.http")
+
+            def register_http_view(hass):
+                state = hass.data[DOMAIN]
+                if not state.get("http_registered"):
+                    calls.append("http_registered")
+                    state["http_registered"] = True
+
+            http_stub.register_http_view = register_http_view
+            panel_stub = types.ModuleType("custom_components.airfryer_recipes.panel")
+
+            async def register_panel(hass):
+                calls.append("panel_registered")
+
+            panel_stub.async_register_panel = register_panel
+            panel_stub.async_remove_panel = lambda hass: calls.append("panel_removed")
+            favorites_stub = types.ModuleType("custom_components.airfryer_recipes.favorites")
+
+            class Favorites:
+                async def async_load(self):
+                    calls.append("favorites_loaded")
+
+            favorites_stub.create_favorites = lambda hass: Favorites()
+            with patch.dict(sys.modules, {
+                "custom_components.airfryer_recipes.websocket_api": api_stub,
+                "custom_components.airfryer_recipes.http": http_stub,
+                "custom_components.airfryer_recipes.panel": panel_stub,
+            }):
                 with patch("custom_components.airfryer_recipes.storage.create_repository", return_value=fake):
-                    self.assertTrue(await async_setup_entry(hass, entry))
-                    self.assertEqual(calls, ["registered"])
-                    self.assertTrue(await async_unload_entry(hass, entry))
-                    self.assertNotIn("repository", hass.data[DOMAIN])
-                    self.assertTrue(await async_setup_entry(hass, entry))
-                    self.assertEqual(calls, ["registered"])
+                    with patch("custom_components.airfryer_recipes.favorites.create_favorites", return_value=Favorites()):
+                        self.assertTrue(await async_setup_entry(hass, entry))
+                        self.assertEqual(calls, ["favorites_loaded", "registered", "http_registered", "panel_registered"])
+                        self.assertTrue(await async_unload_entry(hass, entry))
+                        self.assertNotIn("repository", hass.data[DOMAIN])
+                        self.assertTrue(await async_setup_entry(hass, entry))
+                        self.assertEqual(calls, ["favorites_loaded", "registered", "http_registered", "panel_registered", "panel_removed", "favorites_loaded", "panel_registered"])
             self.assertIsInstance(entry.runtime_data, AirfryerRecipesRuntime)
             self.assertEqual(await entry.runtime_data.recipes.async_list(), ())
 
@@ -105,13 +133,20 @@ class TestConfigFlow(unittest.TestCase):
 class TestPackagedMetadata(unittest.TestCase):
     def test_manifest(self):
         manifest = json.loads((INTEGRATION / "manifest.json").read_text(encoding="utf-8"))
+        self.assertEqual(
+            list(manifest),
+            ["domain", "name", *sorted(key for key in manifest if key not in {"domain", "name"})],
+        )
         self.assertEqual(manifest["domain"], DOMAIN)
         self.assertTrue(manifest["config_flow"])
         self.assertTrue(manifest["single_config_entry"])
         self.assertEqual(manifest["integration_type"], "hub")
         self.assertEqual(manifest["iot_class"], "calculated")
         self.assertEqual(manifest["requirements"], [])
-        self.assertNotIn("dependencies", manifest)
+        self.assertEqual(
+            manifest["dependencies"],
+            ["frontend", "http", "panel_custom", "websocket_api"],
+        )
         self.assertTrue(manifest["version"])
 
     def test_hacs_metadata(self):
