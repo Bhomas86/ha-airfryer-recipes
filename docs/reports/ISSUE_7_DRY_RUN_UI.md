@@ -28,7 +28,7 @@ Model check: GPT-5.6 Sol – High was recommended for this bounded frontend and 
 - a vanished target produces a clear message inside the device section,
 - regular users trigger no device discovery and cannot see the section.
 
-Python compilation and `git diff --check` passed as well. HACS, Hassfest and Python 3.12/3.14 then run in PR Actions. Cloud Codex and CI had no access to Home Assistant, VeSync or a real appliance.
+Python compilation and `git diff --check` passed as well. In PR #19, HACS, Hassfest, Python 3.12 and Python 3.14 passed at commit `86c8bba`. Cloud Codex and CI had no access to Home Assistant, VeSync or a real appliance.
 
 ## Local phone acceptance
 
@@ -43,7 +43,7 @@ After a backup, install the complete `custom_components/airfryer_recipes` direct
 7. If safely possible, make the appliance or zone disappear from the upstream display between selection and preview, then check again. Expect a vanished-target message, no retry and no device change.
 8. Check German and English user languages. A regular user must remain unable to open the administrator page.
 
-If anything changes on the air fryer, mark the test **FAILED**, stop further previews and preserve Home Assistant logs. Live transmission, active-zone changes, SYNC/MATCH and heater start are not tested. Local acceptance remains **NOT TESTED** until installation.
+If anything changes on the air fryer, mark the test **FAILED**, stop further previews and preserve Home Assistant logs. Live transmission, active-zone changes, SYNC/MATCH and heater start are not tested. The owner successfully opened device/zone discovery and the existing `0.1.0b1` dry-run preview on a phone; the new `0.1.0b2` capability dropdown is **NOT TESTED**.
 
 ## Limits and next step
 

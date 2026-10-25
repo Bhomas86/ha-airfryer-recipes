@@ -28,7 +28,7 @@ Modellprüfung: Für dieses abgegrenzte Frontend- und Testpaket wurde GPT-5.6 So
 - ein verschwundenes Ziel erzeugt eine verständliche Meldung im Geräteabschnitt,
 - normale Benutzer lösen keine Geräteabfrage aus und sehen den Abschnitt nicht.
 
-Python-Kompilierung und `git diff --check` bestanden ebenfalls. HACS, Hassfest und Python 3.12/3.14 laufen anschließend in den PR-Actions. Cloud Codex und CI hatten keinen Zugriff auf Home Assistant, VeSync oder ein reales Gerät.
+Python-Kompilierung und `git diff --check` bestanden ebenfalls. In PR #19 bestanden HACS, Hassfest, Python 3.12 und Python 3.14 am Commit `86c8bba`. Cloud Codex und CI hatten keinen Zugriff auf Home Assistant, VeSync oder ein reales Gerät.
 
 ## Lokale Abnahme auf dem Handy
 
@@ -43,7 +43,7 @@ Nach Backup den vollständigen Ordner `custom_components/airfryer_recipes` aus d
 7. Airfryer oder Fach zwischen Auswahl und Vorschau aus der Upstream-Anzeige verschwinden lassen, sofern gefahrlos möglich, anschließend erneut prüfen. Erwartet: Hinweis zum nicht mehr verfügbaren Ziel, keine Wiederholung und keine Geräteänderung.
 8. Oberfläche mit deutscher und englischer Benutzersprache prüfen. Ein normaler Benutzer darf die Admin-Seite weiterhin nicht öffnen.
 
-Bei irgendeiner Änderung am Airfryer gilt der Test als **FEHLGESCHLAGEN**; dann keine weiteren Vorschauen ausführen und Home-Assistant-Protokolle sichern. Echte Übertragung, laufende Fächer, SYNC/MATCH und Heizstart werden nicht getestet. Die lokale Abnahme ist bis zur Installation **NICHT GETESTET**.
+Bei irgendeiner Änderung am Airfryer gilt der Test als **FEHLGESCHLAGEN**; dann keine weiteren Vorschauen ausführen und Home-Assistant-Protokolle sichern. Echte Übertragung, laufende Fächer, SYNC/MATCH und Heizstart werden nicht getestet. Geräte- und Facherkennung sowie die bisherige Testvorschau aus `0.1.0b1` wurden vom Eigentümer auf dem Handy erfolgreich geöffnet; das neue Fähigkeits-Dropdown aus `0.1.0b2` ist **NICHT GETESTET**.
 
 ## Grenzen und nächster Schritt
 
