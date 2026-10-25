@@ -94,6 +94,30 @@ class RepositoryTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(mem.value, saved)
         self.assertEqual(mem.writes, 0)
 
+    async def test_valid_large_library_survives_restart(self):
+        from custom_components.airfryer_recipes.recipe_model import CookingPhase, Recipe
+
+        phase = CookingPhase("p" * 64, 180, 10)
+        for index in range(500):
+            await self.repo.async_create(Recipe(
+                id=str(index), name=f"Recipe {index}", phases=(phase,) * 8,
+                description="d" * 500,
+                tags=tuple(f"{tag} {'x' * 28}" for tag in range(20)),
+            ))
+        self.assertGreater(len(json.dumps(self.mem.value).encode("utf-8")), 1_000_000)
+        fresh = RecipeRepository(self.mem.load, self.mem.save)
+        await fresh.async_load()
+        self.assertEqual(len(await fresh.async_list()), 500)
+
+    async def test_failed_import_write_can_retry_same_confirmation(self):
+        preview = await self.repo.async_preview_import(export_library_json([sample()]))
+        self.mem.fail = True
+        with self.assertRaises(OSError):
+            await self.repo.async_confirm_import(preview.token)
+        self.assertEqual(await self.repo.async_list(), ())
+        self.mem.fail = False
+        self.assertEqual(await self.repo.async_confirm_import(preview.token), 1)
+
     async def test_import_requires_confirmation_and_skips_conflicts(self):
         original = sample()
         await self.repo.async_create(original)
