@@ -2,7 +2,7 @@
 
 [English](ROADMAP.md) | [Deutsch](ROADMAP.de.md)
 
-**Status:** Architecture and all **31 requirements approved**. The integration shell is merged; persistence and API are under review in PR #13/#14, and the administrator panel is in development in Issue #6. No tested HACS release exists. The [architecture specification](ARCHITECTURE.md) defines implementation boundaries.
+**Status:** Architecture and all **31 requirements approved**. Recipe storage, the authenticated API and the manually accepted administrator panel are merged through PR #16. Issue #7 starts with read-only discovery; live transmission remains blocked by the upstream contract findings in the [review](reports/ISSUE_7_DISCOVERY.md). No tested HACS release exists. The [architecture specification](ARCHITECTURE.md) defines implementation boundaries.
 
 ## Implementation priorities and dependency order
 

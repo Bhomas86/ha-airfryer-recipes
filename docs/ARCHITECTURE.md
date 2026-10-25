@@ -2,7 +2,7 @@
 
 [English](ARCHITECTURE.md) | [Deutsch](ARCHITECTURE.de.md)
 
-**Decision ADR-001 / Requirement 31: Modular Home Assistant custom integration.** Approved 2026-10-24. This document defines the target architecture. The integration shell is merged; the recipe store and WebSocket API are under review in PR #13/#14; the administrator panel is being built in Issue #6. Device control, dashboard and diagnostics remain planned.
+**Decision ADR-001 / Requirement 31: Modular Home Assistant custom integration.** Approved 2026-10-24. This document defines the target architecture. Recipe storage, the WebSocket API and the administrator panel are merged through PR #16. Read-only discovery is the first part of Issue #7; device control, dashboard and diagnostics remain planned. See the [upstream contract review](reports/ISSUE_7_DISCOVERY.md).
 
 ## Objectives and deployment
 

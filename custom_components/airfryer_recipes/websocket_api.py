@@ -243,6 +243,18 @@ async def ws_set_favorite(hass: Any, connection: Any, msg: dict[str, Any]) -> No
     await _respond(hass, connection, msg, run)
 
 
+@websocket_api.require_admin
+@websocket_api.websocket_command({probatio.Required("type"): f"{DOMAIN}/devices"})
+@websocket_api.async_response
+async def ws_devices(hass: Any, connection: Any, msg: dict[str, Any]) -> None:
+    """Read optional adapter discovery (admin-only until device ACLs are added)."""
+    from .device_discovery import discover_devices
+
+    async def run(repo: RecipeRepository) -> dict[str, Any]:
+        return discover_devices(hass)
+    await _respond(hass, connection, msg, run)
+
+
 COMMANDS = (
     ws_list,
     ws_get,
@@ -255,6 +267,7 @@ COMMANDS = (
     ws_export,
     ws_favorites,
     ws_set_favorite,
+    ws_devices,
 )
 
 

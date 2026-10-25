@@ -2,7 +2,7 @@
 
 [Deutsch](LOCAL_TEST_CHECKLIST.de.md) | [English](LOCAL_TEST_CHECKLIST.md)
 
-**Dieses Projekt enthält aktuell weder einen Geräteadapter noch ein Dashboard.**
+**Dieses Projekt enthält lesende Geräteerkennung, aber noch keinen Sendeadapter und kein Dashboard.**
 Die folgenden Tests erst durchführen, wenn die jeweilige Funktion implementiert
 und eine manuell installierbare Beta verfügbar ist. Reale Tests erfolgen
 ausschließlich im eigenen Home Assistant; Cloud Codex und GitHub Actions

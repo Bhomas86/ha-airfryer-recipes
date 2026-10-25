@@ -2,7 +2,7 @@
 
 [English](LOCAL_TEST_CHECKLIST.md) | [Deutsch](LOCAL_TEST_CHECKLIST.de.md)
 
-**This project currently has no device adapter or dashboard.** Do not run these
+**This project has read-only device discovery but no live send adapter or dashboard.** Do not run these
 steps until the corresponding phase has been implemented and a beta build is
 available for manual installation. Real tests take place only in the owner's
 Home Assistant environment; Cloud Codex and GitHub Actions must not contact
