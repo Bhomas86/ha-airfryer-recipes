@@ -12,12 +12,25 @@ Gemeinsame Favoriten sind Teil des Rezeptdatensatzes und bleiben mit älteren Re
 
 Die Panel-Einbindung nutzt Home Assistants `frontend`, `http`, `panel_custom` und `websocket_api`. Diese benötigten Komponenten sind im Integrationsmanifest deklariert; ein zuvor fehlender Eintrag für `http` wurde nach einem Hassfest-Fehler ergänzt.
 
+Der JSON-Export erzeugt keinen namenlosen Browser-Blob mehr. Ein Admin erhält über WebSocket einen 30 Sekunden gültigen, an seine HA-Sitzung gebundenen Downloadpfad. Der HTTP-Endpunkt prüft die Adminrolle erneut und liefert die Datei als `Airfryer-Rezepte-Home-Assistant.json`; Caching ist deaktiviert. Damit soll verhindert werden, dass die Android-App stattdessen eine UUID als Dateinamen verwendet.
+
 ## Prüfungen und Grenzen
 
-Automatische Offline-Tests prüfen Python-Lebenszyklus, Datenmodell, Favoriten-Persistenz, WebSocket-Rechte und die wichtigsten Frontend-Abläufe. Die Tests benutzen keine echte HA-Instanz und kein Gerät. Der Projektinhaber hat die Einrichtung und die Admin-Seite auf Home Assistant OS/Core 2026.10.3 am Smartphone geöffnet. Er hat ein Rezept angelegt und bestätigt, dass Rezept und persönlicher Favorit nach einem HA-Neustart erhalten blieben. Bearbeiten, Kopieren, bestätigtes Löschen der Kopie sowie Suche nach Name, Kategorie und Favorit funktionierten ebenfalls. Die Kategorieauswahl und das Wiederverwenden von „Aufbacken“ bei Eingabe von `aufBACKen` wurden am Smartphone bestätigt. JSON-Export/-Import und Berechtigungen sind lokal noch nicht eindeutig geprüft.
+Automatische Offline-Tests prüfen Python-Lebenszyklus, Datenmodell, Favoriten-Persistenz, WebSocket-/HTTP-Rechte und die wichtigsten Frontend-Abläufe. Die Tests benutzen keine echte HA-Instanz und kein Gerät. Für die aktuelle Revision bestanden 10 Frontend- und 59 Python-Offline-Tests.
 
-Beim Smartphone-Test fehlten ein Ausstieg und die Möglichkeit, das HA-Seitenmenü zu öffnen. Der Panel-Kopf enthält nun „Verlassen“ zur HA-Startseite und einen Menüknopf, der das HA-Ereignis `hass-toggle-menu` auslöst. Der Projektinhaber bestätigte anschließend, dass beide Bedienelemente auf dem Smartphone funktionieren. Für die aktuelle Revision bestanden 9 Frontend- und 55 Python-Offline-Tests.
+| Lokale Prüfung auf HA OS/Core 2026.10.3 | Ergebnis |
+| --- | --- |
+| Einrichtung und Admin-Seite auf dem Smartphone | **BESTANDEN** |
+| Rezept anlegen; Rezept und persönlicher Favorit nach Neustart erhalten | **BESTANDEN** |
+| Bearbeiten, Kopieren und bestätigtes Löschen der Kopie | **BESTANDEN** |
+| Suche/Filter nach Name, Kategorie und Favorit | **BESTANDEN** |
+| Kategorieauswahl; `aufBACKen` übernimmt „Aufbacken“ | **BESTANDEN** |
+| HA-Seitenmenü öffnen und Panel verlassen | **BESTANDEN** |
+| JSON exportieren, Datei wieder auswählen und drei gleiche IDs/Namen in der Vorschau erkennen | **BESTANDEN** |
+| Neuer Dateiname `Airfryer-Rezepte-Home-Assistant.json` auf Android | **NICHT GETESTET** |
+| Import tatsächlich mit `skip` oder `replace_ids` bestätigen | **NICHT GETESTET** |
+| Zweiter/normaler Benutzer und getrennte persönliche Favoriten | **NICHT GETESTET** |
 
-Für die weitere lokale Abnahme: Nach Backup den aktualisierten Branch installieren, HA neu starten und [die lokale Testcheckliste](../LOCAL_TEST_CHECKLIST.de.md) fortsetzen. Besonders wichtig sind JSON-Export/-Import, persönlicher Favorit mit zweitem Nutzer, Berechtigung des normalen Nutzers und Importkonflikte. Bitte keine echte Geräteübertragung testen. Für Code-Commit `9bc513f` bestanden auf GitHub Hassfest, HACS sowie Python 3.12 und 3.14.
+Für die weitere lokale Abnahme: Nach Backup den aktualisierten Branch installieren, HA neu starten und [die lokale Testcheckliste](../LOCAL_TEST_CHECKLIST.de.md) fortsetzen. Zuerst den neuen Exportdateinamen prüfen; anschließend bleiben Importbestätigung, persönlicher Favorit mit zweitem Nutzer und die Berechtigung des normalen Nutzers offen. Bitte keine echte Geräteübertragung testen.
 
 Die Programmeingabe ist derzeit frei, weil noch kein Airfryer-Adapter verifizierte Gerätefunktionen liefert. Nach Issue #7 soll der Rezepteditor solche Programme als Auswahl anbieten; Issue #8 zeigt beim Senden nur Funktionen des gewählten Airfryers. Die dafür notwendige Backend-Validierung ist noch nicht implementiert.

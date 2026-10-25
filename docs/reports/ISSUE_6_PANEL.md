@@ -12,12 +12,25 @@ Shared favorites are stored in recipe records, remaining compatible with older r
 
 The panel uses Home Assistant's `frontend`, `http`, `panel_custom` and `websocket_api` components. These required components are declared in the integration manifest; a missing `http` entry was added after a Hassfest failure.
 
+JSON export no longer creates a nameless browser blob. An administrator receives a download path over WebSocket that is bound to their HA session and valid for 30 seconds. The HTTP endpoint rechecks administrator access and serves `Airfryer-Rezepte-Home-Assistant.json` with caching disabled. This is intended to prevent the Android app from assigning a UUID filename.
+
 ## Verification and limits
 
-Automated offline tests cover the Python lifecycle, data model, favorite persistence, WebSocket authorization and key frontend flows. They use neither a real HA instance nor an appliance. The project owner opened the integration and admin panel on a phone running Home Assistant OS/Core 2026.10.3. They created a recipe and confirmed that both the recipe and personal favorite survived an HA restart. Editing, duplication, confirmed deletion of the copy, and filtering by name, category and favorite also worked. The category selector and reuse of “Aufbacken” when entering `aufBACKen` were confirmed on the phone. JSON export/import and permissions have not yet been clearly checked locally.
+Automated offline tests cover the Python lifecycle, data model, favorite persistence, WebSocket/HTTP authorization and key frontend flows. They use neither a real HA instance nor an appliance. The current revision passed 10 frontend and 59 Python offline tests.
 
-The phone test exposed a missing exit control and no way to open HA's sidebar. The panel header now provides a “Leave” link to the HA home page and a menu button that fires HA's `hass-toggle-menu` event. The project owner then confirmed that both controls work on the phone. The current revision passed 9 frontend and 55 Python offline tests.
+| Local check on HA OS/Core 2026.10.3 | Result |
+| --- | --- |
+| Setup and administrator page on a phone | **PASSED** |
+| Create a recipe; recipe and personal favorite survive restart | **PASSED** |
+| Edit, duplicate and confirm deletion of the copy | **PASSED** |
+| Search/filter by name, category and favorite | **PASSED** |
+| Category selector; `aufBACKen` reuses “Aufbacken” | **PASSED** |
+| Open the HA sidebar and leave the panel | **PASSED** |
+| Export JSON, select it again and detect three matching IDs/names in preview | **PASSED** |
+| New Android filename `Airfryer-Rezepte-Home-Assistant.json` | **NOT TESTED** |
+| Actually confirm import with `skip` or `replace_ids` | **NOT TESTED** |
+| Second/regular user and separate personal favorites | **NOT TESTED** |
 
-For further local acceptance: after a backup, install the updated branch, restart HA and continue the [local test checklist](../LOCAL_TEST_CHECKLIST.md). Pay particular attention to JSON export/import, personal favorites with a second user, regular-user permissions and import conflicts. Do not test live appliance transmission. Hassfest, HACS, Python 3.12 and Python 3.14 passed on GitHub for code commit `9bc513f`.
+For further local acceptance: after a backup, install the updated branch, restart HA and continue the [local test checklist](../LOCAL_TEST_CHECKLIST.md). Check the new export filename first; import confirmation, personal favorites with a second user and regular-user permissions remain open. Do not test live appliance transmission.
 
 Program entry is currently free text because no air fryer adapter supplies verified device functions yet. After Issue #7, the recipe editor should offer these programs as choices; Issue #8 will show only functions of the selected air fryer at send time. The necessary backend validation is not implemented yet.

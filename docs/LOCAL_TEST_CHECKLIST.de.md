@@ -39,7 +39,7 @@ erhalten keinen Zugriff auf Heimnetz oder echte VeSync-Geräte.
 - [ ] Rezept anlegen, bearbeiten, kopieren und nach Bestätigung löschen; nach HA-Neustart bleiben gespeicherte Rezepte erhalten.
 - [ ] Im Rezepteditor vorhandene Kategorie wählen; „Neue Kategorie hinzufügen“ steht zuletzt und übernimmt bei abweichender Groß-/Kleinschreibung den vorhandenen Namen.
 - [ ] Gemeinsame und persönliche Favoriten getrennt prüfen; persönliche Favoriten eines zweiten Benutzers bleiben unabhängig.
-- [ ] JSON-Importvorschau mit gleichen Namen/IDs prüfen und erst nach bewusster Auswahl übernehmen; Export prüfen.
+- [ ] JSON-Importvorschau mit gleichen Namen/IDs prüfen und erst nach bewusster Auswahl übernehmen; Export mit dem Dateinamen `Airfryer-Rezepte-Home-Assistant.json` prüfen.
 - [ ] Mit normalem Benutzer: Admin-Panel nicht öffnen und Schreib-WebSocket-Befehle nicht ausführen können.
 - [ ] Erstellen, Bearbeiten, Löschen, Duplizieren, Exportieren und Importieren in beiden Sprachen.
 - [ ] Ungültiges JSON und zukünftige Schemanummer importieren: Daten unverändert.

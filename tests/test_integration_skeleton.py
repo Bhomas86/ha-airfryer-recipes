@@ -40,6 +40,15 @@ class TestIntegrationLifecycle(unittest.TestCase):
             calls = []
             api_stub = types.ModuleType("custom_components.airfryer_recipes.websocket_api")
             api_stub.register_commands = lambda hass: calls.append("registered")
+            http_stub = types.ModuleType("custom_components.airfryer_recipes.http")
+
+            def register_http_view(hass):
+                state = hass.data[DOMAIN]
+                if not state.get("http_registered"):
+                    calls.append("http_registered")
+                    state["http_registered"] = True
+
+            http_stub.register_http_view = register_http_view
             panel_stub = types.ModuleType("custom_components.airfryer_recipes.panel")
 
             async def register_panel(hass):
@@ -56,16 +65,17 @@ class TestIntegrationLifecycle(unittest.TestCase):
             favorites_stub.create_favorites = lambda hass: Favorites()
             with patch.dict(sys.modules, {
                 "custom_components.airfryer_recipes.websocket_api": api_stub,
+                "custom_components.airfryer_recipes.http": http_stub,
                 "custom_components.airfryer_recipes.panel": panel_stub,
             }):
                 with patch("custom_components.airfryer_recipes.storage.create_repository", return_value=fake):
                     with patch("custom_components.airfryer_recipes.favorites.create_favorites", return_value=Favorites()):
                         self.assertTrue(await async_setup_entry(hass, entry))
-                        self.assertEqual(calls, ["favorites_loaded", "registered", "panel_registered"])
+                        self.assertEqual(calls, ["favorites_loaded", "registered", "http_registered", "panel_registered"])
                         self.assertTrue(await async_unload_entry(hass, entry))
                         self.assertNotIn("repository", hass.data[DOMAIN])
                         self.assertTrue(await async_setup_entry(hass, entry))
-                        self.assertEqual(calls, ["favorites_loaded", "registered", "panel_registered", "panel_removed", "favorites_loaded", "panel_registered"])
+                        self.assertEqual(calls, ["favorites_loaded", "registered", "http_registered", "panel_registered", "panel_removed", "favorites_loaded", "panel_registered"])
             self.assertIsInstance(entry.runtime_data, AirfryerRecipesRuntime)
             self.assertEqual(await entry.runtime_data.recipes.async_list(), ())
 

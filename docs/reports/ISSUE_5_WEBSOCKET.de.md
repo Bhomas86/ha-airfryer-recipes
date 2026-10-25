@@ -22,7 +22,7 @@ Jede Anfrage nutzt das normale Home-Assistant-WebSocket-Format: `{"id": 1, "type
 | `delete` | Admin | `recipe_id` | `deleted` |
 | `import_preview` | Admin | `payload` (JSON-Text) | Vorschau, Konflikte und kurzlebiges `token` |
 | `import_confirm` | Admin | `token`, optional `policy` | `imported` |
-| `export` | Admin | – | Versionierter JSON-Text in `payload` |
+| `export` | Admin | – | Kurz gültige signierte `url`, `filename` und Ablaufzeit |
 
 Der vollständige Befehlstyp erhält immer den Präfix `airfryer_recipes/`. Konfliktstrategie: `skip` (Standard) oder `replace_ids` (nur identische IDs).
 
@@ -33,8 +33,8 @@ Der vollständige Befehlstyp erhält immer den Präfix `airfryer_recipes/`. Konf
 - Fehler haben strukturierte Codes, unerwartete interne Speicherfehler werden nicht mit vertraulichen Details an Clients ausgegeben.
 - Beim Unload sperrt die API mangels aktiven Repository-Zugangs.
 - Die API ruft keine Airfryer-/VeSync-Aktionen auf.
-- **Persönliche Favoriten**, Geräteeinstellungen und Steuerrechte für Fach-/Gerätekombinationen sind noch nicht implementiert; sie gehören in spätere Aufgaben. Die aktuelle API enthält keine Benutzerpräferenzen.
-- Authentifizierte Administratoren können JSON exportieren; UI-Bestätigung vor Löschvorgängen muss in Issue #6 ergänzt werden.
+- Persönliche Favoriten werden getrennt nach authentifizierter HA-Benutzer-ID gespeichert; Geräteeinstellungen und Steuerrechte für Fach-/Gerätekombinationen gehören in spätere Aufgaben.
+- Authentifizierte Administratoren erhalten für den JSON-Export einen 30 Sekunden gültigen Downloadpfad. Der HTTP-Endpunkt prüft die Adminrolle erneut und liefert `Airfryer-Rezepte-Home-Assistant.json` mit deaktiviertem Caching.
 
 ## Testplan
 

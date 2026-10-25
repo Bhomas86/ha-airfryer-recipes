@@ -336,12 +336,10 @@ class AirfryerRecipesPanel extends HTMLElement {
     if (type === "export") {
       try {
         const result = await this.request("export");
-        const url = URL.createObjectURL(new Blob([result.payload], { type: "application/json" }));
         const link = document.createElement("a");
-        link.href = url;
-        link.download = "airfryer-recipes.json";
+        link.href = result.url;
+        link.download = result.filename;
         link.click();
-        setTimeout(() => URL.revokeObjectURL(url), 1000);
       } catch (error) { this.showError(error); }
     }
     if (type.startsWith("import-") && this.preview) {

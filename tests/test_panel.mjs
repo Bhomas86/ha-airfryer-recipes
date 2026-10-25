@@ -8,6 +8,7 @@ const source = readFileSync(new URL("../custom_components/airfryer_recipes/front
 function panelWith(api, admin = true) {
   let Panel;
   const events = [];
+  const createdElements = [];
   const context = {
     HTMLElement: class {
       attachShadow() {
@@ -23,7 +24,11 @@ function panelWith(api, admin = true) {
     setTimeout,
     URL,
     Blob,
-    document: { createElement: () => ({ click() {} }) },
+    document: { createElement: () => {
+      const element = { clicked: false, click() { this.clicked = true; } };
+      createdElements.push(element);
+      return element;
+    } },
     structuredClone,
     FormData: class {
       constructor(form) { this.values = form.values; }
@@ -35,6 +40,7 @@ function panelWith(api, admin = true) {
   const panel = new Panel();
   panel._hass = { language: "de", user: { is_admin: admin }, callWS: api };
   panel.events = events;
+  panel.createdElements = createdElements;
   return panel;
 }
 
@@ -118,6 +124,21 @@ test("import preview waits for explicit confirmation and uses selected policy", 
   assert.equal(calls[1].type, "airfryer_recipes/import_confirm");
   assert.equal(calls[1].policy, "replace_ids");
   assert.equal(calls[1].token, "preview-token");
+});
+
+test("export opens the server-provided named download instead of a blob URL", async () => {
+  const panel = panelWith(async (request) => {
+    assert.equal(request.type, "airfryer_recipes/export");
+    return {
+      url: "/api/airfryer_recipes/export?authSig=signed",
+      filename: "Airfryer-Rezepte-Home-Assistant.json",
+    };
+  });
+  await panel.onClick({ target: { closest: () => ({ dataset: { action: "export" } }) } });
+  assert.equal(panel.createdElements.length, 1);
+  assert.equal(panel.createdElements[0].href, "/api/airfryer_recipes/export?authSig=signed");
+  assert.equal(panel.createdElements[0].download, "Airfryer-Rezepte-Home-Assistant.json");
+  assert.equal(panel.createdElements[0].clicked, true);
 });
 
 test("form creates a device-independent recipe through the authenticated API", async () => {

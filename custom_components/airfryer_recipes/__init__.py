@@ -29,6 +29,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Load the local library, then publish it to authenticated commands."""
     from .storage import create_repository
     from .favorites import create_favorites
+    from .http import register_http_view
     from .websocket_api import register_commands
     from .panel import async_register_panel
 
@@ -43,6 +44,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not state.get("websocket_registered", False):
         register_commands(hass)
         state["websocket_registered"] = True
+    register_http_view(hass)
 
     await async_register_panel(hass)
 

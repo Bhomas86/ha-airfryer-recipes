@@ -33,6 +33,8 @@ def _make_modules():
     ha = types.ModuleType("homeassistant")
     components = types.ModuleType("homeassistant.components")
     ws = types.ModuleType("homeassistant.components.websocket_api")
+    http = types.ModuleType("homeassistant.components.http")
+    http_auth = types.ModuleType("homeassistant.components.http.auth")
     probatio = types.ModuleType("probatio")
 
     probatio.Required = lambda key: key
@@ -61,12 +63,18 @@ def _make_modules():
     ws.require_admin = require_admin
     ws.async_response = lambda fn: fn
     ws.async_register_command = lambda hass, command: ws.registered.append(command)
+    http_auth.async_sign_path = lambda hass, path, expiration: (
+        f"{path}?authSig=test-{int(expiration.total_seconds())}"
+    )
     components.websocket_api = ws
+    components.http = http
     ha.components = components
     return {
         "probatio": probatio,
         "homeassistant": ha,
         "homeassistant.components": components,
+        "homeassistant.components.http": http,
+        "homeassistant.components.http.auth": http_auth,
         "homeassistant.components.websocket_api": ws,
     }
 
@@ -221,6 +229,19 @@ class WebsocketTests(unittest.IsolatedAsyncioTestCase):
             (await self.call("import_confirm", self.admin, token=token))[2],
             "preview_expired",
         )
+
+    async def test_admin_export_returns_short_lived_named_download(self):
+        result = await self.call("export", self.admin)
+        self.assertEqual(result[0], "result")
+        self.assertEqual(
+            result[2],
+            {
+                "url": "/api/airfryer_recipes/export?authSig=test-30",
+                "filename": "Airfryer-Rezepte-Home-Assistant.json",
+                "expires_seconds": 30,
+            },
+        )
+        self.assertNotIn("payload", result[2])
 
     async def test_disk_errors_do_not_leak_internal_paths(self):
         self.fail_write = True
