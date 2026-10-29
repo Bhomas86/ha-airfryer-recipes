@@ -2,7 +2,7 @@
 
 [Deutsch](ROADMAP.de.md) | [English](ROADMAP.md)
 
-**Status:** Architektur und alle **31 Anforderungen beschlossen**. Rezeptspeicher, authentifizierte API und manuell abgenommene Admin-Verwaltung sind über PR #16 gemergt. Issue #7 umfasst lesende Geräteerkennung, eine serverseitig erzwungene Testvorschau und deren Admin-Handy-Oberfläche. Die öffentliche HACS-Vorabversion `0.1.0b1` ermöglicht die Handy-Abnahme des offenen PR #19. Airfryer Control `1.0.2-beta.1` liefert inzwischen einen öffentlichen Fähigkeitsvertrag; PR #19 wird um dessen lesende Programmauswahl ergänzt. Echte Übertragung bleibt gesperrt, solange dieser Beta-Vertrag und die modellspezifischen Fähigkeiten ungeprüft sind. Die [Architekturbeschreibung](ARCHITECTURE.de.md) legt die Grenzen der Umsetzung fest.
+**Status (29.10.2026):** Alle 31 Anforderungen sind beschlossen. Rezeptspeicher, authentifizierte API und lokal abgenommene Admin-Verwaltung sind gemergt. PR #19 mit Geräte-Testvorschau und Programmauswahl ist seit 25.10.2026 gemergt; HACS-Vorabversion `0.1.0b2` wurde auf dem Handy erfolgreich abgenommen. PR #20 korrigiert die HACS-Versionsanzeige. Issue #7 bleibt für die sichere echte Übertragung offen: Beta-Vertrag und modellspezifische Fähigkeiten müssen lokal verifiziert werden. Danach folgt das Dashboard (#8). Siehe [Abnahmebericht](reports/ISSUE_7_DRY_RUN_UI.de.md) und [Architektur](ARCHITECTURE.de.md).
 
 ## Prioritäten und Abhängigkeiten
 
@@ -26,7 +26,7 @@
 ## Arbeitsteilung
 
 - **ChatGPT kann übernehmen:** Architektur, Rezeptdatenmodelle, Python-Hilfsfunktionen, Tests, Dokumentation, Reviews sowie kleinere abgegrenzte Branches und Pull Requests.
-- **Codex übernimmt geeignete größere Pakete:** HA-Lifecycle, Admin-Seite, Adapter und Dashboard. Vor jedem Paket gelten die **vier Modellstufen** aus [AGENTS.md](../AGENTS.de.md). **GPT-5.6 Sol High ist Standard**, nicht GPT-6.1.
+- **Codex übernimmt geeignete größere Pakete:** HA-Lifecycle, Admin-Seite, Adapter und Dashboard. Vor jedem Paket gilt die [Modellrichtlinie aus AGENTS.md](../AGENTS.de.md): **ausschließlich GPT-6.1 Sol**, mit dem Denkaufwand **niedrig, mittel oder hoch**. Niedrig für einfache Aufgaben, mittel für normale Entwicklung und hoch für komplexe Architektur oder Sicherheitsaufgaben. Diese Regel gilt ab 29.10.2026 und ersetzt ältere Modellempfehlungen in Issues und Berichten.
 - **GitHub Actions:** Ausschließlich Simulationen, Unit-/statische Tests; niemals Zugang zum Heimnetz oder echten Gerät.
 - **Nutzer / lokales Home Assistant:** Installation, Neustart und reale Tests mit der Cosori anhand der [Testcheckliste](LOCAL_TEST_CHECKLIST.de.md).
 - **Pull Requests:** Eigene Branches, vollständige deutsche und englische Dokumentation, Tests und Review vor dem Merge. Keine automatische Zusammenführung.

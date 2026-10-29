@@ -14,16 +14,17 @@ Diese Datei erläutert die verbindlichen Entwicklungsregeln für Codex und ander
 - Bei Issues und Pull Requests steht **Deutsch zuerst**, danach die vollständig verständliche englische Fassung.
 - Kommunikation mit dem Projektverantwortlichen vorzugsweise auf Deutsch. Technische Bezeichner und Quellcode-Kommentare dürfen Englisch sein. UI-Texte werden mit `en` und `de` bereitgestellt; **Englisch ist Standard/Fallback**.
 - Änderungen an Dokumentation und Übersetzungen erfolgen immer gemeinsam im selben PR. Die inhaltliche Übereinstimmung ist Teil der Prüfung.
-- Für reine Übersetzungen und kleinere Berichte möglichst ein günstiges Codex-Modell nutzen, nicht ohne besonderen Grund GPT-6.1 High.
+- Für kleine Übersetzungen und Berichte GPT-6.1 Sol – niedrig nutzen; bei entsprechender Schwierigkeit oder entsprechendem Risiko gemäß der folgenden Richtlinie mittel oder hoch wählen.
 
-## Modellrichtlinie – vier zugelassene Varianten
+## Modellrichtlinie – ausschließlich GPT-6.1 Sol
+
+Ab 29.10.2026 schreibt der Projektverantwortliche **ausschließlich GPT-6.1 Sol** vor. Unterschieden wird nur der Denkaufwand: **niedrig, mittel oder hoch** (englisch: **Low, Medium, High**). Diese Regel ersetzt die bisherige Modellrichtlinie.
 
 | Modellkonfiguration | Einsatzzweck |
 | --- | --- |
-| **GPT-5.6 Sol – Medium** | Kleine Dokumentationsänderungen, Übersetzungen, isolierte Tests, Formatierung und Wartung mit geringem Risiko |
-| **GPT-5.6 Sol – High** | **STANDARD**. Abgegrenzte Funktionen, Python, normale Fehlerkorrekturen, Unit-Tests und Code Reviews |
-| **GPT-6 Sol – High** | Komplexe Architektur über mehrere Module, Home-Assistant-Async/Lifecycle, Migrationen, schwierige Fehlersuche |
-| **GPT-6.1 Sol – High** | **AUSNAHME**. Schwierige Sicherheits-/Nebenläufigkeits- oder Architekturprobleme, wenn niedrigere Stufen unzureichend sind. Credit-Verbrauch begründen |
+| **GPT-6.1 Sol – niedrig** | Kleine Dokumentationsänderungen, Übersetzungen, Formatierung und einfache Wartung mit geringem Risiko |
+| **GPT-6.1 Sol – mittel** | **STANDARD für normale Entwicklung**. Abgegrenzte Funktionen, Python, normale Fehlerkorrekturen, Unit-Tests und Code Reviews |
+| **GPT-6.1 Sol – hoch** | Komplexe Architektur über mehrere Module, Home-Assistant-Async/Lifecycle, Migrationen, schwierige Fehlersuche, Sicherheit und Nebenläufigkeit |
 
 Die Modellnamen stammen aus der Auswahl des Projektverantwortlichen. Ein Agent darf nicht behaupten, dass er das aktuell ausgewählte Modell automatisch sehen oder ändern kann.
 
@@ -33,8 +34,8 @@ Die Modellnamen stammen aus der Auswahl des Projektverantwortlichen. Ein Agent d
 2. Kurz **Modellprüfung** ausgeben: empfohlene Stufe, Begründung und tatsächlich ausgewähltes Modell **nur, wenn zuverlässig bekannt**.
 3. Wenn das aktuelle Modell nicht sichtbar ist, vor substanziellen Codeänderungen eine Bestätigung einholen.
 4. Passt das gewählte Modell nicht, **vor Bearbeitung stoppen** und die kostengünstigste passende Stufe vorschlagen. Nicht stillschweigend umstellen oder weiterarbeiten.
-5. Standard ist **GPT-5.6 Sol – High**; für einfache Aufgaben ggf. Medium verwenden und bei höherer Schwierigkeit schrittweise zu GPT-6 Sol – High wechseln.
-6. **GPT-6.1 Sol – High** nur mit besonderer Begründung und expliziter Zustimmung empfehlen.
+5. Für jede Aufgabe **GPT-6.1 Sol** verwenden. Für einfache Aufgaben niedrig, für normale Entwicklung mittel und für komplexe oder sicherheitskritische Arbeiten hoch empfehlen.
+6. Die empfohlene Stufe kurz begründen. Hoch ist eine zugelassene Aufwandsstufe und keine Ausnahme, die ein anderes Modell erfordert. Nie behaupten, die ausgewählte Stufe automatisch umzustellen.
 7. Wenn sich der Aufgabenumfang oder das Risiko wesentlich ändert, erneut prüfen und nötigenfalls anhalten.
 
 Beispiel:
@@ -42,7 +43,7 @@ Beispiel:
 ```text
 Modellprüfung
 Aufgabe: JSON-Validierung und Unit-Tests für Rezepte entwickeln.
-Empfehlung: GPT-5.6 Sol – High (abgegrenzte Implementierung).
+Empfehlung: GPT-6.1 Sol – mittel (abgegrenzte Implementierung).
 Ausgewählt: In dieser Umgebung nicht zuverlässig erkennbar.
 Aktion: Modell vor der Implementierung bestätigen lassen.
 ```

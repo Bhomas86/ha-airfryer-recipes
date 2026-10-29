@@ -2,9 +2,9 @@
 
 [English](README.md) | [Deutsch](README.de.md)
 
-A planned Home Assistant custom integration for managing reusable air fryer recipes and sending their settings to supported air fryers through existing Home Assistant integrations.
+A Home Assistant custom integration for managing reusable air fryer recipes and sending their settings to supported air fryers through existing Home Assistant integrations.
 
-> **Project status: Early development.** The integration shell from Issue #3 is merged. The recipe backend and WebSocket API are under review in PR #13 and PR #14. This branch adds an administrator recipe panel for Issue #6. Initial configuration succeeded on Home Assistant OS 2026.10.3; recipe operations, permissions and restart persistence still need local verification. The dashboard and device adapter are not implemented.
+> **Project status: Beta 0.1.0b2 (as of 2026-10-29).** Recipe management, local storage, authenticated API and read-only device preview are merged. Phone acceptance of the preview passed on 2026-10-25. Live transmission remains blocked; the dashboard card and SYNC/MATCH are future work.
 
 ## Goals
 
@@ -14,7 +14,7 @@ A planned Home Assistant custom integration for managing reusable air fryer reci
 - **Cooking zone selection:** Use the same recipe in different baskets/zones where supported.
 - **Dashboard card:** Select a device, zone and recipe from dropdowns, review the settings and send them with one action.
 - **Local storage:** Keep recipes in Home Assistant rather than in a cloud database.
-- **Multilingual interface:** English and German are planned.
+- **Multilingual interface:** English and German are supported.
 
 ## Planned workflow
 
@@ -33,22 +33,27 @@ The project is intended to manage recipes separately from device communication. 
 
 The first target device is the **Cosori Turbo Tower Pro Smart (CAF-DC111S-AEU)**. Basic transmission of temperature and cooking time to its lower zone has been tested using **Airfryer Control**, **not this project**. Compatibility with other models, commands and cooking programs still requires verification.
 
-## Planned milestones
+## Development status
 
-- [x] Custom integration skeleton and configuration flow code ([Issue #3](https://github.com/Bhomas86/ha-airfryer-recipes/issues/3); setup confirmed on HA 2026.10.3)
-- [ ] Persistent, validated recipe storage ([Issue #4](https://github.com/Bhomas86/ha-airfryer-recipes/issues/4); a recipe and personal favorite survived a local restart, further acceptance pending)
-- [ ] Recipe management interface (code in the Issue #6 branch; creation confirmed on a phone, further acceptance pending)
-- [ ] Lovelace dashboard card
-- [ ] Adapter for Airfryer Control
-- [ ] Device/zone compatibility and error handling
-- [ ] Automated tests, HACS metadata and release packaging
-- [ ] English and German translations
+- [x] Home Assistant setup and HACS metadata
+- [x] Versioned local recipe storage and authenticated API
+- [x] Administrator recipe management with categories, search, favorites and JSON import/export
+- [x] Read-only device/zone discovery and server-enforced dry-run preview
+- [x] English and German interface
+- [x] HACS prerelease 0.1.0b2 and documented phone acceptance
+- [ ] Verified model limits and safe live transmission
+- [ ] Lovelace dashboard card and card editor
+- [ ] SYNC/MATCH and stable release
+
+Last documented results: 78 Python offline tests and 15 frontend tests passed; HACS, Hassfest and Python 3.12/3.14 passed in PR #19. See the [acceptance report](docs/reports/ISSUE_7_DRY_RUN_UI.md).
 
 ## Installation
 
-**No fully tested release is available yet.** Setup, recipe creation, and persistence of a recipe and personal favorite across a restart were confirmed on Home Assistant 2026.10.3. Other recipe workflows and permissions still require local testing. Do not assume stable use before the first verified release.
+**Prerelease, not a stable release.** Create a Home Assistant backup first. Add this repository as a custom HACS integration repository, show prereleases and select `v0.1.0b2` using “Redownload”. Restart Home Assistant and fully reopen the Companion app.
 
-The setup flow requires no device, cloud credentials or network access. The administrator recipe panel is being tested in Issue #6; the full device onboarding wizard follows later.
+Recipe management works without Airfryer Control and requires no cloud credentials. Install Airfryer Control `1.0.2-beta.1` or newer for the extended device preview. It executes no control commands. For CAF-DC111S-AEU, the six reported programs and limits remain estimated/unverified; `proof` is missing from the upstream contract. Live transmission remains blocked.
+
+Details: [release notes](docs/releases/0.1.0b2.md), [local test checklist](docs/LOCAL_TEST_CHECKLIST.md) and [roadmap](docs/ROADMAP.md).
 
 ## Safety and privacy
 
