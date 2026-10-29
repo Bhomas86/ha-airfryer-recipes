@@ -2,7 +2,7 @@
 
 [English](ROADMAP.md) | [Deutsch](ROADMAP.de.md)
 
-**Status:** Architecture and all **31 requirements approved**. Recipe storage, the authenticated API and the manually accepted administrator panel are merged through PR #16. Issue #7 includes read-only discovery, a server-enforced dry-run preview and its administrator phone UI. Public HACS prerelease `0.1.0b1` supports phone acceptance from open PR #19. Airfryer Control `1.0.2-beta.1` now supplies a public capability contract; PR #19 is being extended with its read-only program dropdown. Live transmission remains blocked while this beta contract and model-specific capabilities are unverified. The [architecture specification](ARCHITECTURE.md) defines implementation boundaries.
+**Status (2026-10-29):** All 31 requirements are agreed. Recipe storage, authenticated API and locally accepted administrator management are merged. PR #19 with device preview and program selection was merged on 2026-10-25; HACS prerelease `0.1.0b2` passed phone acceptance. PR #20 corrects the HACS version listing. Issue #7 remains open for safe live transmission: the beta contract and model-specific capabilities require local verification. The dashboard (#8) follows. See the [acceptance report](reports/ISSUE_7_DRY_RUN_UI.md) and [architecture](ARCHITECTURE.md).
 
 ## Implementation priorities and dependency order
 
@@ -26,7 +26,7 @@
 ## Development ownership and workflow
 
 - **ChatGPT can prepare:** architecture, data models, Python utilities, tests, documentation, reviews, small bounded feature branches and PRs.
-- **Codex can implement:** larger Home Assistant lifecycle changes, administrative panel, adapter and dashboard features in focused task packages. Apply the **four-choice model policy** in [AGENTS.md](../AGENTS.md) before each package; **GPT-5.6 Sol High is the default**, not GPT-6.1.
+- **Codex can implement:** larger Home Assistant lifecycle changes, administrative panel, adapter and dashboard features in focused task packages. Apply the [AGENTS.md model policy](../AGENTS.md) before each package: **GPT-6.1 Sol exclusively**, with **Low, Medium or High** reasoning effort. Low suits simple tasks, Medium normal development, and High complex architecture or safety work. This policy applies from 2026-10-29 and supersedes older model recommendations in issues and reports.
 - **GitHub Actions:** mocks/static/unit tests only, no household device access or credentials.
 - **Owner/local Home Assistant:** integration install/restart and real Cosori tests. Use the [local checklist](LOCAL_TEST_CHECKLIST.md).
 - **Pull requests:** feature branches, bilingual German-first reports/PR bodies, tests and review before merging. Never automatically merge.

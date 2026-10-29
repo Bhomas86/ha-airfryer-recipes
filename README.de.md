@@ -2,9 +2,9 @@
 
 [English](README.md) | [Deutsch](README.de.md)
 
-Geplante benutzerdefinierte Home-Assistant-Integration zur Verwaltung wiederverwendbarer Heißluftfritteusen-Rezepte. Die gespeicherten Einstellungen sollen über bestehende Home-Assistant-Integrationen an unterstützte Geräte übertragen werden.
+Benutzerdefinierte Home-Assistant-Integration zur Verwaltung wiederverwendbarer Heißluftfritteusen-Rezepte. Die gespeicherten Einstellungen sollen über bestehende Home-Assistant-Integrationen an unterstützte Geräte übertragen werden.
 
-> **Projektstatus: Frühe Entwicklungsphase.** Die Home-Assistant-Grundstruktur aus Issue #3 ist gemergt. Rezeptspeicher und WebSocket-API werden in PR #13 und PR #14 geprüft. Dieser Branch ergänzt die Admin-Rezeptverwaltung für Issue #6. Die Ersteinrichtung gelang auf Home Assistant OS 2026.10.3; Rezeptfunktionen, Rechte und Speicherung nach Neustart müssen lokal geprüft werden. Dashboard und Geräteadapter sind nicht implementiert.
+> **Projektstatus: Beta 0.1.0b2 (Stand 29.10.2026).** Rezeptverwaltung, lokale Speicherung, authentifizierte API und lesende Geräte-Testvorschau sind gemergt. Die Handy-Abnahme der Testvorschau war am 25.10.2026 erfolgreich. Echte Geräteübertragung bleibt gesperrt; Dashboard-Karte und SYNC/MATCH folgen später.
 
 ## Ziele
 
@@ -14,7 +14,7 @@ Geplante benutzerdefinierte Home-Assistant-Integration zur Verwaltung wiederverw
 - **Garkammerauswahl:** Dasselbe Rezept bei unterstützten Geräten in verschiedenen Körben/Zonen verwenden.
 - **Dashboard-Karte:** Gerät, Fach und Rezept über Dropdown-Menüs auswählen, Einstellungen kontrollieren und bewusst übertragen.
 - **Lokale Speicherung:** Rezepte in Home Assistant statt in einer Cloud-Datenbank speichern.
-- **Mehrsprachige Oberfläche:** Deutsch und Englisch sind geplant.
+- **Mehrsprachige Oberfläche:** Deutsch und Englisch werden unterstützt.
 
 ## Geplanter Ablauf
 
@@ -33,22 +33,27 @@ Die Rezeptverwaltung soll von der Gerätekommunikation getrennt bleiben. Die ers
 
 Als erstes Zielgerät dient die **Cosori Turbo Tower Pro Smart (CAF-DC111S-AEU)**. Die Übertragung von Temperatur und Garzeit an die untere Garkammer wurde bereits mit **Airfryer Control** getestet, **nicht mit diesem Projekt**. Weitere Modelle, Befehle und Garprogramme müssen noch geprüft werden.
 
-## Geplante Meilensteine
+## Entwicklungsstand
 
-- [x] Code-Grundstruktur und Einrichtungsdialog ([Issue #3](https://github.com/Bhomas86/ha-airfryer-recipes/issues/3); Einrichtung auf HA 2026.10.3 bestätigt)
-- [ ] Dauerhafte Speicherung mit Plausibilitätsprüfung ([Issue #4](https://github.com/Bhomas86/ha-airfryer-recipes/issues/4); Rezept und persönlicher Favorit überstanden einen lokalen Neustart, weitere Abnahme offen)
-- [ ] Grafische Rezeptverwaltung (Code im Issue-#6-Branch; Anlegen auf dem Smartphone bestätigt, weitere Abnahme offen)
-- [ ] Lovelace-Dashboard-Karte
-- [ ] Anbindung an Airfryer Control
-- [ ] Geräte-/Zonenunterstützung und Fehlerbehandlung
-- [ ] Automatische Tests, HACS-Metadaten und Release-Paket
-- [ ] Deutsche und englische Übersetzungen
+- [x] Home-Assistant-Einrichtung und HACS-Metadaten
+- [x] Versionierte lokale Rezeptspeicherung und authentifizierte API
+- [x] Admin-Rezeptverwaltung mit Kategorien, Suche, Favoriten und JSON-Import/-Export
+- [x] Lesende Geräte-/Facherkennung und serverseitige Testvorschau
+- [x] Deutsche und englische Oberfläche
+- [x] HACS-Vorabversion 0.1.0b2 und dokumentierte Handy-Abnahme
+- [ ] Verifizierte Modellgrenzen und sichere echte Übertragung
+- [ ] Lovelace-Dashboard-Karte und Karteneditor
+- [ ] SYNC/MATCH und stabile Veröffentlichung
+
+Zuletzt dokumentiert: 78 Python-Offline-Tests und 15 Frontend-Tests bestanden; HACS, Hassfest und Python 3.12/3.14 bestanden in PR #19. Siehe [Abnahmebericht](docs/reports/ISSUE_7_DRY_RUN_UI.de.md).
 
 ## Installation
 
-**Noch keine vollständig geprüfte Veröffentlichung verfügbar.** Einrichtung, Rezeptanlage sowie Speicherung von Rezept und persönlichem Favoriten über einen Neustart wurden auf Home Assistant 2026.10.3 bestätigt. Weitere Rezeptabläufe und Berechtigungen müssen lokal noch geprüft werden. Bitte vor der ersten geprüften Version keine stabile Nutzung annehmen.
+**Vorabversion, kein stabiler Release.** Vorher ein Home-Assistant-Backup erstellen. Dieses Repository als benutzerdefiniertes HACS-Integrationsrepository hinzufügen, Vorabversionen anzeigen und über „Neu herunterladen“ `v0.1.0b2` auswählen. Home Assistant neu starten und die Companion-App vollständig neu öffnen.
 
-Der Einrichtungsdialog benötigt weder Airfryer noch Cloud-Zugangsdaten oder eine Internetverbindung. Die Admin-Rezeptverwaltung wird in Issue #6 getestet; der vollständige Geräteassistent folgt später.
+Die Rezeptverwaltung funktioniert ohne Airfryer Control und benötigt keine Cloud-Zugangsdaten. Für die erweiterte Geräte-Testvorschau Airfryer Control `1.0.2-beta.1` oder neuer installieren. Sie führt keine Steuerbefehle aus. Für CAF-DC111S-AEU sind die sechs gemeldeten Programme und Grenzen noch geschätzt/ungeprüft; `proof` fehlt im Upstream-Vertrag. Echte Übertragung bleibt gesperrt.
+
+Details: [Release Notes](docs/releases/0.1.0b2.de.md), [lokale Testcheckliste](docs/LOCAL_TEST_CHECKLIST.de.md) und [Roadmap](docs/ROADMAP.de.md).
 
 ## Sicherheit und Datenschutz
 

@@ -23,21 +23,20 @@ a higher-cost model is better for every task.
   both `en` and `de` translations; English remains the default/fallback.
 - Documentation translations must remain semantically equivalent; whenever one
   language changes, update the other in the **same PR**. Include a review check.
-- Translation or report-writing work is small/medium by default under the
-  separate Codex model-selection policy; do not spend GPT-6.1 High credits
-  without exceptional justification.
+- Use GPT-6.1 Sol — Low for small translations and reports; choose Medium
+  or High when complexity or risk warrants it under the policy below.
 
 ## Model policy (explicit project choices)
 
-The owner has selected exactly four Codex configurations for this workflow,
-in ascending order of expected reasoning/cost:
+Effective 2026-10-29, the owner requires **GPT-6.1 Sol exclusively**.
+Only the reasoning effort varies: **Low, Medium or High** (German:
+**niedrig, mittel, hoch**). This replaces the previous model policy.
 
 | Configuration | When to recommend |
 | --- | --- |
-| **GPT-5.6 Sol — Medium** | Small documentation, translations, isolated tests, formatting and low-risk maintenance |
-| **GPT-5.6 Sol — High** | **DEFAULT.** Scoped feature work, Python implementation, normal bug fixes, unit tests and reviews |
-| **GPT-6 Sol — High** | Multi-module architecture, complex Home Assistant lifecycle/async integration, migration logic and difficult debugging |
-| **GPT-6.1 Sol — High** | **EXCEPTION ONLY.** High-risk security/safety, difficult concurrency or architecture decisions after lower tiers prove insufficient; explicitly justify credit cost |
+| **GPT-6.1 Sol — Low** | Small documentation, translations, formatting and straightforward low-risk maintenance |
+| **GPT-6.1 Sol — Medium** | **DEFAULT for normal development.** Scoped features, Python implementation, normal bug fixes, unit tests and reviews |
+| **GPT-6.1 Sol — High** | Multi-module architecture, complex Home Assistant lifecycle/async integration, migrations, difficult debugging, safety and concurrency |
 
 These names represent choices available to the project owner, not a claim that
 an agent can inspect or change ChatGPT/Codex's model selector.
@@ -54,11 +53,11 @@ an agent can inspect or change ChatGPT/Codex's model selector.
    IMPLEMENTING OR RUNNING A LONG REASONING TASK**. Explain why and propose the
    least-expensive suitable configuration; request that the owner switch it.
    Do not silently switch models or keep coding after identifying a mismatch.
-5. Use **GPT-5.6 Sol — High by default**. Start lower at Medium for small
-   isolated work, or move up progressively to GPT-6 Sol — High only when justified.
-6. Do **not** automatically select GPT-6.1 Sol — High. Suggest it only when
-   lower choices are demonstrably inadequate or the task is unusually risky,
-   and await the owner's explicit approval.
+5. Use **GPT-6.1 Sol for every task**. Recommend Low for simple tasks,
+   Medium for normal development, and High for complex or safety-critical work.
+6. Justify the recommended effort briefly. High is an allowed effort level,
+   not an exception requiring a different model. Never claim to switch the
+   selected effort automatically.
 7. Re-evaluate if task scope changes materially or a previously hidden
    complexity/safety risk emerges. Stop and propose a model adjustment.
 
@@ -67,7 +66,7 @@ Example preflight:
 ```text
 Model check
 Task: Implement recipe JSON validation and unit tests.
-Recommended: GPT-5.6 Sol — High (default; scoped implementation).
+Recommended: GPT-6.1 Sol — Medium (scoped implementation).
 Selected: Not verifiable in this environment.
 Action: Confirm current model before implementation; do not claim to switch it.
 ```
