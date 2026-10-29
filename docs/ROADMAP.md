@@ -4,6 +4,8 @@
 
 **Status (2026-10-29):** All 31 requirements are agreed. Recipe storage, authenticated API and locally accepted administrator management are merged. PR #19 with device preview and program selection was merged on 2026-10-25; HACS prerelease `0.1.0b2` passed phone acceptance. PR #20 corrects the HACS version listing. Issue #7 remains open for safe live transmission: the beta contract and model-specific capabilities require local verification. The dashboard (#8) follows. See the [acceptance report](reports/ISSUE_7_DRY_RUN_UI.md) and [architecture](ARCHITECTURE.md).
 
+**Review on 2026-10-30:** The unchanged beta contract still does not justify live approval. Model-specific evidence and fresh device confirmation remain missing; see the [contract re-review](reports/ISSUE_7_BETA_REVIEW.md).
+
 ## Implementation priorities and dependency order
 
 | Stage | Issue | Deliverable | Dependency | Verification |
@@ -27,7 +29,7 @@
 
 - **ChatGPT can prepare:** architecture, data models, Python utilities, tests, documentation, reviews, small bounded feature branches and PRs.
 - **Codex can implement:** larger Home Assistant lifecycle changes, administrative panel, adapter and dashboard features in focused task packages. Apply the [AGENTS.md model policy](../AGENTS.md) before each package: **GPT-6.1 Sol exclusively**, with **Low, Medium or High** reasoning effort. Low suits simple tasks, Medium normal development, and High complex architecture or safety work. This policy applies from 2026-10-29 and supersedes older model recommendations in issues and reports.
-- **GitHub Actions:** mocks/static/unit tests only, no household device access or credentials.
+- **GitHub Actions:** Limited allowance: prefer targeted local checks and small, path-filtered automatic PR checks. Schedule the full Python matrix and comprehensive HACS/Hassfest acceptance at larger section boundaries or before releases. No code CI for documentation-only changes and no additional automatic merge runs. Mocks only; no real-device access or credentials.
 - **Owner/local Home Assistant:** integration install/restart and real Cosori tests. Use the [local checklist](LOCAL_TEST_CHECKLIST.md).
 - **Pull requests:** feature branches, bilingual German-first reports/PR bodies, tests and review before merging. Never automatically merge.
 

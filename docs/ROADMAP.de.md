@@ -4,6 +4,8 @@
 
 **Status (29.10.2026):** Alle 31 Anforderungen sind beschlossen. Rezeptspeicher, authentifizierte API und lokal abgenommene Admin-Verwaltung sind gemergt. PR #19 mit Geräte-Testvorschau und Programmauswahl ist seit 25.10.2026 gemergt; HACS-Vorabversion `0.1.0b2` wurde auf dem Handy erfolgreich abgenommen. PR #20 korrigiert die HACS-Versionsanzeige. Issue #7 bleibt für die sichere echte Übertragung offen: Beta-Vertrag und modellspezifische Fähigkeiten müssen lokal verifiziert werden. Danach folgt das Dashboard (#8). Siehe [Abnahmebericht](reports/ISSUE_7_DRY_RUN_UI.de.md) und [Architektur](ARCHITECTURE.de.md).
 
+**Prüfung vom 30.10.2026:** Der unveränderte Beta-Vertrag reicht weiterhin nicht zur Live-Freigabe. Modellspezifische Nachweise und frische Gerätebestätigung fehlen; siehe [erneute Vertragsprüfung](reports/ISSUE_7_BETA_REVIEW.de.md).
+
 ## Prioritäten und Abhängigkeiten
 
 | Phase | Issue | Ergebnis | Voraussetzung | Prüfung |
@@ -27,7 +29,7 @@
 
 - **ChatGPT kann übernehmen:** Architektur, Rezeptdatenmodelle, Python-Hilfsfunktionen, Tests, Dokumentation, Reviews sowie kleinere abgegrenzte Branches und Pull Requests.
 - **Codex übernimmt geeignete größere Pakete:** HA-Lifecycle, Admin-Seite, Adapter und Dashboard. Vor jedem Paket gilt die [Modellrichtlinie aus AGENTS.md](../AGENTS.de.md): **ausschließlich GPT-6.1 Sol**, mit dem Denkaufwand **niedrig, mittel oder hoch**. Niedrig für einfache Aufgaben, mittel für normale Entwicklung und hoch für komplexe Architektur oder Sicherheitsaufgaben. Diese Regel gilt ab 29.10.2026 und ersetzt ältere Modellempfehlungen in Issues und Berichten.
-- **GitHub Actions:** Ausschließlich Simulationen, Unit-/statische Tests; niemals Zugang zum Heimnetz oder echten Gerät.
+- **GitHub Actions:** Begrenztes Kontingent: lokal gezielt prüfen, automatische PR-Prüfungen klein und pfadabhängig halten. Vollständige Python-Matrix und umfassende HACS-/Hassfest-Abnahme am Ende größerer Abschnitte bzw. vor Releases planen. Keine Code-CI für reine Dokumentation, keine zusätzlichen automatischen Merge-Läufe. Ausschließlich Simulationen, kein Zugriff auf echte Geräte oder Zugangsdaten.
 - **Nutzer / lokales Home Assistant:** Installation, Neustart und reale Tests mit der Cosori anhand der [Testcheckliste](LOCAL_TEST_CHECKLIST.de.md).
 - **Pull Requests:** Eigene Branches, vollständige deutsche und englische Dokumentation, Tests und Review vor dem Merge. Keine automatische Zusammenführung.
 

@@ -1,9 +1,21 @@
 name: Offline unit tests
 
 on:
-  push:
-    branches: ["main"]
   pull_request:
+    paths:
+      - "custom_components/**"
+      - "tests/**"
+      - ".github/workflows/unit-tests.yml"
+  workflow_dispatch:
+    inputs:
+      full_suite:
+        description: "Run the full Python matrix at a section boundary"
+        type: boolean
+        default: false
+
+concurrency:
+  group: offline-tests-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -12,10 +24,11 @@ jobs:
   unit-tests:
     name: Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.12", "3.14"]
+        python-version: ${{ fromJSON(inputs.full_suite == true && '["3.12", "3.14"]' || '["3.12"]') }}
     steps:
       - name: Check out source
         uses: actions/checkout@v4
@@ -28,4 +41,5 @@ jobs:
       - name: Unit tests (offline; no device access)
         run: python -m unittest discover -s tests -v
       - name: Recipe panel tests (offline)
+        if: matrix.python-version == '3.12'
         run: node --test tests/test_panel.mjs
