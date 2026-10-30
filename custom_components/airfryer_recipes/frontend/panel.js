@@ -1,10 +1,16 @@
 // Local Home Assistant custom panel. All mutations go through the authenticated API.
 const WORDS = {
   en: {
+    betaSelection: "Prepare selected settings for a supervised send",
+    betaSelectionInfo: "Supervised beta: all six reviewed programs, only when reported by the adapter and within their program limits. Maximum duration: 1440 minutes. Estimated capabilities remain unverified until local acceptance. No recipe is changed.",
+    betaProgram: "This program is not in the reviewed beta contract. The selected program was not substituted.",
+    betaRange: "These values are outside the reviewed program bounds or exceed the 1440-minute beta limit. Reported adapter limits also apply. Nothing was clamped.",
+    betaRecipeChanged: "The recipe changed or was deleted. Select it again and prepare a new confirmation.",
+    betaSource: "Select a single-phase recipe or valid manual values.",
     betaRefreshing: "Requesting a fresh device status… No settings are being sent.",
     betaRefreshUnavailable: "No loaded, enabled Airfryer Control sensor is available for this device. Enable a status sensor and check the integration.",
     betaRefreshFailed: "No new successful device report followed the status request. Check the device connection in Airfryer Control. No settings were sent.",
-    betaTitle: "Supervised beta device test", betaIntro: "CAF-DC111S-AEU only: Air Fry, 170 °C, 1 minute, zone 1 or 2. This is a real settings transmission with unverified device compatibility. Both zones must be idle. No cooking start is requested.",
+    betaTitle: "Supervised beta device test", betaIntro: "CAF-DC111S-AEU only, zone 1 or 2. Prepare selected recipe/manual settings in the form above, or use the fixed Air Fry test (170 °C, 1 minute) below. This is a real settings transmission with unverified device compatibility. Both zones must be idle. No cooking start is requested.",
     betaWarning: "Remain beside the empty appliance. Do not press Start. Device compatibility is unverified. If heating starts or the other zone changes, stop at the appliance and end testing. Prepare this supervised test?",
     betaPrepare: "Prepare real device test", betaConfirm: "Send once to the appliance", betaCancel: "Discard test",
     betaConfirmWarning: "Send these exact settings ONCE? Do not press Start. Observe the appliance and both zones.",
@@ -62,10 +68,16 @@ const WORDS = {
     statusDrawerOpen: "Drawer open", statusHolding: "Holding", statusKeepingWarm: "Keeping warm", statusPreheated: "Preheated",
   },
   de: {
+    betaSelection: "Gewählte Werte für beaufsichtigtes Senden vorbereiten",
+    betaSelectionInfo: "Beaufsichtigte Beta: alle sechs geprüften Programmkennungen, nur wenn vom Adapter gemeldet und innerhalb der Programmgrenzen. Höchstens 1440 Minuten. Geschätzte Fähigkeiten bleiben bis zur lokalen Abnahme ungeprüft. Rezepte werden nicht verändert.",
+    betaProgram: "Dieses Programm ist nicht im geprüften Beta-Vertrag enthalten. Das gewählte Programm wurde nicht ersetzt.",
+    betaRange: "Diese Werte liegen außerhalb der geprüften Programmgrenzen oder über dem Beta-Limit von 1440 Minuten. Zusätzlich gelten die gemeldeten Adaptergrenzen. Es wurden keine Werte begrenzt.",
+    betaRecipeChanged: "Das Rezept wurde geändert oder gelöscht. Erneut auswählen und eine neue Bestätigung vorbereiten.",
+    betaSource: "Ein einphasiges Rezept oder gültige manuelle Werte auswählen.",
     betaRefreshing: "Aktueller Gerätestatus wird angefordert … Es werden keine Einstellungen gesendet.",
     betaRefreshUnavailable: "Für dieses Gerät ist kein geladener, aktivierter Airfryer-Control-Sensor verfügbar. Einen Statussensor aktivieren und die Integration prüfen.",
     betaRefreshFailed: "Die Statusabfrage hat keinen neuen erfolgreichen Gerätebericht geliefert. Die Geräteverbindung in Airfryer Control prüfen. Es wurden keine Einstellungen gesendet.",
-    betaTitle: "Beaufsichtigter Beta-Gerätetest", betaIntro: "Nur CAF-DC111S-AEU: Airfry, 170 °C, 1 Minute, Fach 1 oder 2. Dies ist eine echte Einstellungsübertragung bei ungeprüfter Gerätekompatibilität. Beide Fächer müssen ruhen. Es wird kein Garstart angefordert.",
+    betaTitle: "Beaufsichtigter Beta-Gerätetest", betaIntro: "Nur CAF-DC111S-AEU, Fach 1 oder 2. Gewählte Rezept-/manuelle Werte im Formular oben vorbereiten oder unten den festen Airfry-Test (170 °C, 1 Minute) verwenden. Dies ist eine echte Einstellungsübertragung bei ungeprüfter Gerätekompatibilität. Beide Fächer müssen ruhen. Es wird kein Garstart angefordert.",
     betaWarning: "Am leeren Gerät bleiben. Nicht auf Start drücken. Die Gerätekompatibilität ist ungeprüft. Falls Heizen beginnt oder sich das andere Fach ändert, am Gerät stoppen und den Test beenden. Diesen beaufsichtigten Test vorbereiten?",
     betaPrepare: "Echten Gerätetest vorbereiten", betaConfirm: "Einmalig ans Gerät senden", betaCancel: "Test verwerfen",
     betaConfirmWarning: "Diese exakten Einstellungen EINMAL senden? Nicht auf Start drücken. Gerät und beide Fächer beobachten.",
@@ -144,6 +156,8 @@ class AirfryerRecipesPanel extends HTMLElement {
     this.selectedZoneId = "";
     this.previewRecipeId = "";
     this.manualPreviewProgram = "airfry";
+    this.manualPreviewTemperatureC = 180;
+    this.manualPreviewDurationMinutes = 10;
     this.sendPreview = null;
     this.betaTest = null;
     this.betaMessage = "";
@@ -356,7 +370,7 @@ class AirfryerRecipesPanel extends HTMLElement {
     const zones = device?.zones || [];
     const previewRecipe = this.selectedPreviewRecipe();
     const previewPhase = previewRecipe?.phases?.[0] || {
-      program: this.manualPreviewProgram, temperature_c: 180, duration_minutes: 10,
+      program: this.manualPreviewProgram, temperature_c: this.manualPreviewTemperatureC, duration_minutes: this.manualPreviewDurationMinutes,
     };
     const programs = device?.programs || [];
     const programReported = programs.some((program) => program.id === previewPhase.program);
@@ -432,7 +446,9 @@ class AirfryerRecipesPanel extends HTMLElement {
               : `<input id="preview-program" name="program" maxlength="64" required ${previewRecipe ? "readonly" : ""} value="${escapeHtml(previewPhase.program)}">`}</div>
             <div><label for="preview-temperature">${t.temperature} (${this.unit})</label><input id="preview-temperature" name="temperature_c" type="number" min="${this.unit === "°F" ? 32 : 0}" max="${this.unit === "°F" ? 752 : 400}" step="1" required ${previewRecipe ? "readonly" : ""} value="${escapeHtml(this.toDisplay(previewPhase.temperature_c))}"></div>
             <div><label for="preview-duration">${t.duration}</label><input id="preview-duration" name="duration_minutes" type="number" min="1" max="1440" step="1" required ${previewRecipe ? "readonly" : ""} value="${escapeHtml(previewPhase.duration_minutes)}"></div></div>
-            <div class="actions"><button class="primary" type="submit" ${this.busy || this.devicesBusy || !zones.length ? "disabled" : ""}>${t.checkPreview}</button></div>
+            <div class="actions"><button class="primary" type="submit" ${this.busy || this.devicesBusy || !zones.length ? "disabled" : ""}>${t.checkPreview}</button>
+            <button type="submit" data-beta-selection="true" ${this.busy || this.devicesBusy || !zones.length ? "disabled" : ""}>${t.betaSelection}</button></div>
+            <p class="muted">${t.betaSelectionInfo}</p>
           </form>` : ""}
           ${this.sendPreview ? `<section class="message" role="status"><h3>${t.dryRunResult}</h3><p><strong>${t.noTransmission}</strong></p>
             <p>${t.desiredSettings}: ${escapeHtml(this.sendPreview.settings.program)} · ${escapeHtml(this.toDisplay(this.sendPreview.settings.temperature_c))} ${this.unit} · ${escapeHtml(this.sendPreview.settings.duration_minutes)} min</p>
@@ -444,7 +460,7 @@ class AirfryerRecipesPanel extends HTMLElement {
           <p>${t.device}: ${escapeHtml(device?.name || "—")} · ${t.zone}: ${escapeHtml(this.selectedZoneId || "—")}</p>
           <button type="button" data-action="beta-prepare" ${this.busy || this.devicesBusy || !this.selectedZone() ? "disabled" : ""}>${t.betaPrepare}</button>
           ${this.betaTest ? `<div class="message"><p>${t.betaPending}</p>
-            <p><strong>${escapeHtml(this.betaTest.device_name)} · ${t.zone} ${escapeHtml(this.betaTest.zone_id)} · ${escapeHtml(this.programName(this.betaTest.settings.program))} · ${escapeHtml(this.toDisplay(this.betaTest.settings.temperature_c))} ${this.unit} · ${escapeHtml(this.betaTest.settings.duration_minutes)} min</strong></p>
+            <p>${this.betaTest.recipe_name ? escapeHtml(this.betaTest.recipe_name) : t.manualValues}</p><p><strong>${escapeHtml(this.betaTest.device_name)} · ${t.zone} ${escapeHtml(this.betaTest.zone_id)} · ${escapeHtml(this.programName(this.betaTest.settings.program))} · ${escapeHtml(this.toDisplay(this.betaTest.settings.temperature_c))} ${this.unit} · ${escapeHtml(this.betaTest.settings.duration_minutes)} min</strong></p>
             <button type="button" data-action="beta-confirm" ${this.busy ? "disabled" : ""}>${t.betaConfirm}</button>
             <button type="button" data-action="beta-cancel" ${this.busy ? "disabled" : ""}>${t.betaCancel}</button></div>` : ""}
           ${this.betaMessage ? `<p class="message" role="status">${escapeHtml(this.betaMessage)}</p>` : ""}
@@ -462,6 +478,14 @@ class AirfryerRecipesPanel extends HTMLElement {
   }
 
   onInput(event) {
+    if (["preview-temperature", "preview-duration"].includes(event.target.id)) {
+      if (event.target.id === "preview-temperature") this.manualPreviewTemperatureC = this.fromDisplay(Number(event.target.value));
+      else this.manualPreviewDurationMinutes = Number(event.target.value);
+      this.betaTest = null;
+      const confirmation = this.shadowRoot.querySelector?.('[data-action="beta-confirm"]');
+      if (confirmation) confirmation.disabled = true;
+      return;
+    }
     if (event.target.id !== "search") return;
     const cursor = event.target.selectionStart;
     this.query = event.target.value;
@@ -498,12 +522,15 @@ class AirfryerRecipesPanel extends HTMLElement {
       this.sendPreview = null;
       this.render();
     } else if (event.target.id === "preview-recipe") {
+      this.betaTest = null;
       this.previewRecipeId = event.target.value;
       this.sendPreview = null;
       this.render();
     } else if (event.target.id === "preview-program") {
+      this.betaTest = null;
       this.manualPreviewProgram = event.target.value;
       this.sendPreview = null;
+      this.render();
     } else if (event.target.id === "import-file") {
       this.previewFile(event.target.files?.[0]);
     }
@@ -600,6 +627,7 @@ class AirfryerRecipesPanel extends HTMLElement {
   onSubmit(event) {
     if (event.target.id === "device-preview-form") {
       event.preventDefault();
+      if (event.submitter?.dataset?.betaSelection === "true") return this.prepareSelectedBeta(event.target);
       return this.submitDevicePreview(event.target);
     }
     if (event.target.id !== "editor") return;
@@ -631,6 +659,7 @@ class AirfryerRecipesPanel extends HTMLElement {
 
   betaError(error) {
     const key = {
+      source: "betaSource", program_unsupported: "betaProgram", test_range: "betaRange", recipe_changed: "betaRecipeChanged",
       freshness: "betaFreshness", refresh_unavailable: "betaRefreshUnavailable", refresh_failed: "betaRefreshFailed", state_changed: "betaState", zones: "betaZones",
       adapter_version: "betaAdapter", adapter_data: "adapterIncompatible", model: "betaModel", capabilities: "betaCaps",
       busy: "betaBusy", confirmation: "betaExpired", outcome_unknown: "betaUnknown",
@@ -640,7 +669,19 @@ class AirfryerRecipesPanel extends HTMLElement {
     return `${this.words.betaNoSend} ${this.words[key || "genericError"]}`;
   }
 
-  async prepareBetaTest() {
+  async prepareSelectedBeta(formElement) {
+    if (!this.admin || this.busy || this.devicesBusy) return;
+    const form = new FormData(formElement);
+    const recipeId = String(form.get("recipe_id") || "");
+    const source = recipeId ? { recipe_id: recipeId } : { settings: {
+      program: String(form.get("program") || "").trim(),
+      temperature_c: this.fromDisplay(Number(form.get("temperature_c"))),
+      duration_minutes: Number(form.get("duration_minutes")),
+    } };
+    return this.prepareBetaTest(source);
+  }
+
+  async prepareBetaTest(source = null) {
     if (!this.admin || this.busy || this.devicesBusy || !this.selectedZone() || !confirm(this.words.betaWarning)) return;
     const device_id = this.selectedDeviceId;
     const zone_id = Number(this.selectedZoneId);
@@ -649,7 +690,9 @@ class AirfryerRecipesPanel extends HTMLElement {
     this.busy = true;
     this.render();
     try {
-      const result = await this.request("beta_prepare", { device_id, zone_id, acknowledge_unverified: true });
+      const fields = { device_id, zone_id, acknowledge_unverified: true };
+      if (source !== null) fields.source = source;
+      const result = await this.request("beta_prepare", fields);
       this.betaMessage = "";
       if (this.selectedDeviceId === device_id && Number(this.selectedZoneId) === zone_id) this.betaTest = result;
     } catch (error) {

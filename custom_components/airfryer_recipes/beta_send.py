@@ -6,7 +6,7 @@ not a compatibility approval: the administrator must observe the appliance.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 import asyncio
 from datetime import datetime, timezone
 import secrets
@@ -15,6 +15,8 @@ from typing import Any, Callable
 
 from .const import DOMAIN
 from .device_discovery import normalize_capabilities
+from .recipe_model import CookingPhase, Recipe
+from .recipe_repository import RecipeNotFoundError
 
 UPSTREAM = "airfryer_control"
 MODEL = "CAF-DC111S-AEU"
@@ -22,6 +24,21 @@ VERSION = "1.0.2-beta.1"
 TTL_SECONDS = 15
 MAX_REPORT_AGE = 15
 TEST_SETTINGS = {"program": "airfry", "temperature_c": 170, "duration_minutes": 1}
+# Reviewed upstream contract bounds, NOT verified CAF-DC111S-AEU capabilities.
+# Recipe schema v1 caps duration at 1440 minutes, including manual beta input.
+REVIEWED_PROGRAM_LIMITS = {
+    "airfry": (120, 205, 60), "roast": (120, 205, 240),
+    "bake": (80, 205, 240), "grill": (205, 240, 30),
+    "reheat": (40, 205, 60), "dry": (34, 95, 1440),
+}
+
+
+def validate_settings(phase: CookingPhase) -> None:
+    """Bound supervised commissioning; these are not verified model limits."""
+    require(phase.program in REVIEWED_PROGRAM_LIMITS, "program_unsupported")
+    low, high, minutes = REVIEWED_PROGRAM_LIMITS[phase.program]
+    require(low <= phase.temperature_c <= high and 1 <= phase.duration_minutes <= minutes,
+            "test_range")
 
 
 class BetaTestBlocked(ValueError):
@@ -42,6 +59,7 @@ class Target:
 
 async def read_target(
     hass: Any, device_id: str, zone_id: int, *, refresh: bool = False, context: Any = None,
+    settings: CookingPhase | None = None,
 ) -> Target:
     """Read a coherent idle snapshot; optionally request a read-only refresh.
 
@@ -51,6 +69,8 @@ async def read_target(
     from homeassistant.helpers import device_registry as dr
     from homeassistant.loader import async_get_integration
 
+    phase = settings or CookingPhase(**TEST_SETTINGS)
+    validate_settings(phase)
     require(isinstance(device_id, str) and 0 < len(device_id) <= 128, "target")
     require(type(zone_id) is int and zone_id in (1, 2), "target")
     integration = await async_get_integration(hass, UPSTREAM)
@@ -122,10 +142,11 @@ async def read_target(
     require(set(state.zones) == {1, 2} and all(type(z) is int for z in state.zones), "zones")
     statuses = tuple((z, state.zones[z].status) for z in (1, 2))
     require(all(s in ("aus", "bereit") and state.zones[z].active is False for z, s in statuses), "zones")
-    program = next((p for p in caps["programs"] if p["id"] == "airfry"), None)
-    require(program is not None and program["limits_status"] in ("confirmed", "estimated"), "capabilities")
-    require(program["temperature_c"]["min"] <= 170 <= program["temperature_c"]["max"]
-            and program["duration_minutes"]["min"] <= 1 <= program["duration_minutes"]["max"], "capabilities")
+    program = next((p for p in caps["programs"] if p["id"] == phase.program), None)
+    require(program is not None and program["limits_status"] in ("confirmed", "estimated")
+            and program["send_status"] in ("confirmed", "unverified"), "capabilities")
+    require(program["temperature_c"]["min"] <= phase.temperature_c <= program["temperature_c"]["max"]
+            and program["duration_minutes"]["min"] <= phase.duration_minutes <= program["duration_minutes"]["max"], "capabilities")
     programs = tuple((p["id"], p["temperature_c"]["min"], p["temperature_c"]["max"],
                       p["duration_minutes"]["min"], p["duration_minutes"]["max"],
                       p["limits_status"], p["send_status"]) for p in caps["programs"])
@@ -158,6 +179,10 @@ class Confirmation:
     zone_id: int
     target: Target
     expires: float
+    phase: CookingPhase
+    recipe: Recipe | None
+    repository: Any
+    variable: bool
 
 
 class BetaSender:
@@ -192,6 +217,7 @@ class BetaSender:
 
     async def prepare(
         self, user_id: str, device_id: str, zone_id: int, acknowledge: bool, context: Any,
+        *, source: dict | None = None,
     ) -> dict:
         require(acknowledge is True, "acknowledgement")
         await self._authorized(user_id)
@@ -202,16 +228,43 @@ class BetaSender:
             # Starting a fresh preparation invalidates older confirmations for
             # this user even when the refresh subsequently fails.
             self.pending = {k: v for k, v in self.pending.items() if v.user_id != user_id}
-            target = await self._read(device_id, zone_id, refresh=True, context=context)
+            recipe, repository = None, None
+            phase = CookingPhase(**TEST_SETTINGS)
+            if source is not None:
+                require(isinstance(source, dict), "source")
+                if set(source) == {"recipe_id"}:
+                    recipe_id = source["recipe_id"]
+                    require(isinstance(recipe_id, str) and 0 < len(recipe_id) <= 128, "source")
+                    repository = self.hass.data[DOMAIN]["repository"]
+                    try:
+                        recipe = await repository.async_get(recipe_id)
+                    except RecipeNotFoundError:
+                        raise BetaTestBlocked("recipe_changed") from None
+                    require(len(recipe.phases) == 1, "source")
+                    phase = recipe.phases[0]
+                else:
+                    require(set(source) == {"settings"} and isinstance(source["settings"], dict), "source")
+                    raw = source["settings"]
+                    require(set(raw) == {"program", "temperature_c", "duration_minutes"}, "source")
+                    phase = CookingPhase(**raw)
+                    require(phase.program == raw["program"], "source")
+                validate_settings(phase)
             await self._authorized(user_id)
+            extra = {"settings": phase} if source is not None else {}
+            target = await self._read(device_id, zone_id, refresh=True, context=context, **extra)
+            await self._authorized(user_id)
+            if recipe is not None:
+                require(repository.matches_snapshot(recipe), "recipe_changed")
             now = time.monotonic()
             self.pending = {k: v for k, v in self.pending.items() if v.expires > now}
             require(len(self.pending) < 32, "busy")
             token = secrets.token_urlsafe(32)
-            self.pending[token] = Confirmation(user_id, device_id, zone_id, target, now + TTL_SECONDS)
+            self.pending[token] = Confirmation(user_id, device_id, zone_id, target, now + TTL_SECONDS,
+                                               phase, recipe, repository, source is not None)
             return {"mode": "supervised_beta_test", "token": token, "expires_seconds": TTL_SECONDS,
                     "device_id": device_id, "device_name": target.name, "zone_id": zone_id,
-                    "settings": dict(TEST_SETTINGS), "transmitted": False,
+                    "settings": asdict(phase), "recipe_name": recipe.name if recipe else None,
+                    "transmitted": False,
                     "compatibility_verified": False}
         finally:
             self.busy.discard(device_id)
@@ -229,10 +282,16 @@ class BetaSender:
         require(device_id not in self.uncertain, "outcome_unknown")
         self.busy.add(device_id)
         try:
-            target = await self._read(device_id, prepared.zone_id)
+            extra = {"settings": prepared.phase} if prepared.variable else {}
+            target = await self._read(device_id, prepared.zone_id, **extra)
             require(target.fingerprint == prepared.target.fingerprint, "state_changed")
             await self._authorized(user_id)
             require(time.monotonic() < prepared.expires, "confirmation")
+            if prepared.recipe is not None:
+                require(self.hass.data[DOMAIN].get("repository") is prepared.repository
+                        and prepared.repository.matches_snapshot(prepared.recipe), "recipe_changed")
+            phase = prepared.phase
+            validate_settings(phase)
             try:
                 unchanged = target.unchanged()
             except Exception:
@@ -244,8 +303,8 @@ class BetaSender:
                 self.uncertain.add(device_id)
                 result = await self.hass.services.async_call(
                     UPSTREAM, "programm_senden",
-                    {"geraet": device_id, "zone": prepared.zone_id, "programm": "airfry",
-                     "temperatur": 170, "minuten": 1, "variante": "multi_app",
+                    {"geraet": device_id, "zone": prepared.zone_id, "programm": phase.program,
+                     "temperatur": phase.temperature_c, "minuten": phase.duration_minutes, "variante": "multi_app",
                      "einmal": True, "streng": True, "bestaetigen": False},
                     blocking=True, return_response=True, context=context,
                 )
@@ -255,7 +314,8 @@ class BetaSender:
                 return self._result("unknown")
             # Only accept a complete, exact response contract. Nothing from the
             # upstream response (including error strings or raw data) is exposed.
-            exact = {"programm": "airfry", "temperatur": 170, "minuten": 1, "zone": prepared.zone_id}
+            exact = {"programm": phase.program, "temperatur": phase.temperature_c,
+                     "minuten": phase.duration_minutes, "zone": prepared.zone_id}
             if (isinstance(result, dict) and result.get("ok") is True
                     and result.get("ergebnis") == "angenommen"
                     and type(result.get("versuche")) is int and result["versuche"] == 1

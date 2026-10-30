@@ -32,7 +32,7 @@ async def async_register_panel(hass: Any) -> None:
         webcomponent_name="airfryer-recipes-panel",
         sidebar_title="Airfryer Recipes",
         sidebar_icon="mdi:chef-hat",
-        module_url=f"{MODULE_URL}?v=0.1.0b4",
+        module_url=f"{MODULE_URL}?v=0.1.0b5",
         require_admin=True,
         config_panel_domain=DOMAIN,
     )

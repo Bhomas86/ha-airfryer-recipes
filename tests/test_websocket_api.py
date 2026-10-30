@@ -335,6 +335,18 @@ class WebsocketTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(forged[2], "invalid_format")
         self.assertEqual(sender.confirm.await_count, 1)
 
+    async def test_beta_source_is_forwarded_only_inside_authenticated_preparation(self):
+        sender = SimpleNamespace(prepare=AsyncMock(return_value={"transmitted": False}))
+        self.hass.data[DOMAIN]["beta_sender"] = sender
+        source = {"recipe_id": "server-recipe"}
+        params = {"device_id": "ha-device", "zone_id": 2,
+                  "acknowledge_unverified": True, "source": source}
+        self.assertEqual((await self.call("beta_prepare", self.user, **params))[2], "unauthorized")
+        sender.prepare.assert_not_awaited()
+        self.assertEqual((await self.call("beta_prepare", self.admin, **params))[0], "result")
+        self.assertEqual(sender.prepare.await_args.kwargs, {"source": source})
+        self.assertEqual(sender.prepare.await_args.args[0], self.admin.user.id)
+
     async def test_beta_block_reason_is_allowlisted_and_unload_disables_routes(self):
         from custom_components.airfryer_recipes.beta_send import BetaTestBlocked
 

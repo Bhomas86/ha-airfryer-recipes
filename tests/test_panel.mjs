@@ -144,6 +144,52 @@ test("beta preparation shows read-only refresh progress and a failed refresh nev
   assert.deepEqual(calls, ["airfryer_recipes/beta_prepare"]);
 });
 
+test("selected recipe preparation sends only its ID and uses server-resolved confirmation values", async () => {
+  const calls = [];
+  const panel = betaPanel(async (request) => {
+    calls.push(request);
+    return { ...betaPrepared, recipe_name: "Rolls", settings: { program: "airfry", temperature_c: 190, duration_minutes: 8 } };
+  });
+  await panel.onSubmit({ preventDefault() {}, submitter: { dataset: { betaSelection: "true" } },
+    target: { id: "device-preview-form", values: { recipe_id: "saved", program: "forged", temperature_c: "999", duration_minutes: "999" } } });
+  assert.equal(calls[0].source.recipe_id, "saved");
+  assert.equal(Object.hasOwn(calls[0].source, "settings"), false);
+  assert.equal(panel.betaTest.settings.temperature_c, 190);
+  assert.match(panel.shadowRoot.innerHTML, /190 °C · 8 min/);
+});
+
+test("selected manual Fahrenheit values are converted and never mixed with preview API", async () => {
+  const calls = [];
+  const panel = betaPanel(async (request) => { calls.push(request); return betaPrepared; });
+  panel._hass.config = { unit_system: { temperature: "°F" } };
+  await panel.prepareSelectedBeta({ values: { recipe_id: "", program: "airfry", temperature_c: "356", duration_minutes: "7" } });
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].type, "airfryer_recipes/beta_prepare");
+  assert.equal(calls[0].source.settings.temperature_c, 180);
+  assert.equal(calls[0].source.settings.duration_minutes, 7);
+});
+
+test("editing selected values invalidates a pending confirmation and preserves manual inputs", async () => {
+  const calls = [];
+  const panel = betaPanel(async (request) => { calls.push(request); return betaPrepared; });
+  panel.betaTest = betaPrepared;
+  panel.onInput({ target: { id: "preview-temperature", value: "190" } });
+  assert.equal(panel.betaTest, null);
+  panel.onInput({ target: { id: "preview-duration", value: "8" } });
+  panel.render();
+  assert.match(panel.shadowRoot.innerHTML, /id="preview-temperature"[^>]*value="190"/);
+  assert.match(panel.shadowRoot.innerHTML, /id="preview-duration"[^>]*value="8"/);
+  await panel.confirmBetaTest();
+  assert.equal(calls.length, 0);
+});
+
+test("unsupported program rejection remains visible and enables no confirmation", async () => {
+  const panel = betaPanel(async () => { throw { code: "beta_test_blocked", message: "program_unsupported" }; });
+  await panel.prepareSelectedBeta({ values: { program: "proof", temperature_c: "35", duration_minutes: "7" } });
+  assert.equal(panel.betaTest, null);
+  assert.match(panel.betaMessage, /Programm wurde nicht ersetzt/);
+});
+
 test("navigation remains available during loading and uses the HA sidebar event", async () => {
   const panel = panelWith(async () => ({ recipes: [] }));
   panel.busy = true;
