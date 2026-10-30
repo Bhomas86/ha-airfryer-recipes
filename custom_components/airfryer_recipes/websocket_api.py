@@ -289,6 +289,7 @@ async def ws_prepare_send(hass: Any, connection: Any, msg: dict[str, Any]) -> No
     voluptuous.Required("device_id"): str,
     voluptuous.Required("zone_id"): int,
     voluptuous.Required("acknowledge_unverified"): bool,
+    voluptuous.Optional("source"): dict,
 })
 @websocket_api.async_response
 async def ws_beta_prepare(hass: Any, connection: Any, msg: dict[str, Any]) -> None:
@@ -296,14 +297,16 @@ async def ws_beta_prepare(hass: Any, connection: Any, msg: dict[str, Any]) -> No
     async def run(repo: RecipeRepository) -> dict[str, Any]:
         from homeassistant.core import Context
 
-        if set(msg) != {"id", "type", "device_id", "zone_id", "acknowledge_unverified"}:
+        required = {"id", "type", "device_id", "zone_id", "acknowledge_unverified"}
+        if not required <= set(msg) or set(msg) - required - {"source"}:
             raise RecipeValidationError("Unexpected beta test parameter")
         sender = hass.data[DOMAIN].get("beta_sender")
         if sender is None:
             raise BetaTestBlocked("not_configured")
+        extra = {"source": msg["source"]} if "source" in msg else {}
         return await sender.prepare(connection.user.id, msg["device_id"], msg["zone_id"],
                                     msg["acknowledge_unverified"],
-                                    Context(user_id=connection.user.id))
+                                    Context(user_id=connection.user.id), **extra)
     await _respond(hass, connection, msg, run)
 
 

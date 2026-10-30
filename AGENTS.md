@@ -128,6 +128,8 @@ Action: Confirm current model before implementation; do not claim to switch it.
 9. Record decisions in `docs/REQUIREMENTS.md` and staged work in
    `docs/ROADMAP.md`. Do not label planned features as implemented.
 
+**Current owner instruction (2026-10-30): Do not trigger GitHub Actions for further updates until instructed otherwise; validate locally only. This overrides the general budget rules below. Suppress automatic PR/push runs when publishing (for example, `[skip ci]` in the commit); do not manually dispatch workflows.**
+
 ## GitHub Actions budget (effective 2026-10-30)
 
 - Use GitHub Actions sparingly; the available allowance is limited.

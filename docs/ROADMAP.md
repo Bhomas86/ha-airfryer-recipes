@@ -10,6 +10,8 @@
 
 **Beta correction 0.1.0b4:** The first local attempt was blocked before sending by the freshness gate. Preparation now requests one new read-only status query. Real transmission remains unaccepted. [Review and repeat test](reports/ISSUE_7_STATUS_REFRESH.md).
 
+**Local acceptance 2026-10-30: Both zones PASS** for Air Fry at 170 °C for one minute, without heating or changing the other zone. Next package: bounded recipe/manual transmission in the administrator panel. [Acceptance and limits](reports/ISSUE_7_LOCAL_ACCEPTANCE.md). Further updates temporarily use no GitHub Actions.
+
 ## Implementation priorities and dependency order
 
 | Stage | Issue | Deliverable | Dependency | Verification |
@@ -56,3 +58,5 @@ Avoid promising release dates before a real installation and safety testing are 
 - Backups before schema migrations and safe JSON import conflict handling
 - Full **English and German** UI, issues, PR descriptions, docs, test reports and release notes; German first for reports
 - Local Cosori tests documented as PASS / FAIL / NOT TESTED without claiming unperformed verification
+
+Beta 0.1.0b5: At the owner’s request, supervised recipe/manual transmission for all six currently reported IDs in the reviewed contract. No general model approval. [Implementation and limits](reports/ISSUE_7_RECIPE_SEND.md), [60-case acceptance](reports/BETA_0_1_0B5_TEST_PLAN.md). Local validation only; no GitHub Actions.

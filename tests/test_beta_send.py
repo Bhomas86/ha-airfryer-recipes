@@ -11,6 +11,9 @@ from custom_components.airfryer_recipes.beta_send import (
     BetaSender, BetaTestBlocked, Target, read_target, TEST_SETTINGS,
 )
 from custom_components.airfryer_recipes.const import DOMAIN
+from custom_components.airfryer_recipes.recipe_model import CookingPhase, create_recipe, RecipeValidationError
+from custom_components.airfryer_recipes.recipe_repository import RecipeRepository
+from dataclasses import replace
 
 
 class SenderTests(unittest.IsolatedAsyncioTestCase):
@@ -216,6 +219,122 @@ class SenderTests(unittest.IsolatedAsyncioTestCase):
         self.assertNotIn("device", self.sender.busy)
         self.hass.services.async_call.assert_not_awaited()
 
+    async def selected(self, source, zone=1):
+        return await self.sender.prepare("u1", "device", zone, True, "user-context", source=source)
+
+    async def library(self):
+        repo = RecipeRepository(AsyncMock(return_value=None), AsyncMock())
+        await repo.async_load()
+        self.hass.data[DOMAIN]["repository"] = repo
+        return repo
+
+    async def test_manual_values_are_copied_bound_and_sent_exactly_once(self):
+        source = {"settings": {"program": "airfry", "temperature_c": 180, "duration_minutes": 7}}
+        prepared = await self.selected(source)
+        source["settings"]["temperature_c"] = 200
+        self.assertEqual(prepared["settings"]["temperature_c"], 180)
+        self.hass.services.async_call.return_value["gesendet"].update(temperatur=180, minuten=7)
+        result = await self.confirm(prepared["token"])
+        self.assertEqual(result["outcome"], "accepted")
+        self.assertEqual(self.hass.services.async_call.await_args.args[2]["temperatur"], 180)
+        self.assertEqual(self.hass.services.async_call.await_args.args[2]["minuten"], 7)
+        self.assertEqual(self.read.await_args.kwargs["settings"], CookingPhase("airfry", 180, 7))
+
+    async def test_recipe_resolves_server_side_and_is_not_modified(self):
+        repo = await self.library()
+        recipe = await repo.async_create(create_recipe("Rolls", program="airfry", temperature_c=180, duration_minutes=7))
+        prepared = await self.selected({"recipe_id": recipe.id})
+        self.assertEqual(prepared["recipe_name"], "Rolls")
+        self.assertEqual(prepared["settings"], {"program": "airfry", "temperature_c": 180, "duration_minutes": 7})
+        self.hass.services.async_call.return_value["gesendet"].update(temperatur=180, minuten=7)
+        await self.confirm(prepared["token"])
+        self.assertEqual(await repo.async_get(recipe.id), recipe)
+
+    async def test_changed_deleted_or_reloaded_recipe_blocks_confirmation(self):
+        for change in ("change", "delete", "reload"):
+            repo = await self.library()
+            recipe = await repo.async_create(create_recipe("Rolls", program="airfry", temperature_c=180, duration_minutes=7))
+            prepared = await self.selected({"recipe_id": recipe.id})
+            if change == "change":
+                await repo.async_update(replace(recipe, phases=(CookingPhase("airfry", 190, 8),)))
+            elif change == "delete":
+                await repo.async_delete(recipe.id)
+            else:
+                await self.library()
+            with self.assertRaisesRegex(BetaTestBlocked, "recipe_changed"):
+                await self.confirm(prepared["token"])
+            self.assertNotIn(prepared["token"], self.sender.pending)
+        self.hass.services.async_call.assert_not_awaited()
+
+    async def test_invalid_or_forged_sources_are_rejected_before_status_refresh(self):
+        for source in ({}, {"recipe_id": "x", "settings": {}}, {"settings": {}, "is_admin": True},
+                       {"recipe_id": True}, {"settings": {"program": "airfry", "temperature_c": 180, "duration_minutes": 7, "readyStart": False}}):
+            with self.assertRaises(BetaTestBlocked):
+                await self.selected(source)
+        for settings in ({"program": "airfry", "temperature_c": True, "duration_minutes": 7},
+                         {"program": "airfry", "temperature_c": 180, "duration_minutes": 1.5}):
+            with self.assertRaises(RecipeValidationError):
+                await self.selected({"settings": settings})
+        self.read.assert_not_awaited()
+
+    async def test_program_and_test_envelope_are_not_silently_adapted(self):
+        for program, temp, minutes in (("proof", 170, 1), ("unknown", 180, 7),
+                                       ("airfry", 119, 1), ("airfry", 206, 1), ("airfry", 180, 61)):
+            with self.assertRaises(BetaTestBlocked):
+                await self.selected({"settings": {"program": program, "temperature_c": temp, "duration_minutes": minutes}})
+        self.read.assert_not_awaited()
+
+    async def test_missing_and_multiphase_recipes_cannot_be_sent(self):
+        repo = await self.library()
+        with self.assertRaisesRegex(BetaTestBlocked, "recipe_changed"):
+            await self.selected({"recipe_id": "missing"})
+        recipe = create_recipe("Two steps", program="airfry", temperature_c=170, duration_minutes=1)
+        recipe = await repo.async_create(replace(recipe, phases=recipe.phases * 2))
+        with self.assertRaisesRegex(BetaTestBlocked, "source"):
+            await self.selected({"recipe_id": recipe.id})
+        self.read.assert_not_awaited()
+
+    async def test_all_six_programs_on_both_zones_use_the_same_single_attempt_contract(self):
+        for zone in (1, 2):
+            for program, temp, minutes in (("airfry", 180, 7), ("roast", 190, 30),
+                                           ("bake", 180, 6), ("grill", 205, 1),
+                                           ("reheat", 70, 10), ("dry", 55, 10)):
+                with self.subTest(zone=zone, program=program):
+                    prepared = await self.selected({"settings": {"program": program,
+                        "temperature_c": temp, "duration_minutes": minutes}}, zone=zone)
+                    self.hass.services.async_call.return_value["gesendet"].update(
+                        programm=program, temperatur=temp, minuten=minutes, zone=zone)
+                    self.assertEqual((await self.confirm(prepared["token"]))["outcome"], "accepted")
+                    sent = self.hass.services.async_call.await_args.args[2]
+                    self.assertEqual((sent["programm"], sent["zone"], sent["temperatur"], sent["minuten"]),
+                                     (program, zone, temp, minutes))
+                    self.assertTrue(sent["einmal"])
+                    self.assertFalse(sent["bestaetigen"])
+        self.assertEqual(self.hass.services.async_call.await_count, 12)
+
+    async def test_recipe_write_in_progress_blocks_confirmation_without_waiting_for_write(self):
+        entered, finish = asyncio.Event(), asyncio.Event()
+        writing = False
+        async def save(data):
+            if writing:
+                entered.set()
+                await finish.wait()
+        repo = RecipeRepository(AsyncMock(return_value=None), save)
+        await repo.async_load()
+        recipe = await repo.async_create(create_recipe("Rolls", program="airfry", temperature_c=180, duration_minutes=7))
+        self.hass.data[DOMAIN]["repository"] = repo
+        token = (await self.selected({"recipe_id": recipe.id}))["token"]
+        writing = True
+        task = asyncio.create_task(repo.async_update(replace(recipe, name="Renamed")))
+        await entered.wait()
+        try:
+            with self.assertRaisesRegex(BetaTestBlocked, "recipe_changed"):
+                await self.confirm(token)
+        finally:
+            finish.set()
+            await task
+        self.hass.services.async_call.assert_not_awaited()
+
 
 class AdapterTests(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
@@ -380,3 +499,23 @@ class AdapterTests(unittest.IsolatedAsyncioTestCase):
         self.hass.services.async_call.assert_awaited_once_with(
             "airfryer_control", "faehigkeiten", {"geraet": "ha-device"},
             blocking=True, return_response=True)
+
+    async def test_selected_values_must_fit_reported_limits_as_well_as_test_envelope(self):
+        await read_target(self.hass, "ha-device", 1, settings=CookingPhase("airfry", 180, 7))
+        self.payload["programme"]["airfry"]["temperatur"] = [120, 175]
+        with self.assertRaisesRegex(BetaTestBlocked, "capabilities"):
+            await read_target(self.hass, "ha-device", 1, settings=CookingPhase("airfry", 180, 7))
+
+    async def test_all_program_bounds_require_actual_report_and_known_provenance(self):
+        from custom_components.airfryer_recipes.beta_send import REVIEWED_PROGRAM_LIMITS
+        for program, (low, high, minutes) in REVIEWED_PROGRAM_LIMITS.items():
+            self.payload["programme"] = {program: {"temperatur": [low, high], "minuten": [1, minutes],
+                "grenzen": "geschaetzt", "senden": "ungeprueft"}}
+            for zone in (1, 2):
+                for temp, duration in ((low, 1), (high, minutes)):
+                    await read_target(self.hass, "ha-device", zone,
+                                      settings=CookingPhase(program, temp, duration))
+            self.payload["programme"][program]["grenzen"] = "unknown-source"
+            with self.assertRaisesRegex(BetaTestBlocked, "capabilities"):
+                await read_target(self.hass, "ha-device", 1, settings=CookingPhase(program, low, 1))
+        self.assertTrue(all(call.args[1] == "faehigkeiten" for call in self.hass.services.async_call.await_args_list))

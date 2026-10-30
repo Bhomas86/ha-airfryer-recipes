@@ -10,6 +10,8 @@
 
 **Beta-Korrektur 0.1.0b4:** Der erste lokale Versuch wurde vor dem Senden durch die Aktualitätssperre blockiert. Die Vorbereitung fordert jetzt einmal eine neue lesende Statusabfrage an. Echte Übertragung weiterhin nicht abgenommen. [Prüfbericht und Wiederholung](reports/ISSUE_7_STATUS_REFRESH.de.md).
 
+**Lokale Abnahme 30.10.2026: Beide Fächer BESTANDEN** für Airfry 170 °C, eine Minute, ohne Heizstart und ohne Änderung des jeweils anderen Fachs. Nächstes Paket ist die begrenzte Rezept-/manuelle Übertragung im Admin-Panel. [Abnahme und Grenzen](reports/ISSUE_7_LOCAL_ACCEPTANCE.de.md). Weitere Updates vorerst ohne GitHub Actions.
+
 ## Prioritäten und Abhängigkeiten
 
 | Phase | Issue | Ergebnis | Voraussetzung | Prüfung |
@@ -56,3 +58,5 @@ Keine konkreten Veröffentlichungstermine, bevor Installation und Sicherheitspr�
 - Sicherungen vor Migrationen und geschützter Import mit Konfliktvorschau
 - **Vollständige deutsche und englische** Oberfläche, Issues, PRs, Dokumentation, Testberichte und Release Notes; Berichte zuerst auf Deutsch
 - Reale Cosori-Tests nur mit den Angaben BESTANDEN / FEHLGESCHLAGEN / NICHT GETESTET dokumentieren
+
+Beta 0.1.0b5: Auf Eigentümerwunsch beaufsichtigte Rezept-/manuelle Übertragung aller sechs aktuell gemeldeten, im geprüften Vertrag enthaltenen Programme. Keine allgemeine Modellfreigabe. [Umsetzung und Grenzen](reports/ISSUE_7_RECIPE_SEND.de.md), [60-teilige Abnahme](reports/BETA_0_1_0B5_TEST_PLAN.de.md). Ausschließlich lokal geprüft; keine GitHub Actions.

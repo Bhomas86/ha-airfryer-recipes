@@ -84,3 +84,5 @@ Implementation note for requirements 14/15/26: Issue #7 exposes read-only discov
 Beta acceptance decision on 2026-10-30: At the owner’s explicit request, implement a separate administrator-only supervised test transmission before real acceptance for CAF-DC111S-AEU, zone 1/2, Air Fry 170 °C and one minute. This is a bounded initial-test exception, not general send permission from estimated capabilities. Normal control remains blocked; see the [beta test contract and procedure](reports/ISSUE_7_BETA_SEND.md).
 
 Correction 0.1.0b4: Supervised preparation requests exactly one new read-only device report through an eligible HA sensor. Old reports are never made artificially fresh; freshness, permissions and device gates remain mandatory. [Evidence and local acceptance](reports/ISSUE_7_STATUS_REFRESH.md).
+
+Beta 0.1.0b5: At the owner’s request, supervised recipe/manual transmission for all six currently reported IDs in the reviewed contract. No general model approval. [Implementation and limits](reports/ISSUE_7_RECIPE_SEND.md), [60-case acceptance](reports/BETA_0_1_0B5_TEST_PLAN.md). Local validation only; no GitHub Actions.
