@@ -5,7 +5,7 @@ import vm from "node:vm";
 
 const source = readFileSync(new URL("../custom_components/airfryer_recipes/frontend/panel.js", import.meta.url), "utf8");
 
-function panelWith(api, admin = true) {
+function panelWith(api, admin = true, confirmDialog = () => true) {
   let Panel;
   const events = [];
   const createdElements = [];
@@ -19,7 +19,7 @@ function panelWith(api, admin = true) {
     },
     Event,
     customElements: { define(name, type) { assert.equal(name, "airfryer-recipes-panel"); Panel = type; } },
-    confirm: () => true,
+    confirm: confirmDialog,
     prompt: () => "Copy",
     setTimeout,
     URL,
@@ -43,6 +43,86 @@ function panelWith(api, admin = true) {
   panel.createdElements = createdElements;
   return panel;
 }
+
+function betaPanel(api, admin = true, dialog) {
+  const panel = panelWith(api, admin, dialog);
+  panel.deviceState = { status: "adapter_beta", devices: [{
+    device_id: "ha-device", name: "Kitchen", model: "CAF-DC111S-AEU",
+    zones: [{ zone_id: 1, status: "idle" }, { zone_id: 2, status: "idle" }],
+  }] };
+  panel.selectedDeviceId = "ha-device";
+  panel.selectedZoneId = "1";
+  return panel;
+}
+
+const betaPrepared = { token: "single-use", device_name: "Kitchen <unsafe>", zone_id: 1,
+  settings: { program: "airfry", temperature_c: 170, duration_minutes: 1 } };
+
+test("beta preparation never confirms automatically and displays the exact fixed test", async () => {
+  const calls = [];
+  const panel = betaPanel(async (request) => { calls.push(request); return betaPrepared; });
+  await panel.prepareBetaTest();
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].type, "airfryer_recipes/beta_prepare");
+  assert.equal(calls[0].acknowledge_unverified, true);
+  assert.equal(Object.hasOwn(calls[0], "settings"), false);
+  assert.match(panel.shadowRoot.innerHTML, /Kitchen &lt;unsafe&gt;/);
+  assert.match(panel.shadowRoot.innerHTML, /170 °C · 1 min/);
+  assert.match(panel.shadowRoot.innerHTML, /Einmalig ans Gerät senden/);
+});
+
+test("beta send consumes the token and reports adapter acceptance without device confirmation", async () => {
+  const calls = [];
+  const panel = betaPanel(async (request) => { calls.push(request); return { outcome: "accepted" }; });
+  panel.betaTest = betaPrepared;
+  await panel.confirmBetaTest();
+  assert.equal(panel.betaTest, null);
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].type, "airfryer_recipes/beta_confirm");
+  assert.equal(calls[0].token, "single-use");
+  assert.equal(Object.hasOwn(calls[0], "device_id"), false);
+  assert.match(panel.betaMessage, /keine Gerätebestätigung/);
+  await panel.confirmBetaTest();
+  assert.equal(calls.length, 1);
+});
+
+test("lost beta response does not retry or retain a token", async () => {
+  let calls = 0;
+  const panel = betaPanel(async () => { calls++; throw new Error("private transport data"); });
+  panel.betaTest = betaPrepared;
+  await panel.confirmBetaTest();
+  assert.equal(panel.betaTest, null);
+  assert.match(panel.betaMessage, /Ergebnis unklar/);
+  assert.doesNotMatch(panel.shadowRoot.innerHTML, /private transport/);
+  await panel.confirmBetaTest();
+  assert.equal(calls, 1);
+});
+
+test("beta controls require administrator permission and explicit dialog acceptance", async () => {
+  let calls = 0;
+  const panel = betaPanel(async () => { calls++; }, false);
+  panel.betaTest = betaPrepared;
+  await panel.prepareBetaTest();
+  await panel.confirmBetaTest();
+  panel.render();
+  assert.doesNotMatch(panel.shadowRoot.innerHTML, /id="beta-device-test"/);
+  const declined = betaPanel(async () => { calls++; }, true, () => false);
+  declined.betaTest = betaPrepared;
+  await declined.prepareBetaTest();
+  await declined.confirmBetaTest();
+  assert.equal(calls, 0);
+});
+
+test("changing beta target discards the visible confirmation and English messages exist", () => {
+  const panel = betaPanel(async () => ({}));
+  panel.betaTest = betaPrepared;
+  panel.onChange({ target: { id: "preview-zone", value: "2" } });
+  assert.equal(panel.betaTest, null);
+  panel._hass.language = "en";
+  panel.render();
+  assert.match(panel.shadowRoot.innerHTML, /Supervised beta device test/);
+  assert.match(panel.shadowRoot.innerHTML, /170 °C, 1 minute/);
+});
 
 test("navigation remains available during loading and uses the HA sidebar event", async () => {
   const panel = panelWith(async () => ({ recipes: [] }));

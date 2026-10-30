@@ -92,6 +92,7 @@ Aktion: Modell vor der Implementierung bestätigen lassen.
 - Die vollständige Python-Matrix und umfassende Validierungen am Ende eines größeren Abschnitts bzw. vor einer Freigabe ausführen. Keine unveränderten Prüfungen ohne neuen Grund wiederholen.
 - Keine automatischen Doppelprüfungen für denselben Stand bei PR und anschließendem Merge. Erforderliche Sicherheits- und Release-Prüfungen bleiben verpflichtend; ihren Umfang passend zum Abschnitt planen.
 - Vollständige Offline-Prüfung: Workflow „Offline unit tests“ manuell mit `full_suite=true`. HACS/Hassfest bei relevanten Metadatenänderungen oder über den manuellen Workflow „Home Assistant and HACS validation“.
+- Ein abgeschlossener Abschnitt kann die vollständige Matrix im einmaligen PR-Lauf mit `[full-ci]` im PR-Titel anfordern. Das vermeidet einen separaten doppelten Lauf vor einer Beta; die Kennzeichnung nicht für Zwischenschritte verwenden.
 
 ## Referenzen
 

@@ -28,7 +28,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ${{ fromJSON(inputs.full_suite == true && '["3.12", "3.14"]' || '["3.12"]') }}
+        python-version: ${{ fromJSON((inputs.full_suite == true || contains(github.event.pull_request.title, '[full-ci]')) && '["3.12", "3.14"]' || '["3.12"]') }}
     steps:
       - name: Check out source
         uses: actions/checkout@v4
@@ -42,4 +42,4 @@ jobs:
         run: python -m unittest discover -s tests -v
       - name: Recipe panel tests (offline)
         if: matrix.python-version == '3.12'
-        run: node --test tests/test_panel.mjs
+        run: node tests/test_panel.mjs

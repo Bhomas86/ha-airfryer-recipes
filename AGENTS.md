@@ -136,6 +136,7 @@ Action: Confirm current model before implementation; do not claim to switch it.
 - Run the full Python matrix and comprehensive validation at the end of a larger section or before release. Do not repeat unchanged checks without a new reason.
 - Avoid duplicate automatic checks for the same state on a PR and its subsequent merge. Required safety and release checks remain mandatory; plan their scope around the section.
 - Full offline validation: manually run “Offline unit tests” with `full_suite=true`. Run HACS/Hassfest for relevant metadata changes or through the manual “Home Assistant and HACS validation” workflow.
+- A completed section may request the full matrix in its single PR run using `[full-ci]` in the PR title. This avoids a separate duplicate run before a beta release; do not use the marker for intermediate work.
 
 ## Helpful references
 
