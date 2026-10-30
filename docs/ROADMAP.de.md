@@ -6,6 +6,8 @@
 
 **Prüfung vom 30.10.2026:** Der unveränderte Beta-Vertrag reicht weiterhin nicht zur Live-Freigabe. Modellspezifische Nachweise und frische Gerätebestätigung fehlen; siehe [erneute Vertragsprüfung](reports/ISSUE_7_BETA_REVIEW.de.md).
 
+**Nächstes Testpaket 0.1.0b3:** Separater beaufsichtigter Schnittstellentest vor der Geräteabnahme, vom Eigentümer beauftragt. Keine normale Gerätesteuerung oder Kompatibilitätsfreigabe. [Umsetzung und lokale Tests](reports/ISSUE_7_BETA_SEND.de.md).
+
 ## Prioritäten und Abhängigkeiten
 
 | Phase | Issue | Ergebnis | Voraussetzung | Prüfung |

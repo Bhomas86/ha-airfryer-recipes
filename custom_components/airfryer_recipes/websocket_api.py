@@ -3,7 +3,7 @@
 Read access: authenticated HA users.
 Shared recipe mutations and imports: administrators only, enforced by Home
 Assistant's built-in require_admin decorator. Each authenticated user may
-change only their own personal favorites. No appliance calls.
+change only their own personal favorites. Supervised beta sends are admin-only.
 """
 
 from __future__ import annotations
@@ -14,12 +14,13 @@ from dataclasses import replace
 from typing import Any, Awaitable, Callable
 from uuid import uuid4
 
-import probatio
+import voluptuous
 
 from homeassistant.components import websocket_api
 
 from .const import DOMAIN, EXPORT_FILENAME, EXPORT_URL
 from .command_preview import PreviewTargetNotFound
+from .beta_send import BetaTestBlocked
 from .recipe_model import (
     MAX_IMPORT_BYTES,
     RecipeValidationError,
@@ -63,6 +64,8 @@ async def _respond(
         return
     try:
         result = await action(repository)
+    except BetaTestBlocked as err:
+        connection.send_error(msg["id"], "beta_test_blocked", str(err))
     except PreviewTargetNotFound:
         connection.send_error(msg["id"], "target_not_found", "Device or reported zone not found")
     except RecipePreviewExpiredError:
@@ -82,7 +85,7 @@ async def _respond(
         connection.send_result(msg["id"], result)
 
 
-@websocket_api.websocket_command({probatio.Required("type"): f"{DOMAIN}/list"})
+@websocket_api.websocket_command({voluptuous.Required("type"): f"{DOMAIN}/list"})
 @websocket_api.async_response
 async def ws_list(hass: Any, connection: Any, msg: dict[str, Any]) -> None:
     """Read saved recipes; device selection is not part of the recipe."""
@@ -92,8 +95,8 @@ async def ws_list(hass: Any, connection: Any, msg: dict[str, Any]) -> None:
 
 
 @websocket_api.websocket_command({
-    probatio.Required("type"): f"{DOMAIN}/get",
-    probatio.Required("recipe_id"): str,
+    voluptuous.Required("type"): f"{DOMAIN}/get",
+    voluptuous.Required("recipe_id"): str,
 })
 @websocket_api.async_response
 async def ws_get(hass: Any, connection: Any, msg: dict[str, Any]) -> None:
@@ -105,8 +108,8 @@ async def ws_get(hass: Any, connection: Any, msg: dict[str, Any]) -> None:
 
 @websocket_api.require_admin
 @websocket_api.websocket_command({
-    probatio.Required("type"): f"{DOMAIN}/create",
-    probatio.Required("recipe"): dict,
+    voluptuous.Required("type"): f"{DOMAIN}/create",
+    voluptuous.Required("recipe"): dict,
 })
 @websocket_api.async_response
 async def ws_create(hass: Any, connection: Any, msg: dict[str, Any]) -> None:
@@ -122,8 +125,8 @@ async def ws_create(hass: Any, connection: Any, msg: dict[str, Any]) -> None:
 
 @websocket_api.require_admin
 @websocket_api.websocket_command({
-    probatio.Required("type"): f"{DOMAIN}/update",
-    probatio.Required("recipe"): dict,
+    voluptuous.Required("type"): f"{DOMAIN}/update",
+    voluptuous.Required("recipe"): dict,
 })
 @websocket_api.async_response
 async def ws_update(hass: Any, connection: Any, msg: dict[str, Any]) -> None:
@@ -136,9 +139,9 @@ async def ws_update(hass: Any, connection: Any, msg: dict[str, Any]) -> None:
 
 @websocket_api.require_admin
 @websocket_api.websocket_command({
-    probatio.Required("type"): f"{DOMAIN}/duplicate",
-    probatio.Required("recipe_id"): str,
-    probatio.Required("name"): str,
+    voluptuous.Required("type"): f"{DOMAIN}/duplicate",
+    voluptuous.Required("recipe_id"): str,
+    voluptuous.Required("name"): str,
 })
 @websocket_api.async_response
 async def ws_duplicate(hass: Any, connection: Any, msg: dict[str, Any]) -> None:
@@ -152,8 +155,8 @@ async def ws_duplicate(hass: Any, connection: Any, msg: dict[str, Any]) -> None:
 
 @websocket_api.require_admin
 @websocket_api.websocket_command({
-    probatio.Required("type"): f"{DOMAIN}/delete",
-    probatio.Required("recipe_id"): str,
+    voluptuous.Required("type"): f"{DOMAIN}/delete",
+    voluptuous.Required("recipe_id"): str,
 })
 @websocket_api.async_response
 async def ws_delete(hass: Any, connection: Any, msg: dict[str, Any]) -> None:
@@ -166,8 +169,8 @@ async def ws_delete(hass: Any, connection: Any, msg: dict[str, Any]) -> None:
 
 @websocket_api.require_admin
 @websocket_api.websocket_command({
-    probatio.Required("type"): f"{DOMAIN}/import_preview",
-    probatio.Required("payload"): str,
+    voluptuous.Required("type"): f"{DOMAIN}/import_preview",
+    voluptuous.Required("payload"): str,
 })
 @websocket_api.async_response
 async def ws_import_preview(hass: Any, connection: Any, msg: dict[str, Any]) -> None:
@@ -187,9 +190,9 @@ async def ws_import_preview(hass: Any, connection: Any, msg: dict[str, Any]) -> 
 
 @websocket_api.require_admin
 @websocket_api.websocket_command({
-    probatio.Required("type"): f"{DOMAIN}/import_confirm",
-    probatio.Required("token"): str,
-    probatio.Optional("policy", default="skip"): str,
+    voluptuous.Required("type"): f"{DOMAIN}/import_confirm",
+    voluptuous.Required("token"): str,
+    voluptuous.Optional("policy", default="skip"): str,
 })
 @websocket_api.async_response
 async def ws_import_confirm(hass: Any, connection: Any, msg: dict[str, Any]) -> None:
@@ -201,7 +204,7 @@ async def ws_import_confirm(hass: Any, connection: Any, msg: dict[str, Any]) -> 
 
 
 @websocket_api.require_admin
-@websocket_api.websocket_command({probatio.Required("type"): f"{DOMAIN}/export"})
+@websocket_api.websocket_command({voluptuous.Required("type"): f"{DOMAIN}/export"})
 @websocket_api.async_response
 async def ws_export(hass: Any, connection: Any, msg: dict[str, Any]) -> None:
     """Create a short-lived authenticated JSON download URL (admins only)."""
@@ -220,7 +223,7 @@ async def ws_export(hass: Any, connection: Any, msg: dict[str, Any]) -> None:
     await _respond(hass, connection, msg, run)
 
 
-@websocket_api.websocket_command({probatio.Required("type"): f"{DOMAIN}/favorites"})
+@websocket_api.websocket_command({voluptuous.Required("type"): f"{DOMAIN}/favorites"})
 @websocket_api.async_response
 async def ws_favorites(hass: Any, connection: Any, msg: dict[str, Any]) -> None:
     """Return favorites of the authenticated user only."""
@@ -231,9 +234,9 @@ async def ws_favorites(hass: Any, connection: Any, msg: dict[str, Any]) -> None:
 
 
 @websocket_api.websocket_command({
-    probatio.Required("type"): f"{DOMAIN}/set_favorite",
-    probatio.Required("recipe_id"): str,
-    probatio.Required("favorite"): bool,
+    voluptuous.Required("type"): f"{DOMAIN}/set_favorite",
+    voluptuous.Required("recipe_id"): str,
+    voluptuous.Required("favorite"): bool,
 })
 @websocket_api.async_response
 async def ws_set_favorite(hass: Any, connection: Any, msg: dict[str, Any]) -> None:
@@ -247,7 +250,7 @@ async def ws_set_favorite(hass: Any, connection: Any, msg: dict[str, Any]) -> No
 
 
 @websocket_api.require_admin
-@websocket_api.websocket_command({probatio.Required("type"): f"{DOMAIN}/devices"})
+@websocket_api.websocket_command({voluptuous.Required("type"): f"{DOMAIN}/devices"})
 @websocket_api.async_response
 async def ws_devices(hass: Any, connection: Any, msg: dict[str, Any]) -> None:
     """Read optional adapter discovery (admin-only until device ACLs are added)."""
@@ -260,10 +263,10 @@ async def ws_devices(hass: Any, connection: Any, msg: dict[str, Any]) -> None:
 
 @websocket_api.require_admin
 @websocket_api.websocket_command({
-    probatio.Required("type"): f"{DOMAIN}/prepare_send",
-    probatio.Required("device_id"): str,
-    probatio.Required("zone_id"): int,
-    probatio.Required("settings"): dict,
+    voluptuous.Required("type"): f"{DOMAIN}/prepare_send",
+    voluptuous.Required("device_id"): str,
+    voluptuous.Required("zone_id"): int,
+    voluptuous.Required("settings"): dict,
 })
 @websocket_api.async_response
 async def ws_prepare_send(hass: Any, connection: Any, msg: dict[str, Any]) -> None:
@@ -277,6 +280,50 @@ async def ws_prepare_send(hass: Any, connection: Any, msg: dict[str, Any]) -> No
         return await prepare_preview(
             hass, device_id=msg["device_id"], zone_id=msg["zone_id"], settings=msg["settings"]
         )
+    await _respond(hass, connection, msg, run)
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command({
+    voluptuous.Required("type"): f"{DOMAIN}/beta_prepare",
+    voluptuous.Required("device_id"): str,
+    voluptuous.Required("zone_id"): int,
+    voluptuous.Required("acknowledge_unverified"): bool,
+})
+@websocket_api.async_response
+async def ws_beta_prepare(hass: Any, connection: Any, msg: dict[str, Any]) -> None:
+    """Prepare a fixed supervised test, never a device command."""
+    async def run(repo: RecipeRepository) -> dict[str, Any]:
+        if set(msg) != {"id", "type", "device_id", "zone_id", "acknowledge_unverified"}:
+            raise RecipeValidationError("Unexpected beta test parameter")
+        sender = hass.data[DOMAIN].get("beta_sender")
+        if sender is None:
+            raise BetaTestBlocked("not_configured")
+        return await sender.prepare(connection.user.id, msg["device_id"], msg["zone_id"],
+                                    msg["acknowledge_unverified"])
+    await _respond(hass, connection, msg, run)
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command({
+    voluptuous.Required("type"): f"{DOMAIN}/beta_confirm",
+    voluptuous.Required("token"): str,
+    voluptuous.Required("acknowledge_supervised_test"): bool,
+})
+@websocket_api.async_response
+async def ws_beta_confirm(hass: Any, connection: Any, msg: dict[str, Any]) -> None:
+    """Consume an admin-bound token; exact target/settings are server-owned."""
+    async def run(repo: RecipeRepository) -> dict[str, Any]:
+        from homeassistant.core import Context
+
+        if set(msg) != {"id", "type", "token", "acknowledge_supervised_test"}:
+            raise RecipeValidationError("Unexpected beta test parameter")
+        sender = hass.data[DOMAIN].get("beta_sender")
+        if sender is None:
+            raise BetaTestBlocked("not_configured")
+        return await sender.confirm(connection.user.id, msg["token"],
+                                    msg["acknowledge_supervised_test"],
+                                    Context(user_id=connection.user.id))
     await _respond(hass, connection, msg, run)
 
 
@@ -294,6 +341,8 @@ COMMANDS = (
     ws_set_favorite,
     ws_devices,
     ws_prepare_send,
+    ws_beta_prepare,
+    ws_beta_confirm,
 )
 
 

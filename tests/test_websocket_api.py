@@ -9,7 +9,7 @@ import types
 import unittest
 from functools import wraps
 from types import SimpleNamespace
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from custom_components.airfryer_recipes.const import DOMAIN
 from custom_components.airfryer_recipes.recipe_model import create_recipe, recipe_to_dict
@@ -31,14 +31,16 @@ class FakeConnection:
 
 def _make_modules():
     ha = types.ModuleType("homeassistant")
+    core = types.ModuleType("homeassistant.core")
+    core.Context = SimpleNamespace
     components = types.ModuleType("homeassistant.components")
     ws = types.ModuleType("homeassistant.components.websocket_api")
     http = types.ModuleType("homeassistant.components.http")
     http_auth = types.ModuleType("homeassistant.components.http.auth")
-    probatio = types.ModuleType("probatio")
+    voluptuous = types.ModuleType("voluptuous")
 
-    probatio.Required = lambda key: key
-    probatio.Optional = lambda key, default=None: key
+    voluptuous.Required = lambda key: key
+    voluptuous.Optional = lambda key, default=None: key
     ws.ERR_UNAUTHORIZED = "unauthorized"
     ws.ERR_NOT_FOUND = "not_found"
     ws.ERR_INVALID_FORMAT = "invalid_format"
@@ -70,8 +72,9 @@ def _make_modules():
     components.http = http
     ha.components = components
     return {
-        "probatio": probatio,
+        "voluptuous": voluptuous,
         "homeassistant": ha,
+        "homeassistant.core": core,
         "homeassistant.components": components,
         "homeassistant.components.http": http,
         "homeassistant.components.http.auth": http_auth,
@@ -163,6 +166,8 @@ class WebsocketTests(unittest.IsolatedAsyncioTestCase):
             ("import_preview", {"payload": '{"schema_version":1,"recipes":[]}'}),
             ("import_confirm", {"token": "a-token"}),
             ("export", {}),
+            ("beta_prepare", {"device_id": "ha-device", "zone_id": 1, "acknowledge_unverified": True}),
+            ("beta_confirm", {"token": "forged", "acknowledge_supervised_test": True}),
             ("devices", {}),
             ("prepare_send", {"device_id": "ha-device", "zone_id": 1, "settings": {}}),
         )
@@ -309,19 +314,51 @@ class WebsocketTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(read.call_count, 2)
         self.assertEqual(self.writes, 0)
 
+    async def test_beta_routes_use_authenticated_user_and_reject_extra_control_fields(self):
+        sender = SimpleNamespace(prepare=AsyncMock(return_value={"transmitted": False}),
+                                 confirm=AsyncMock(return_value={"outcome": "accepted"}))
+        self.hass.data[DOMAIN]["beta_sender"] = sender
+        params = {"device_id": "ha-device", "zone_id": 1, "acknowledge_unverified": True}
+        self.assertEqual((await self.call("beta_prepare", self.admin, **params))[0], "result")
+        sender.prepare.assert_awaited_once_with("u1", "ha-device", 1, True)
+        forged = await self.call("beta_prepare", self.admin, **params, settings={"readyStart": False})
+        self.assertEqual(forged[2], "invalid_format")
+        self.assertEqual(sender.prepare.await_count, 1)
+        result = await self.call("beta_confirm", self.admin, token="one", acknowledge_supervised_test=True)
+        self.assertEqual(result[0], "result")
+        call = sender.confirm.await_args
+        self.assertEqual(call.args[:3], ("u1", "one", True))
+        self.assertEqual(call.args[3].user_id, "u1")
+        forged = await self.call("beta_confirm", self.admin, token="one",
+                                 acknowledge_supervised_test=True, device_id="other")
+        self.assertEqual(forged[2], "invalid_format")
+        self.assertEqual(sender.confirm.await_count, 1)
+
+    async def test_beta_block_reason_is_allowlisted_and_unload_disables_routes(self):
+        from custom_components.airfryer_recipes.beta_send import BetaTestBlocked
+
+        sender = SimpleNamespace(prepare=AsyncMock(side_effect=BetaTestBlocked("freshness")))
+        self.hass.data[DOMAIN]["beta_sender"] = sender
+        params = {"device_id": "ha-device", "zone_id": 1, "acknowledge_unverified": True}
+        result = await self.call("beta_prepare", self.admin, **params)
+        self.assertEqual(result[2:], ("beta_test_blocked", "freshness"))
+        self.hass.data[DOMAIN].pop("repository")
+        self.assertEqual((await self.call("beta_prepare", self.admin, **params))[2], "not_configured")
+        self.assertEqual(sender.prepare.await_count, 1)
+
     def test_commands_register_once_per_explicit_call(self):
         ws = self.modules["homeassistant.components.websocket_api"]
         ws.registered.clear()
         self.api.register_commands(self.hass)
         commands = {handler._ws_command for handler in ws.registered}
-        self.assertEqual(len(commands), 13)
+        self.assertEqual(len(commands), 15)
         self.assertEqual(
             commands,
             {f"{DOMAIN}/{name}" for name in (
                 "list", "get", "create", "update", "duplicate", "delete",
                 "import_preview", "import_confirm", "export", "favorites", "set_favorite",
                 "devices",
-                "prepare_send",
+                "prepare_send", "beta_prepare", "beta_confirm",
             )},
         )
 

@@ -1,6 +1,18 @@
 // Local Home Assistant custom panel. All mutations go through the authenticated API.
 const WORDS = {
   en: {
+    betaTitle: "Supervised beta device test", betaIntro: "CAF-DC111S-AEU only: Air Fry, 170 °C, 1 minute, zone 1 or 2. This is a real settings transmission with unverified device compatibility. Both zones must be idle. No cooking start is requested.",
+    betaWarning: "Remain beside the empty appliance. Do not press Start. Device compatibility is unverified. If heating starts or the other zone changes, stop at the appliance and end testing. Prepare this supervised test?",
+    betaPrepare: "Prepare real device test", betaConfirm: "Send once to the appliance", betaCancel: "Discard test",
+    betaConfirmWarning: "Send these exact settings ONCE? Do not press Start. Observe the appliance and both zones.",
+    betaPending: "Ready for one explicit test send (expires after 15 seconds)",
+    betaAccepted: "The adapter accepted the request. This is not device confirmation. Check program, temperature, duration and both zones at the appliance. Do not press Start; no heating should occur.",
+    betaUnknown: "Outcome unknown. Do not send again. Check the appliance and stop testing. Further beta attempts for this device are blocked until Home Assistant restarts.",
+    betaNoSend: "Test blocked; no command was sent.", betaFreshness: "Wait for a new successful Airfryer Control report, then prepare again promptly. Reports must be at most 15 seconds old.",
+    betaState: "The report or device state changed. Check both zones and prepare a new test.", betaZones: "Both reported zones must be idle/off, Celsius selected and SYNC/MATCH off. Cancel any prepared program at the appliance first.",
+    betaAdapter: "This test requires exactly Airfryer Control 1.0.2-beta.1, the reviewed version.", betaModel: "This beta test supports only CAF-DC111S-AEU.",
+    betaCaps: "The adapter did not supply suitable Air Fry test bounds.", betaBusy: "A test is already in progress. No command was queued.",
+    betaExpired: "The test confirmation expired or was consumed. Check the appliance before preparing a new test.",
     title: "Recipe library", subtitle: "Manage recipes independently of any appliance.",
     openMenu: "Open menu", leave: "Leave",
     search: "Search recipes", all: "All categories", new: "New recipe", import: "Import JSON",
@@ -19,7 +31,7 @@ const WORDS = {
     unauthorized: "Administrator permission is required.", conflict: "A recipe with that ID or name already exists.",
     invalid: "Check the recipe values and try again.", expired: "The preview expired. Select the file again.",
     storage: "Saving failed. Check the Home Assistant logs.", notConfigured: "The integration is not configured.",
-    phases: "Cooking phase", refresh: "Refresh", devicesNote: "Live device transmission is not available.",
+    phases: "Cooking phase", refresh: "Refresh", devicesNote: "Normal device control is not available. The separate supervised beta test requires explicit confirmation.",
     sharedFavorite: "Shared favorite", myFavorite: "My favorite", allFavorites: "All recipes",
     onlyMine: "My favorites", onlyShared: "Shared favorites",
     sample: "Create sample recipe", sampleConfirm: "Create one sample recipe?",
@@ -47,6 +59,18 @@ const WORDS = {
     statusDrawerOpen: "Drawer open", statusHolding: "Holding", statusKeepingWarm: "Keeping warm", statusPreheated: "Preheated",
   },
   de: {
+    betaTitle: "Beaufsichtigter Beta-Gerätetest", betaIntro: "Nur CAF-DC111S-AEU: Airfry, 170 °C, 1 Minute, Fach 1 oder 2. Dies ist eine echte Einstellungsübertragung bei ungeprüfter Gerätekompatibilität. Beide Fächer müssen ruhen. Es wird kein Garstart angefordert.",
+    betaWarning: "Am leeren Gerät bleiben. Nicht auf Start drücken. Die Gerätekompatibilität ist ungeprüft. Falls Heizen beginnt oder sich das andere Fach ändert, am Gerät stoppen und den Test beenden. Diesen beaufsichtigten Test vorbereiten?",
+    betaPrepare: "Echten Gerätetest vorbereiten", betaConfirm: "Einmalig ans Gerät senden", betaCancel: "Test verwerfen",
+    betaConfirmWarning: "Diese exakten Einstellungen EINMAL senden? Nicht auf Start drücken. Gerät und beide Fächer beobachten.",
+    betaPending: "Für einen ausdrücklich bestätigten Test bereit (nach 15 Sekunden abgelaufen)",
+    betaAccepted: "Der Adapter hat die Anfrage angenommen. Das ist keine Gerätebestätigung. Programm, Temperatur, Zeit und beide Fächer am Gerät prüfen. Nicht auf Start drücken; es darf kein Heizen beginnen.",
+    betaUnknown: "Ergebnis unklar. Nicht erneut senden. Gerät prüfen und Test beenden. Weitere Beta-Versuche für dieses Gerät bleiben bis zum Home-Assistant-Neustart gesperrt.",
+    betaNoSend: "Test gesperrt; es wurde kein Befehl gesendet.", betaFreshness: "Eine neue erfolgreiche Meldung von Airfryer Control abwarten und den Test dann zügig vorbereiten. Meldungen dürfen höchstens 15 Sekunden alt sein.",
+    betaState: "Meldung oder Gerätezustand hat sich geändert. Beide Fächer prüfen und einen neuen Test vorbereiten.", betaZones: "Beide gemeldeten Fächer müssen bereit/aus sein, Celsius gewählt und SYNC/MATCH aus. Vorbereitete Programme zuerst am Gerät abbrechen.",
+    betaAdapter: "Dieser Test benötigt exakt Airfryer Control 1.0.2-beta.1, die geprüfte Version.", betaModel: "Dieser Beta-Test unterstützt nur CAF-DC111S-AEU.",
+    betaCaps: "Der Adapter hat keine passenden Grenzen für den Airfry-Test geliefert.", betaBusy: "Ein Test läuft bereits. Es wurde kein Befehl vorgemerkt.",
+    betaExpired: "Die Testbestätigung ist abgelaufen oder verbraucht. Vor einem neuen Test das Gerät prüfen.",
     title: "Rezeptbibliothek", subtitle: "Rezepte unabhängig von einem Gerät verwalten.",
     openMenu: "Menü öffnen", leave: "Verlassen",
     search: "Rezepte suchen", all: "Alle Kategorien", new: "Neues Rezept", import: "JSON importieren",
@@ -65,7 +89,7 @@ const WORDS = {
     unauthorized: "Administratorrechte sind erforderlich.", conflict: "Ein Rezept mit dieser ID oder diesem Namen existiert bereits.",
     invalid: "Bitte die Rezeptwerte prüfen.", expired: "Die Vorschau ist abgelaufen. Datei erneut auswählen.",
     storage: "Speichern fehlgeschlagen. Bitte die Home-Assistant-Protokolle prüfen.", notConfigured: "Die Integration ist nicht eingerichtet.",
-    phases: "Garphase", refresh: "Aktualisieren", devicesNote: "Echte Geräteübertragung ist nicht verfügbar.",
+    phases: "Garphase", refresh: "Aktualisieren", devicesNote: "Normale Gerätesteuerung ist nicht verfügbar. Der separate beaufsichtigte Beta-Test erfordert eine ausdrückliche Bestätigung.",
     sharedFavorite: "Gemeinsamer Favorit", myFavorite: "Mein Favorit", allFavorites: "Alle Rezepte",
     onlyMine: "Meine Favoriten", onlyShared: "Gemeinsame Favoriten",
     sample: "Beispielrezept anlegen", sampleConfirm: "Ein Beispielrezept anlegen?",
@@ -115,6 +139,8 @@ class AirfryerRecipesPanel extends HTMLElement {
     this.previewRecipeId = "";
     this.manualPreviewProgram = "airfry";
     this.sendPreview = null;
+    this.betaTest = null;
+    this.betaMessage = "";
     this.deviceError = "";
     this.devicesBusy = false;
     this.busy = false;
@@ -227,6 +253,7 @@ class AirfryerRecipesPanel extends HTMLElement {
 
   async loadDevices() {
     if (!this.admin) return;
+    this.betaTest = null;
     this.devicesBusy = true;
     this.deviceError = "";
     this.render();
@@ -407,6 +434,15 @@ class AirfryerRecipesPanel extends HTMLElement {
             <p>${t.blockingReasons}:</p><ul>${this.sendPreview.blocking_reasons.map((reason) => `<li>${escapeHtml(this.reasonLabel(reason))}</li>`).join("")}</ul></section>` : ""}
         </section>` : ""}
         ${this.busy && !this.recipes.length ? `<p>${t.loading}</p>` : ""}
+        ${this.admin ? `<section class="preview" id="beta-device-test"><h2>${t.betaTitle}</h2><p>${t.betaIntro}</p>
+          <p>${t.device}: ${escapeHtml(device?.name || "—")} · ${t.zone}: ${escapeHtml(this.selectedZoneId || "—")}</p>
+          <button type="button" data-action="beta-prepare" ${this.busy || this.devicesBusy || !this.selectedZone() ? "disabled" : ""}>${t.betaPrepare}</button>
+          ${this.betaTest ? `<div class="message"><p>${t.betaPending}</p>
+            <p><strong>${escapeHtml(this.betaTest.device_name)} · ${t.zone} ${escapeHtml(this.betaTest.zone_id)} · ${escapeHtml(this.programName(this.betaTest.settings.program))} · ${escapeHtml(this.toDisplay(this.betaTest.settings.temperature_c))} ${this.unit} · ${escapeHtml(this.betaTest.settings.duration_minutes)} min</strong></p>
+            <button type="button" data-action="beta-confirm" ${this.busy ? "disabled" : ""}>${t.betaConfirm}</button>
+            <button type="button" data-action="beta-cancel" ${this.busy ? "disabled" : ""}>${t.betaCancel}</button></div>` : ""}
+          ${this.betaMessage ? `<p class="message" role="status">${escapeHtml(this.betaMessage)}</p>` : ""}
+        </section>` : ""}
         <section class="cards">${this.filtered().map((recipe) => `<article><h2>${escapeHtml(recipe.name)}</h2>
           ${recipe.description ? `<p>${escapeHtml(recipe.description)}</p>` : ""}
           <p class="muted">${escapeHtml(recipe.category)} ${recipe.tags?.length ? `· ${escapeHtml(recipe.tags.join(", "))}` : ""}</p>
@@ -443,6 +479,7 @@ class AirfryerRecipesPanel extends HTMLElement {
       this.favoriteFilter = event.target.value;
       this.render();
     } else if (event.target.id === "preview-device") {
+      this.betaTest = null;
       this.selectedDeviceId = event.target.value;
       this.selectedZoneId = this.selectedDevice()?.zones?.[0]
         ? String(this.selectedDevice().zones[0].zone_id) : "";
@@ -450,6 +487,7 @@ class AirfryerRecipesPanel extends HTMLElement {
       this.sendPreview = null;
       this.render();
     } else if (event.target.id === "preview-zone") {
+      this.betaTest = null;
       this.selectedZoneId = event.target.value;
       this.sendPreview = null;
       this.render();
@@ -497,6 +535,9 @@ class AirfryerRecipesPanel extends HTMLElement {
     const t = this.words;
     if (type === "refresh") return this.load();
     if (!this.admin) return;
+    if (type === "beta-prepare") return this.prepareBetaTest();
+    if (type === "beta-confirm") return this.confirmBetaTest();
+    if (type === "beta-cancel") { this.betaTest = null; this.render(); return; }
     if (type === "refresh-devices") {
       await this.loadDevices();
       this.render();
@@ -580,6 +621,50 @@ class AirfryerRecipesPanel extends HTMLElement {
     if (this.editor.id) recipe.id = this.editor.id;
     const command = this.editor.id ? "update" : "create";
     return this.action(() => this.request(command, { recipe }), this.words.saved);
+  }
+
+  betaError(error) {
+    const key = {
+      freshness: "betaFreshness", state_changed: "betaState", zones: "betaZones",
+      adapter_version: "betaAdapter", adapter_data: "adapterIncompatible", model: "betaModel", capabilities: "betaCaps",
+      busy: "betaBusy", confirmation: "betaExpired", outcome_unknown: "betaUnknown",
+      connection: "reasonConnection", target: "targetMissing", unauthorized: "unauthorized",
+      not_configured: "notConfigured",
+    }[error?.message];
+    return `${this.words.betaNoSend} ${this.words[key || "genericError"]}`;
+  }
+
+  async prepareBetaTest() {
+    if (!this.admin || this.busy || this.devicesBusy || !this.selectedZone() || !confirm(this.words.betaWarning)) return;
+    const device_id = this.selectedDeviceId;
+    const zone_id = Number(this.selectedZoneId);
+    this.betaTest = null;
+    this.betaMessage = "";
+    this.busy = true;
+    this.render();
+    try {
+      const result = await this.request("beta_prepare", { device_id, zone_id, acknowledge_unverified: true });
+      if (this.selectedDeviceId === device_id && Number(this.selectedZoneId) === zone_id) this.betaTest = result;
+    } catch (error) {
+      this.betaMessage = this.betaError(error);
+    } finally { this.busy = false; this.render(); }
+  }
+
+  async confirmBetaTest() {
+    if (!this.admin || this.busy || this.devicesBusy || !this.betaTest) return;
+    const prepared = this.betaTest;
+    const exact = `${prepared.device_name} · ${this.words.zone} ${prepared.zone_id} · ${prepared.settings.program} · ${this.toDisplay(prepared.settings.temperature_c)} ${this.unit} · ${prepared.settings.duration_minutes} min`;
+    if (!confirm(`${exact}\n${this.words.betaConfirmWarning}`)) return;
+    this.betaTest = null; // Never reuse a confirmation, including after a lost response.
+    this.busy = true;
+    this.betaMessage = "";
+    this.render();
+    try {
+      const result = await this.request("beta_confirm", { token: prepared.token, acknowledge_supervised_test: true });
+      this.betaMessage = result.outcome === "accepted" ? this.words.betaAccepted : this.words.betaUnknown;
+    } catch (error) {
+      this.betaMessage = error?.code === "beta_test_blocked" ? this.betaError(error) : this.words.betaUnknown;
+    } finally { this.busy = false; this.render(); }
   }
 
   async submitDevicePreview(formElement) {

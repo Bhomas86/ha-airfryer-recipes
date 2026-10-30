@@ -8,6 +8,8 @@ available for manual installation. Real tests take place only in the owner's
 Home Assistant environment; Cloud Codex and GitHub Actions must not contact
 the local network or real VeSync device.
 
+For v0.1.0b3, use only the separate [supervised initial test](reports/ISSUE_7_BETA_SEND.md#local-appliance-acceptance). General live/dashboard checks below remain pending until implemented.
+
 ## Before any real-device test
 
 - [ ] Record Home Assistant, HACS integration and adapter versions.

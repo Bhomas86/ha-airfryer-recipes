@@ -8,6 +8,8 @@ und eine manuell installierbare Beta verfügbar ist. Reale Tests erfolgen
 ausschließlich im eigenen Home Assistant; Cloud Codex und GitHub Actions
 erhalten keinen Zugriff auf Heimnetz oder echte VeSync-Geräte.
 
+Für v0.1.0b3 gilt ausschließlich der separate [beaufsichtigte Ersttest](reports/ISSUE_7_BETA_SEND.de.md#lokale-gerateabnahme). Die allgemeinen Live-/Dashboard-Prüfungen unten bleiben bis zu ihrer Implementierung ausstehend.
+
 ## Vor jedem realen Gerätetest
 
 - [ ] Home-Assistant-, HACS- und Adapter-Versionen notieren.

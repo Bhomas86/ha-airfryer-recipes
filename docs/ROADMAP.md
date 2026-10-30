@@ -6,6 +6,8 @@
 
 **Review on 2026-10-30:** The unchanged beta contract still does not justify live approval. Model-specific evidence and fresh device confirmation remain missing; see the [contract re-review](reports/ISSUE_7_BETA_REVIEW.md).
 
+**Next test package 0.1.0b3:** Separate supervised interface test before appliance acceptance, requested by the owner. No normal device control or compatibility approval. [Implementation and local tests](reports/ISSUE_7_BETA_SEND.md).
+
 ## Implementation priorities and dependency order
 
 | Stage | Issue | Deliverable | Dependency | Verification |
