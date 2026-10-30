@@ -8,6 +8,8 @@
 
 **Next test package 0.1.0b3:** Separate supervised interface test before appliance acceptance, requested by the owner. No normal device control or compatibility approval. [Implementation and local tests](reports/ISSUE_7_BETA_SEND.md).
 
+**Beta correction 0.1.0b4:** The first local attempt was blocked before sending by the freshness gate. Preparation now requests one new read-only status query. Real transmission remains unaccepted. [Review and repeat test](reports/ISSUE_7_STATUS_REFRESH.md).
+
 ## Implementation priorities and dependency order
 
 | Stage | Issue | Deliverable | Dependency | Verification |

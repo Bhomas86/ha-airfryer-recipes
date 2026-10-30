@@ -1,6 +1,9 @@
 // Local Home Assistant custom panel. All mutations go through the authenticated API.
 const WORDS = {
   en: {
+    betaRefreshing: "Requesting a fresh device status… No settings are being sent.",
+    betaRefreshUnavailable: "No loaded, enabled Airfryer Control sensor is available for this device. Enable a status sensor and check the integration.",
+    betaRefreshFailed: "No new successful device report followed the status request. Check the device connection in Airfryer Control. No settings were sent.",
     betaTitle: "Supervised beta device test", betaIntro: "CAF-DC111S-AEU only: Air Fry, 170 °C, 1 minute, zone 1 or 2. This is a real settings transmission with unverified device compatibility. Both zones must be idle. No cooking start is requested.",
     betaWarning: "Remain beside the empty appliance. Do not press Start. Device compatibility is unverified. If heating starts or the other zone changes, stop at the appliance and end testing. Prepare this supervised test?",
     betaPrepare: "Prepare real device test", betaConfirm: "Send once to the appliance", betaCancel: "Discard test",
@@ -8,7 +11,7 @@ const WORDS = {
     betaPending: "Ready for one explicit test send (expires after 15 seconds)",
     betaAccepted: "The adapter accepted the request. This is not device confirmation. Check program, temperature, duration and both zones at the appliance. Do not press Start; no heating should occur.",
     betaUnknown: "Outcome unknown. Do not send again. Check the appliance and stop testing. Further beta attempts for this device are blocked until Home Assistant restarts.",
-    betaNoSend: "Test blocked; no command was sent.", betaFreshness: "Wait for a new successful Airfryer Control report, then prepare again promptly. Reports must be at most 15 seconds old.",
+    betaNoSend: "Test blocked; no command was sent.", betaFreshness: "The refreshed report could not be verified. No settings were sent. Check Airfryer Control and prepare a new test. Reports must be at most 15 seconds old.",
     betaState: "The report or device state changed. Check both zones and prepare a new test.", betaZones: "Both reported zones must be idle/off, Celsius selected and SYNC/MATCH off. Cancel any prepared program at the appliance first.",
     betaAdapter: "This test requires exactly Airfryer Control 1.0.2-beta.1, the reviewed version.", betaModel: "This beta test supports only CAF-DC111S-AEU.",
     betaCaps: "The adapter did not supply suitable Air Fry test bounds.", betaBusy: "A test is already in progress. No command was queued.",
@@ -59,6 +62,9 @@ const WORDS = {
     statusDrawerOpen: "Drawer open", statusHolding: "Holding", statusKeepingWarm: "Keeping warm", statusPreheated: "Preheated",
   },
   de: {
+    betaRefreshing: "Aktueller Gerätestatus wird angefordert … Es werden keine Einstellungen gesendet.",
+    betaRefreshUnavailable: "Für dieses Gerät ist kein geladener, aktivierter Airfryer-Control-Sensor verfügbar. Einen Statussensor aktivieren und die Integration prüfen.",
+    betaRefreshFailed: "Die Statusabfrage hat keinen neuen erfolgreichen Gerätebericht geliefert. Die Geräteverbindung in Airfryer Control prüfen. Es wurden keine Einstellungen gesendet.",
     betaTitle: "Beaufsichtigter Beta-Gerätetest", betaIntro: "Nur CAF-DC111S-AEU: Airfry, 170 °C, 1 Minute, Fach 1 oder 2. Dies ist eine echte Einstellungsübertragung bei ungeprüfter Gerätekompatibilität. Beide Fächer müssen ruhen. Es wird kein Garstart angefordert.",
     betaWarning: "Am leeren Gerät bleiben. Nicht auf Start drücken. Die Gerätekompatibilität ist ungeprüft. Falls Heizen beginnt oder sich das andere Fach ändert, am Gerät stoppen und den Test beenden. Diesen beaufsichtigten Test vorbereiten?",
     betaPrepare: "Echten Gerätetest vorbereiten", betaConfirm: "Einmalig ans Gerät senden", betaCancel: "Test verwerfen",
@@ -66,7 +72,7 @@ const WORDS = {
     betaPending: "Für einen ausdrücklich bestätigten Test bereit (nach 15 Sekunden abgelaufen)",
     betaAccepted: "Der Adapter hat die Anfrage angenommen. Das ist keine Gerätebestätigung. Programm, Temperatur, Zeit und beide Fächer am Gerät prüfen. Nicht auf Start drücken; es darf kein Heizen beginnen.",
     betaUnknown: "Ergebnis unklar. Nicht erneut senden. Gerät prüfen und Test beenden. Weitere Beta-Versuche für dieses Gerät bleiben bis zum Home-Assistant-Neustart gesperrt.",
-    betaNoSend: "Test gesperrt; es wurde kein Befehl gesendet.", betaFreshness: "Eine neue erfolgreiche Meldung von Airfryer Control abwarten und den Test dann zügig vorbereiten. Meldungen dürfen höchstens 15 Sekunden alt sein.",
+    betaNoSend: "Test gesperrt; es wurde kein Befehl gesendet.", betaFreshness: "Der aktualisierte Bericht konnte nicht bestätigt werden. Es wurden keine Einstellungen gesendet. Airfryer Control prüfen und den Test neu vorbereiten. Meldungen dürfen höchstens 15 Sekunden alt sein.",
     betaState: "Meldung oder Gerätezustand hat sich geändert. Beide Fächer prüfen und einen neuen Test vorbereiten.", betaZones: "Beide gemeldeten Fächer müssen bereit/aus sein, Celsius gewählt und SYNC/MATCH aus. Vorbereitete Programme zuerst am Gerät abbrechen.",
     betaAdapter: "Dieser Test benötigt exakt Airfryer Control 1.0.2-beta.1, die geprüfte Version.", betaModel: "Dieser Beta-Test unterstützt nur CAF-DC111S-AEU.",
     betaCaps: "Der Adapter hat keine passenden Grenzen für den Airfry-Test geliefert.", betaBusy: "Ein Test läuft bereits. Es wurde kein Befehl vorgemerkt.",
@@ -625,7 +631,7 @@ class AirfryerRecipesPanel extends HTMLElement {
 
   betaError(error) {
     const key = {
-      freshness: "betaFreshness", state_changed: "betaState", zones: "betaZones",
+      freshness: "betaFreshness", refresh_unavailable: "betaRefreshUnavailable", refresh_failed: "betaRefreshFailed", state_changed: "betaState", zones: "betaZones",
       adapter_version: "betaAdapter", adapter_data: "adapterIncompatible", model: "betaModel", capabilities: "betaCaps",
       busy: "betaBusy", confirmation: "betaExpired", outcome_unknown: "betaUnknown",
       connection: "reasonConnection", target: "targetMissing", unauthorized: "unauthorized",
@@ -639,11 +645,12 @@ class AirfryerRecipesPanel extends HTMLElement {
     const device_id = this.selectedDeviceId;
     const zone_id = Number(this.selectedZoneId);
     this.betaTest = null;
-    this.betaMessage = "";
+    this.betaMessage = this.words.betaRefreshing;
     this.busy = true;
     this.render();
     try {
       const result = await this.request("beta_prepare", { device_id, zone_id, acknowledge_unverified: true });
+      this.betaMessage = "";
       if (this.selectedDeviceId === device_id && Number(this.selectedZoneId) === zone_id) this.betaTest = result;
     } catch (error) {
       this.betaMessage = this.betaError(error);

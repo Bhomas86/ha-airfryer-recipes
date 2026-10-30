@@ -294,13 +294,16 @@ async def ws_prepare_send(hass: Any, connection: Any, msg: dict[str, Any]) -> No
 async def ws_beta_prepare(hass: Any, connection: Any, msg: dict[str, Any]) -> None:
     """Prepare a fixed supervised test, never a device command."""
     async def run(repo: RecipeRepository) -> dict[str, Any]:
+        from homeassistant.core import Context
+
         if set(msg) != {"id", "type", "device_id", "zone_id", "acknowledge_unverified"}:
             raise RecipeValidationError("Unexpected beta test parameter")
         sender = hass.data[DOMAIN].get("beta_sender")
         if sender is None:
             raise BetaTestBlocked("not_configured")
         return await sender.prepare(connection.user.id, msg["device_id"], msg["zone_id"],
-                                    msg["acknowledge_unverified"])
+                                    msg["acknowledge_unverified"],
+                                    Context(user_id=connection.user.id))
     await _respond(hass, connection, msg, run)
 
 

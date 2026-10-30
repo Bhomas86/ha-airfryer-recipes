@@ -40,8 +40,10 @@ class Target:
     unchanged: Callable[[], bool] = lambda: True
 
 
-async def read_target(hass: Any, device_id: str, zone_id: int) -> Target:
-    """Read a coherent, fresh idle snapshot; no refresh or control calls.
+async def read_target(
+    hass: Any, device_id: str, zone_id: int, *, refresh: bool = False, context: Any = None,
+) -> Target:
+    """Read a coherent idle snapshot; optionally request a read-only refresh.
 
     The report timestamp is part of the confirmation binding. Even an identical
     new report invalidates a prepared test, as does a different adapter instance.
@@ -68,6 +70,37 @@ async def read_target(hass: Any, device_id: str, zone_id: int) -> Target:
                 matches.append((entry, runtime, fryers[identities[0]]))
     require(len(matches) == 1, "target")
     entry, runtime, fryer = matches[0]
+    if refresh:
+        from homeassistant.helpers import entity_registry as er
+
+        require(context is not None, "unauthorized")
+        require(hass.services.has_service("homeassistant", "update_entity"), "refresh_unavailable")
+        registry = er.async_get(hass)
+        # All sensors of the reviewed upstream use CoordinatorEntity. Updating
+        # one loaded sensor requests a coordinator read, never a control action.
+        sensors = sorted(
+            entity.entity_id
+            for entity in er.async_entries_for_device(registry, device_id)
+            if entity.platform == UPSTREAM and entity.config_entry_id == entry.entry_id
+            and entity.disabled_by is None and entity.entity_id.startswith("sensor.")
+            and hass.states.get(entity.entity_id) is not None
+        )
+        require(bool(sensors), "refresh_unavailable")
+        before = getattr(fryer, "last_report", None)
+        requested_at = datetime.now(timezone.utc)
+        try:
+            async with asyncio.timeout(20):
+                await hass.services.async_call(
+                    "homeassistant", "update_entity", {"entity_id": [sensors[0]]},
+                    blocking=True, context=context,
+                )
+        except Exception:
+            raise BetaTestBlocked("refresh_failed") from None
+        after = getattr(fryer, "last_report", None)
+        require(isinstance(after, datetime) and after.tzinfo is not None, "refresh_failed")
+        require(after >= requested_at, "refresh_failed")
+        if isinstance(before, datetime) and before.tzinfo is not None:
+            require(after > before, "refresh_failed")
     payload = await hass.services.async_call(
         UPSTREAM, "faehigkeiten", {"geraet": device_id},
         blocking=True, return_response=True,
@@ -149,33 +182,39 @@ class BetaSender:
         require(not self.closed and self.hass.data.get(DOMAIN, {}).get("beta_sender") is self,
                 "not_configured")
 
-    async def _read(self, device_id: str, zone_id: int) -> Target:
+    async def _read(self, device_id: str, zone_id: int, **kwargs: Any) -> Target:
         try:
-            return await read_target(self.hass, device_id, zone_id)
+            return await read_target(self.hass, device_id, zone_id, **kwargs)
         except BetaTestBlocked:
             raise
         except Exception:
             raise BetaTestBlocked("adapter_data") from None
 
-    async def prepare(self, user_id: str, device_id: str, zone_id: int, acknowledge: bool) -> dict:
+    async def prepare(
+        self, user_id: str, device_id: str, zone_id: int, acknowledge: bool, context: Any,
+    ) -> dict:
         require(acknowledge is True, "acknowledgement")
         await self._authorized(user_id)
         require(device_id not in self.busy, "busy")
         require(device_id not in self.uncertain, "outcome_unknown")
-        target = await self._read(device_id, zone_id)
-        await self._authorized(user_id)
-        require(device_id not in self.busy, "busy")
-        require(device_id not in self.uncertain, "outcome_unknown")
-        now = time.monotonic()
-        self.pending = {k: v for k, v in self.pending.items()
-                        if v.expires > now and v.user_id != user_id}
-        require(len(self.pending) < 32, "busy")
-        token = secrets.token_urlsafe(32)
-        self.pending[token] = Confirmation(user_id, device_id, zone_id, target, now + TTL_SECONDS)
-        return {"mode": "supervised_beta_test", "token": token, "expires_seconds": TTL_SECONDS,
-                "device_id": device_id, "device_name": target.name, "zone_id": zone_id,
-                "settings": dict(TEST_SETTINGS), "transmitted": False,
-                "compatibility_verified": False}
+        self.busy.add(device_id)
+        try:
+            # Starting a fresh preparation invalidates older confirmations for
+            # this user even when the refresh subsequently fails.
+            self.pending = {k: v for k, v in self.pending.items() if v.user_id != user_id}
+            target = await self._read(device_id, zone_id, refresh=True, context=context)
+            await self._authorized(user_id)
+            now = time.monotonic()
+            self.pending = {k: v for k, v in self.pending.items() if v.expires > now}
+            require(len(self.pending) < 32, "busy")
+            token = secrets.token_urlsafe(32)
+            self.pending[token] = Confirmation(user_id, device_id, zone_id, target, now + TTL_SECONDS)
+            return {"mode": "supervised_beta_test", "token": token, "expires_seconds": TTL_SECONDS,
+                    "device_id": device_id, "device_name": target.name, "zone_id": zone_id,
+                    "settings": dict(TEST_SETTINGS), "transmitted": False,
+                    "compatibility_verified": False}
+        finally:
+            self.busy.discard(device_id)
 
     async def confirm(self, user_id: str, token: str, acknowledge: bool, context: Any) -> dict:
         require(acknowledge is True, "acknowledgement")

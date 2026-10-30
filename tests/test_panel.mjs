@@ -124,6 +124,26 @@ test("changing beta target discards the visible confirmation and English message
   assert.match(panel.shadowRoot.innerHTML, /170 °C, 1 minute/);
 });
 
+test("beta preparation shows read-only refresh progress and a failed refresh never enables send", async () => {
+  let reject;
+  const calls = [];
+  const panel = betaPanel((request) => {
+    calls.push(request.type);
+    return new Promise((resolve, fail) => { reject = fail; });
+  });
+  const task = panel.prepareBetaTest();
+  assert.equal(panel.busy, true);
+  assert.match(panel.shadowRoot.innerHTML, /Aktueller Gerätestatus wird angefordert/);
+  assert.match(panel.shadowRoot.innerHTML, /keine Einstellungen gesendet/);
+  reject({ code: "beta_test_blocked", message: "refresh_failed" });
+  await task;
+  assert.equal(panel.betaTest, null);
+  assert.equal(panel.busy, false);
+  assert.match(panel.betaMessage, /keinen neuen erfolgreichen Gerätebericht/);
+  assert.doesNotMatch(panel.shadowRoot.innerHTML, /data-action="beta-confirm"/);
+  assert.deepEqual(calls, ["airfryer_recipes/beta_prepare"]);
+});
+
 test("navigation remains available during loading and uses the HA sidebar event", async () => {
   const panel = panelWith(async () => ({ recipes: [] }));
   panel.busy = true;

@@ -30,7 +30,7 @@ class SenderTests(unittest.IsolatedAsyncioTestCase):
         self.addCleanup(p.stop)
 
     async def prepare(self, user="u1", device="device", zone=1):
-        return await self.sender.prepare(user, device, zone, True)
+        return await self.sender.prepare(user, device, zone, True, "user-context")
 
     async def confirm(self, token, user="u1"):
         return await self.sender.confirm(user, token, True, "user-context")
@@ -40,7 +40,9 @@ class SenderTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(prepared["settings"], TEST_SETTINGS)
         self.assertFalse(prepared["transmitted"])
         self.hass.services.async_call.assert_not_awaited()
+        self.read.assert_awaited_once_with(self.hass, "device", 1, refresh=True, context="user-context")
         result = await self.confirm(prepared["token"])
+        self.assertEqual(self.read.await_args.kwargs, {})  # Confirmation never refreshes again.
         self.assertEqual(result["outcome"], "accepted")
         self.assertFalse(result["confirmed_on_device"])
         self.assertNotIn("secret", str(result))
@@ -56,7 +58,7 @@ class SenderTests(unittest.IsolatedAsyncioTestCase):
     async def test_acknowledgements_must_be_true_and_admin_is_rechecked(self):
         for value in (False, 1, "true", None):
             with self.assertRaisesRegex(BetaTestBlocked, "acknowledgement"):
-                await self.sender.prepare("u1", "device", 1, value)
+                await self.sender.prepare("u1", "device", 1, value, "user-context")
         token = (await self.prepare())["token"]
         self.hass.auth.async_get_user.return_value.is_admin = False
         with self.assertRaisesRegex(BetaTestBlocked, "unauthorized"):
@@ -188,6 +190,32 @@ class SenderTests(unittest.IsolatedAsyncioTestCase):
         finish.set()
         await task
 
+    async def test_parallel_preparation_cannot_queue_refresh_or_send(self):
+        entered, finish = asyncio.Event(), asyncio.Event()
+        async def read(*args, **kwargs):
+            entered.set()
+            await finish.wait()
+            return Target("Kitchen", ("same",))
+        self.read.side_effect = read
+        task = asyncio.create_task(self.prepare())
+        await entered.wait()
+        with self.assertRaisesRegex(BetaTestBlocked, "busy"):
+            await self.prepare(user="u2")
+        finish.set()
+        await task
+        self.read.assert_awaited_once()
+        self.hass.services.async_call.assert_not_awaited()
+
+    async def test_failed_new_preparation_invalidates_previous_token(self):
+        token = (await self.prepare())["token"]
+        self.read.side_effect = BetaTestBlocked("refresh_failed")
+        with self.assertRaisesRegex(BetaTestBlocked, "refresh_failed"):
+            await self.prepare()
+        with self.assertRaisesRegex(BetaTestBlocked, "confirmation"):
+            await self.confirm(token)
+        self.assertNotIn("device", self.sender.busy)
+        self.hass.services.async_call.assert_not_awaited()
+
 
 class AdapterTests(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
@@ -209,15 +237,23 @@ class AdapterTests(unittest.IsolatedAsyncioTestCase):
                         "letzte_meldung": self.reported.isoformat(), "revision": 7}
         self.hass = NS(config_entries=NS(async_loaded_entries=Mock(return_value=[self.entry])),
                        services=NS(has_service=Mock(return_value=True),
-                                   async_call=AsyncMock(return_value=self.payload)))
+                                   async_call=AsyncMock(return_value=self.payload)),
+                       states=NS(get=Mock(return_value=NS(state="ready"))))
         helpers = ModuleType("homeassistant.helpers")
         dr = ModuleType("homeassistant.helpers.device_registry")
         dr.async_get = lambda hass: self.registry
         helpers.device_registry = dr
+        er = ModuleType("homeassistant.helpers.entity_registry")
+        self.entities = [NS(entity_id="sensor.airfryer_status", platform="airfryer_control",
+                            config_entry_id="entry", disabled_by=None)]
+        er.async_get = lambda hass: "registry"
+        er.async_entries_for_device = Mock(side_effect=lambda registry, device_id: self.entities)
+        helpers.entity_registry = er
         loader = ModuleType("homeassistant.loader")
         loader.async_get_integration = AsyncMock(return_value=self.integration)
         p = patch.dict(sys.modules, {"homeassistant.helpers": helpers,
                                     "homeassistant.helpers.device_registry": dr,
+                                    "homeassistant.helpers.entity_registry": er,
                                     "homeassistant.loader": loader})
         p.start()
         self.addCleanup(p.stop)
@@ -294,3 +330,53 @@ class AdapterTests(unittest.IsolatedAsyncioTestCase):
         self.fryer.last_error = None
         self.fryer.state.zones[2].status = "gart"
         self.assertFalse(target.unchanged())
+
+    async def refreshing_read(self):
+        return await read_target(self.hass, "ha-device", 1, refresh=True, context="admin-context")
+
+    async def test_stale_report_is_refreshed_through_one_public_read_only_call(self):
+        self.fryer.last_report = self.reported - timedelta(seconds=90)
+        async def service(domain, name, data, **kwargs):
+            if (domain, name) == ("homeassistant", "update_entity"):
+                self.fryer.last_report = datetime.now(timezone.utc)
+                self.payload["letzte_meldung"] = self.fryer.last_report.isoformat()
+                return None
+            return self.payload
+        self.hass.services.async_call.side_effect = service
+        target = await self.refreshing_read()
+        self.assertTrue(target.unchanged())
+        calls = self.hass.services.async_call.await_args_list
+        self.assertEqual(len(calls), 2)
+        self.assertEqual(calls[0].args, ("homeassistant", "update_entity",
+                                       {"entity_id": ["sensor.airfryer_status"]}))
+        self.assertEqual(calls[0].kwargs, {"blocking": True, "context": "admin-context"})
+        self.assertEqual(calls[1].args[1], "faehigkeiten")
+        self.assertFalse(any(c.args[1] == "programm_senden" for c in calls))
+
+    async def test_refresh_returning_without_new_report_is_rejected_even_if_cache_is_recent(self):
+        with self.assertRaisesRegex(BetaTestBlocked, "refresh_failed"):
+            await self.refreshing_read()
+        self.hass.services.async_call.assert_awaited_once()
+
+    async def test_refresh_timeout_does_not_retry_or_expose_exception(self):
+        self.hass.services.async_call.side_effect = TimeoutError("private")
+        with self.assertRaisesRegex(BetaTestBlocked, "^refresh_failed$"):
+            await self.refreshing_read()
+        self.hass.services.async_call.assert_awaited_once()
+
+    async def test_refresh_requires_loaded_enabled_upstream_sensor_from_selected_entry(self):
+        self.entities[:] = [
+            NS(entity_id="button.control", platform="airfryer_control", config_entry_id="entry", disabled_by=None),
+            NS(entity_id="sensor.other", platform="other", config_entry_id="entry", disabled_by=None),
+            NS(entity_id="sensor.wrong_entry", platform="airfryer_control", config_entry_id="other", disabled_by=None),
+            NS(entity_id="sensor.disabled", platform="airfryer_control", config_entry_id="entry", disabled_by="user"),
+        ]
+        with self.assertRaisesRegex(BetaTestBlocked, "refresh_unavailable"):
+            await self.refreshing_read()
+        self.hass.services.async_call.assert_not_awaited()
+
+    async def test_read_without_refresh_does_not_invoke_update_service(self):
+        await self.read()
+        self.hass.services.async_call.assert_awaited_once_with(
+            "airfryer_control", "faehigkeiten", {"geraet": "ha-device"},
+            blocking=True, return_response=True)
