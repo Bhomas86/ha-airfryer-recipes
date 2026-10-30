@@ -8,6 +8,8 @@
 
 **Nächstes Testpaket 0.1.0b3:** Separater beaufsichtigter Schnittstellentest vor der Geräteabnahme, vom Eigentümer beauftragt. Keine normale Gerätesteuerung oder Kompatibilitätsfreigabe. [Umsetzung und lokale Tests](reports/ISSUE_7_BETA_SEND.de.md).
 
+**Beta-Korrektur 0.1.0b4:** Der erste lokale Versuch wurde vor dem Senden durch die Aktualitätssperre blockiert. Die Vorbereitung fordert jetzt einmal eine neue lesende Statusabfrage an. Echte Übertragung weiterhin nicht abgenommen. [Prüfbericht und Wiederholung](reports/ISSUE_7_STATUS_REFRESH.de.md).
+
 ## Prioritäten und Abhängigkeiten
 
 | Phase | Issue | Ergebnis | Voraussetzung | Prüfung |

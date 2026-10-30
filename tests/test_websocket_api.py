@@ -320,7 +320,8 @@ class WebsocketTests(unittest.IsolatedAsyncioTestCase):
         self.hass.data[DOMAIN]["beta_sender"] = sender
         params = {"device_id": "ha-device", "zone_id": 1, "acknowledge_unverified": True}
         self.assertEqual((await self.call("beta_prepare", self.admin, **params))[0], "result")
-        sender.prepare.assert_awaited_once_with("u1", "ha-device", 1, True)
+        self.assertEqual(sender.prepare.await_args.args[:4], ("u1", "ha-device", 1, True))
+        self.assertEqual(sender.prepare.await_args.args[4].user_id, "u1")
         forged = await self.call("beta_prepare", self.admin, **params, settings={"readyStart": False})
         self.assertEqual(forged[2], "invalid_format")
         self.assertEqual(sender.prepare.await_count, 1)
