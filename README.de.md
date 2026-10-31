@@ -4,13 +4,15 @@
 
 Benutzerdefinierte Home-Assistant-Integration zur Verwaltung wiederverwendbarer Heißluftfritteusen-Rezepte. Die gespeicherten Einstellungen sollen über bestehende Home-Assistant-Integrationen an unterstützte Geräte übertragen werden.
 
-> **Projektstatus: Test-Beta 0.1.0b5 (Stand 30.10.2026).** Rezeptverwaltung, lokale Speicherung, authentifizierte API und lesende Geräte-Testvorschau sind implementiert. Die Handy-Abnahme der Vorschau von 0.1.0b2 war am 25.10.2026 erfolgreich. 0.1.0b5 ergänzt einen separaten beaufsichtigten Ersttest mit echter Einstellungsübertragung; dessen Geräteabnahme steht aus. Normale Gerätesteuerung, Dashboard-Karte und SYNC/MATCH bleiben ausstehend.
+> **Projektstatus: Test-Beta 0.1.0b6.** Rezeptverwaltung und beaufsichtigte Einstellungsübertragung sind implementiert. Neu ist die einmal bestätigte Testfolge für beide Fächer. Der feste Airfry-Test wurde auf beiden Fächern abgenommen; die neue Folge und zusätzliche Programme stehen noch zur Geräteabnahme aus. Dashboard und SYNC/MATCH folgen später.
 
 **Neue Test-Beta 0.1.0b5:** Separater beaufsichtigter Gerätetest mit gewählten Rezept-/manuellen Werten für CAF-DC111S-AEU und exakt Airfryer Control 1.0.2-beta.1. Nur nach ausdrücklicher Bestätigung wird einmalig übertragen; normale Gerätesteuerung bleibt gesperrt. [Installation und Test](docs/releases/0.1.0b5.de.md).
 
 Die Testvorbereitung fordert jetzt selbst einen neuen Statusbericht an. [Korrektur der Aktualitätssperre](docs/releases/0.1.0b5.de.md).
 
 Neu: gewählte Rezepte/manuelle Werte für alle sechs gemeldeten Programme beaufsichtigt testen. [Große Testliste](docs/reports/BETA_0_1_0B5_TEST_PLAN.de.md). Keine GitHub Actions für dieses Update.
+
+**Neu: [Geführter Testlauf mit einer Bestätigung](docs/releases/0.1.0b6.de.md).** 132 Python-/29 Frontend-Tests lokal bestanden; keine GitHub Actions.
 
 ## Ziele
 
@@ -51,15 +53,15 @@ Als erstes Zielgerät dient die **Cosori Turbo Tower Pro Smart (CAF-DC111S-AEU)*
 - [ ] Lovelace-Dashboard-Karte und Karteneditor
 - [ ] SYNC/MATCH und stabile Veröffentlichung
 
-Aktuelle Beta: 119 Python-Tests und 25 Frontend-Tests lokal bestanden. Keine GitHub Actions, HACS-/Hassfest- oder Python-3.14-Läufe für dieses Update. Der feste Airfry-Test 170 °C/eine Minute wurde auf beiden Fächern lokal abgenommen; erweiterte Programme und Werte stehen zur Abnahme aus. [Neue Testliste](docs/reports/BETA_0_1_0B5_TEST_PLAN.de.md).
+Aktuelle Beta: 132 Python-Tests und 29 Frontend-Tests lokal bestanden. Keine GitHub Actions, HACS-/Hassfest- oder Python-3.14-Läufe für dieses Update. Der feste Airfry-Test 170 °C/eine Minute wurde auf beiden Fächern lokal abgenommen; erweiterte Programme und Werte stehen zur Abnahme aus. [Neue Testliste](docs/reports/BETA_0_1_0B5_TEST_PLAN.de.md).
 
 ## Installation
 
-**Vorabversion, kein stabiler Release.** Vorher ein Home-Assistant-Backup erstellen. Dieses Repository als benutzerdefiniertes HACS-Integrationsrepository hinzufügen, Vorabversionen anzeigen und über „Neu herunterladen“ `v0.1.0b5` auswählen. Home Assistant neu starten und die Companion-App vollständig neu öffnen.
+**Vorabversion, kein stabiler Release.** Vorher ein Home-Assistant-Backup erstellen. Dieses Repository als benutzerdefiniertes HACS-Integrationsrepository hinzufügen, Vorabversionen anzeigen und über „Neu herunterladen“ `v0.1.0b6` auswählen. Home Assistant neu starten und die Companion-App vollständig neu öffnen.
 
 Die Rezeptverwaltung funktioniert ohne Airfryer Control und benötigt keine Cloud-Zugangsdaten. Für die erweiterte Geräte-Testvorschau Airfryer Control `1.0.2-beta.1` oder neuer installieren. Sie führt keine Steuerbefehle aus. Für CAF-DC111S-AEU sind die sechs gemeldeten Programme und Grenzen noch geschätzt/ungeprüft; `proof` fehlt im Upstream-Vertrag. Normale Übertragung bleibt gesperrt; der separate beaufsichtigte Beta-Test benötigt exakt Airfryer Control 1.0.2-beta.1.
 
-Details: [Release Notes](docs/releases/0.1.0b5.de.md), [lokale Testcheckliste](docs/LOCAL_TEST_CHECKLIST.de.md) und [Roadmap](docs/ROADMAP.de.md).
+Details: [Release Notes](docs/releases/0.1.0b6.de.md), [lokale Testcheckliste](docs/LOCAL_TEST_CHECKLIST.de.md) und [Roadmap](docs/ROADMAP.de.md).
 
 ## Sicherheit und Datenschutz
 

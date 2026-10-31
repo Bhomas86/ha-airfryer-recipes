@@ -9,7 +9,7 @@ import types
 import unittest
 from functools import wraps
 from types import SimpleNamespace
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from custom_components.airfryer_recipes.const import DOMAIN
 from custom_components.airfryer_recipes.recipe_model import create_recipe, recipe_to_dict
@@ -21,6 +21,7 @@ class FakeConnection:
     def __init__(self, is_admin: bool = False, authenticated: bool = True):
         self.user = SimpleNamespace(is_admin=is_admin, id="u1") if authenticated else None
         self.messages = []
+        self.subscriptions = {}
 
     def send_result(self, message_id, value):
         self.messages.append(("result", message_id, value))
@@ -166,6 +167,10 @@ class WebsocketTests(unittest.IsolatedAsyncioTestCase):
             ("import_preview", {"payload": '{"schema_version":1,"recipes":[]}'}),
             ("import_confirm", {"token": "a-token"}),
             ("export", {}),
+            ("batch_prepare", {"device_id": "device"}),
+            ("batch_start", {"token": "x", "acknowledge_supervised_batch": True}),
+            ("batch_next", {"run_id": "x", "next_token": "x"}),
+            ("batch_stop", {"run_id": "x"}),
             ("beta_prepare", {"device_id": "ha-device", "zone_id": 1, "acknowledge_unverified": True}),
             ("beta_confirm", {"token": "forged", "acknowledge_supervised_test": True}),
             ("devices", {}),
@@ -359,12 +364,32 @@ class WebsocketTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual((await self.call("beta_prepare", self.admin, **params))[2], "not_configured")
         self.assertEqual(sender.prepare.await_count, 1)
 
+    async def test_batch_routes_bind_websocket_owner_and_register_disconnect_stop(self):
+        active = SimpleNamespace(cleanup=None)
+        batch = SimpleNamespace(prepare=AsyncMock(return_value={"token": "batch"}),
+            start=AsyncMock(return_value={"run_id": "batch", "next_token": "one", "total": 12}),
+            next=AsyncMock(return_value={"done": True}), stop=Mock(),
+            owned=Mock(return_value=active), runs={"batch": active})
+        with patch.object(self.api, "_batch", return_value=batch):
+            result = await self.call("batch_prepare", self.admin, device_id="ha-device")
+            self.assertEqual(result[0], "result")
+            self.assertIs(batch.prepare.await_args.args[1], self.admin)
+            result = await self.call("batch_start", self.admin, token="batch", acknowledge_supervised_batch=True)
+            self.assertEqual(result[0], "result")
+            self.admin.subscriptions[result[1]]()
+            batch.stop.assert_called_with(active, disconnected=True)
+            await self.call("batch_next", self.admin, run_id="batch", next_token="one")
+            self.assertIs(batch.next.await_args.args[1], self.admin)
+            forged = await self.call("batch_next", self.admin, run_id="batch", next_token="one", settings={})
+            self.assertEqual(forged[2], "invalid_format")
+            self.assertEqual(batch.next.await_count, 1)
+
     def test_commands_register_once_per_explicit_call(self):
         ws = self.modules["homeassistant.components.websocket_api"]
         ws.registered.clear()
         self.api.register_commands(self.hass)
         commands = {handler._ws_command for handler in ws.registered}
-        self.assertEqual(len(commands), 15)
+        self.assertEqual(len(commands), 19)
         self.assertEqual(
             commands,
             {f"{DOMAIN}/{name}" for name in (
@@ -372,6 +397,7 @@ class WebsocketTests(unittest.IsolatedAsyncioTestCase):
                 "import_preview", "import_confirm", "export", "favorites", "set_favorite",
                 "devices",
                 "prepare_send", "beta_prepare", "beta_confirm",
+                "batch_prepare", "batch_start", "batch_next", "batch_stop",
             )},
         )
 

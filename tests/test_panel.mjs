@@ -190,6 +190,81 @@ test("unsupported program rejection remains visible and enables no confirmation"
   assert.match(panel.betaMessage, /Programm wurde nicht ersetzt/);
 });
 
+const batchPlan = { token: "batch", device_name: "Fixture", skipped: [],
+  steps: [{ zone_id: 1, settings: { program: "airfry", temperature_c: 180, duration_minutes: 7 } },
+          { zone_id: 2, settings: { program: "bake", temperature_c: 180, duration_minutes: 6 } }] };
+
+test("guided test uses one start consent and sequences distinct nonces without browser dialogs", async () => {
+  const calls = [];
+  let dialogs = 0;
+  const panel = betaPanel(async (r) => {
+    calls.push(r);
+    if (r.type.endsWith("batch_prepare")) return batchPlan;
+    if (r.type.endsWith("batch_start")) return { run_id: "batch", next_token: "one", total: 2 };
+    const i = r.next_token === "one" ? 0 : 1;
+    return { ...batchPlan.steps[i], done: i === 1, next_token: i === 0 ? "two" : null };
+  }, true, () => { dialogs++; return true; });
+  await panel.prepareBatch();
+  assert.equal(calls.length, 1); // Showing a list sends no commands.
+  assert.match(panel.shadowRoot.innerHTML, /Angezeigte Testfolge bestätigen und starten/);
+  await panel.startBatch();
+  assert.equal(dialogs, 0);
+  assert.deepEqual(calls.map(r => r.type), ["airfryer_recipes/batch_prepare", "airfryer_recipes/batch_start",
+    "airfryer_recipes/batch_next", "airfryer_recipes/batch_next"]);
+  assert.equal(calls[1].acknowledge_supervised_batch, true);
+  assert.deepEqual(calls.slice(2).map(r => r.next_token), ["one", "two"]);
+  assert.equal(panel.batchResults.length, 2);
+  assert.match(panel.batchMessage, /Testfolge abgeschlossen/);
+});
+
+test("guided test stops on a lost response without replay or another step", async () => {
+  const calls = [];
+  const panel = betaPanel(async r => {
+    calls.push(r);
+    if (r.type.endsWith("batch_start")) return { run_id: "batch", next_token: "one", total: 2 };
+    if (r.type.endsWith("batch_next")) throw new Error("private transport detail");
+    return { stopped: true };
+  });
+  panel.batchPlan = batchPlan;
+  await panel.startBatch();
+  assert.equal(calls.filter(r => r.type.endsWith("batch_next")).length, 1);
+  assert.match(panel.batchMessage, /Ein Befehl kann angekommen sein/);
+  assert.doesNotMatch(panel.batchMessage, /private transport/);
+  assert.equal(panel.batchRunning, false);
+});
+
+test("guided stop button works while a step is pending and prevents the next step", async () => {
+  let resolve;
+  const calls = [];
+  const panel = betaPanel(async r => {
+    calls.push(r);
+    if (r.type.endsWith("batch_start")) return { run_id: "batch", next_token: "one", total: 2 };
+    if (r.type.endsWith("batch_next")) return new Promise(done => { resolve = done; });
+    return { stopped: true };
+  });
+  panel.batchPlan = batchPlan;
+  const running = panel.startBatch();
+  await Promise.resolve(); await Promise.resolve(); await Promise.resolve();
+  await panel.onClick({ target: { closest: () => ({ dataset: { action: "batch-stop" } }) } });
+  resolve({ ...batchPlan.steps[0], done: false, next_token: "two" });
+  await running;
+  assert.equal(calls.filter(r => r.type.endsWith("batch_next")).length, 1);
+  assert.match(panel.batchMessage, /Restliche Schritte abgebrochen/);
+});
+
+test("guided controls are admin-only and leaving the panel stops further requests", async () => {
+  let calls = 0;
+  const panel = betaPanel(async () => { calls++; }, false);
+  panel.batchPlan = batchPlan;
+  await panel.prepareBatch(); await panel.startBatch();
+  panel.render();
+  assert.equal(calls, 0);
+  assert.doesNotMatch(panel.shadowRoot.innerHTML, /id="batch-test"/);
+  panel.batchRunId = "batch";
+  panel.disconnectedCallback();
+  assert.equal(panel.batchStopRequested, true);
+});
+
 test("navigation remains available during loading and uses the HA sidebar event", async () => {
   const panel = panelWith(async () => ({ recipes: [] }));
   panel.busy = true;

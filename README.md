@@ -4,13 +4,15 @@
 
 A Home Assistant custom integration for managing reusable air fryer recipes and sending their settings to supported air fryers through existing Home Assistant integrations.
 
-> **Project status: Test beta 0.1.0b5 (as of 2026-10-30).** Recipe management, local storage, authenticated API and read-only device preview are implemented. Phone acceptance of the 0.1.0b2 preview passed on 2026-10-25. Version 0.1.0b5 adds a separate supervised initial test with real settings transmission; its appliance acceptance is pending. Normal device control, the dashboard card and SYNC/MATCH remain pending.
+> **Project status: Test beta 0.1.0b6.** Recipe management and supervised settings transmission are implemented. New: a once-confirmed sequence across both zones. The fixed Air Fry test passed on both zones; the new sequence and additional programs await appliance acceptance. Dashboard and SYNC/MATCH remain future work.
 
 **New test beta 0.1.0b5:** Separate supervised appliance test with selected recipe/manual values for CAF-DC111S-AEU and exactly Airfryer Control 1.0.2-beta.1. A single transmission requires explicit confirmation; normal device control remains blocked. [Installation and test](docs/releases/0.1.0b5.md).
 
 Test preparation now requests a new status report itself. [Freshness blocking correction](docs/releases/0.1.0b5.md).
 
 New: supervised selected recipe/manual settings for all six reported programs. [Extended test plan](docs/reports/BETA_0_1_0B5_TEST_PLAN.md). No GitHub Actions for this update.
+
+**New: [Guided run with one confirmation](docs/releases/0.1.0b6.md).** 132 Python/29 frontend tests passed locally; no GitHub Actions.
 
 ## Goals
 
@@ -51,15 +53,15 @@ The first target device is the **Cosori Turbo Tower Pro Smart (CAF-DC111S-AEU)**
 - [ ] Lovelace dashboard card and card editor
 - [ ] SYNC/MATCH and stable release
 
-Current beta: 119 Python tests and 25 frontend tests passed locally. No GitHub Actions, HACS/Hassfest or Python 3.14 runs for this update. The fixed Air Fry 170 °C/one-minute test passed local acceptance on both zones; extended programs/settings await acceptance. [New test plan](docs/reports/BETA_0_1_0B5_TEST_PLAN.md).
+Current beta: 132 Python tests and 29 frontend tests passed locally. No GitHub Actions, HACS/Hassfest or Python 3.14 runs for this update. The fixed Air Fry 170 °C/one-minute test passed local acceptance on both zones; extended programs/settings await acceptance. [New test plan](docs/reports/BETA_0_1_0B5_TEST_PLAN.md).
 
 ## Installation
 
-**Prerelease, not a stable release.** Create a Home Assistant backup first. Add this repository as a custom HACS integration repository, show prereleases and select `v0.1.0b5` using “Redownload”. Restart Home Assistant and fully reopen the Companion app.
+**Prerelease, not a stable release.** Create a Home Assistant backup first. Add this repository as a custom HACS integration repository, show prereleases and select `v0.1.0b6` using “Redownload”. Restart Home Assistant and fully reopen the Companion app.
 
 Recipe management works without Airfryer Control and requires no cloud credentials. Install Airfryer Control `1.0.2-beta.1` or newer for the extended device preview. It executes no control commands. For CAF-DC111S-AEU, the six reported programs and limits remain estimated/unverified; `proof` is missing from the upstream contract. Normal transmission remains blocked; the separate supervised beta test requires exactly Airfryer Control 1.0.2-beta.1.
 
-Details: [release notes](docs/releases/0.1.0b5.md), [local test checklist](docs/LOCAL_TEST_CHECKLIST.md) and [roadmap](docs/ROADMAP.md).
+Details: [release notes](docs/releases/0.1.0b6.md), [local test checklist](docs/LOCAL_TEST_CHECKLIST.md) and [roadmap](docs/ROADMAP.md).
 
 ## Safety and privacy
 

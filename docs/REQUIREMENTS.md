@@ -86,3 +86,5 @@ Beta acceptance decision on 2026-10-30: At the owner’s explicit request, imple
 Correction 0.1.0b4: Supervised preparation requests exactly one new read-only device report through an eligible HA sensor. Old reports are never made artificially fresh; freshness, permissions and device gates remain mandatory. [Evidence and local acceptance](reports/ISSUE_7_STATUS_REFRESH.md).
 
 Beta 0.1.0b5: At the owner’s request, supervised recipe/manual transmission for all six currently reported IDs in the reviewed contract. No general model approval. [Implementation and limits](reports/ISSUE_7_RECIPE_SEND.md), [60-case acceptance](reports/BETA_0_1_0B5_TEST_PLAN.md). Local validation only; no GitHub Actions.
+
+Owner decision: one confirmation for the complete supervised list, then sequential single steps with fresh state checks and stopping. Beta 0.1.0b6 contains at most twelve ordinary test settings across both zones, not automatic cooking. [Implementation and acceptance](reports/ISSUE_7_GUIDED_BATCH.md). No GitHub Actions.

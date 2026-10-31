@@ -1,6 +1,12 @@
 // Local Home Assistant custom panel. All mutations go through the authenticated API.
 const WORDS = {
   en: {
+    batchTitle: "Guided appliance test", batchInfo: "One confirmation for the displayed sequence. Six reported programs are prepared on both zones, one command at a time. Remain beside the empty appliance; do not press Start. The run checks reported settings between commands and stops on errors. Cancel the prepared programs at the appliance after the run.",
+    batchPrepare: "Show test sequence", batchStart: "Confirm displayed sequence and start", batchStop: "Stop remaining steps",
+    batchConsent: "By starting, I confirm that I am supervising the appliance and authorize every setting in this list once. No cooking start is requested.",
+    batchLoading: "Reading device status and preparing the list… No settings are being sent.", batchProgress: "Step", batchOf: "of", batchDone: "Sequence completed. Reported settings matched after each command. Check both zones physically and cancel the prepared programs. No compatibility approval is implied.",
+    batchStopped: "Remaining steps stopped. A submitted command cannot be recalled; inspect the appliance.", batchFailed: "Sequence stopped. A command may have arrived. Inspect the appliance; do not repeat the run until the outcome is clear.", batchSkipped: "Not included because not reported or sample values outside bounds", batchConnection: "Connection changed; this run cannot resume.",
+
     betaSelection: "Prepare selected settings for a supervised send",
     betaSelectionInfo: "Supervised beta: all six reviewed programs, only when reported by the adapter and within their program limits. Maximum duration: 1440 minutes. Estimated capabilities remain unverified until local acceptance. No recipe is changed.",
     betaProgram: "This program is not in the reviewed beta contract. The selected program was not substituted.",
@@ -68,6 +74,12 @@ const WORDS = {
     statusDrawerOpen: "Drawer open", statusHolding: "Holding", statusKeepingWarm: "Keeping warm", statusPreheated: "Preheated",
   },
   de: {
+    batchTitle: "Geführter Gerätetest", batchInfo: "Eine Bestätigung für die angezeigte Folge. Sechs gemeldete Programme werden nacheinander an beiden Fächern bereitgestellt, jeweils ein Befehl. Am leeren Gerät bleiben; nicht Start drücken. Der Lauf prüft gemeldete Werte zwischen den Befehlen und stoppt bei Fehlern. Nach dem Lauf die vorbereiteten Programme am Gerät abbrechen.",
+    batchPrepare: "Testfolge anzeigen", batchStart: "Angezeigte Testfolge bestätigen und starten", batchStop: "Restliche Schritte abbrechen",
+    batchConsent: "Mit Start bestätige ich, dass ich das Gerät beaufsichtige, und erlaube jede Einstellung dieser Liste genau einmal. Es wird kein Garstart angefordert.",
+    batchLoading: "Gerätestatus und Testliste werden gelesen … Es werden keine Einstellungen gesendet.", batchProgress: "Schritt", batchOf: "von", batchDone: "Testfolge abgeschlossen. Nach jedem Befehl wurden passende Werte gemeldet. Beide Fächer am Gerät kontrollieren und vorbereitete Programme abbrechen. Das ist keine allgemeine Kompatibilitätsfreigabe.",
+    batchStopped: "Restliche Schritte abgebrochen. Ein bereits gesendeter Befehl kann nicht zurückgeholt werden; Gerät prüfen.", batchFailed: "Testfolge gestoppt. Ein Befehl kann angekommen sein. Gerät prüfen und den Lauf erst nach geklärtem Ergebnis wiederholen.", batchSkipped: "Nicht enthalten, weil nicht gemeldet oder Testwerte außerhalb der Grenzen", batchConnection: "Die Verbindung hat gewechselt; dieser Lauf wird nicht fortgesetzt.",
+
     betaSelection: "Gewählte Werte für beaufsichtigtes Senden vorbereiten",
     betaSelectionInfo: "Beaufsichtigte Beta: alle sechs geprüften Programmkennungen, nur wenn vom Adapter gemeldet und innerhalb der Programmgrenzen. Höchstens 1440 Minuten. Geschätzte Fähigkeiten bleiben bis zur lokalen Abnahme ungeprüft. Rezepte werden nicht verändert.",
     betaProgram: "Dieses Programm ist nicht im geprüften Beta-Vertrag enthalten. Das gewählte Programm wurde nicht ersetzt.",
@@ -159,6 +171,12 @@ class AirfryerRecipesPanel extends HTMLElement {
     this.manualPreviewTemperatureC = 180;
     this.manualPreviewDurationMinutes = 10;
     this.sendPreview = null;
+    this.batchPlan = null;
+    this.batchRunning = false;
+    this.batchRunId = null;
+    this.batchStopRequested = false;
+    this.batchMessage = "";
+    this.batchResults = [];
     this.betaTest = null;
     this.betaMessage = "";
     this.deviceError = "";
@@ -431,6 +449,16 @@ class AirfryerRecipesPanel extends HTMLElement {
           <div class="actions"><button class="primary" type="submit" ${this.busy || multiple ? "disabled" : ""}>${t.save}</button><button type="button" data-action="cancel">${t.cancel}</button></div></form>` : ""}
         ${this.preview ? `<section class="preview"><h2>${t.preview}</h2><p>${t.incoming}: ${this.preview.incoming_count}</p><p>${t.duplicateIds}: ${this.preview.duplicate_ids.length}${this.preview.duplicate_ids.length ? ` (${escapeHtml(this.preview.duplicate_ids.join(", "))})` : ""}</p><p>${t.duplicateNames}: ${this.preview.duplicate_names.length}${this.preview.duplicate_names.length ? ` (${escapeHtml(this.preview.duplicate_names.join(", "))})` : ""}</p>
           <div class="actions"><button class="primary" data-action="import-skip" ${this.busy ? "disabled" : ""}>${t.skip}</button><button data-action="import-replace" ${this.busy ? "disabled" : ""}>${t.replace}</button><button data-action="cancel-preview">${t.cancel}</button></div></section>` : ""}
+        ${this.admin ? `<section class="preview" id="batch-test"><h2>${t.batchTitle}</h2><p>${t.batchInfo}</p>
+          <label for="batch-device">${t.device}</label><select id="batch-device" ${this.busy || this.batchRunning ? "disabled" : ""}>${this.deviceState.devices.map((item) => `<option value="${escapeHtml(item.device_id)}" ${item.device_id === this.selectedDeviceId ? "selected" : ""}>${escapeHtml(item.name)}</option>`).join("")}</select>
+          <div class="actions"><button type="button" data-action="batch-prepare" ${this.busy || this.devicesBusy || this.batchRunning || !device ? "disabled" : ""}>${t.batchPrepare}</button>
+          ${this.batchRunning ? `<button type="button" data-action="batch-stop">${t.batchStop}</button>` : ""}</div>
+          ${this.batchPlan ? `<p><strong>${escapeHtml(this.batchPlan.device_name)}</strong></p><ol>${this.batchPlan.steps.map((step) => `<li>${t.zone} ${step.zone_id} · ${escapeHtml(this.programName(step.settings.program))} · ${this.toDisplay(step.settings.temperature_c)} ${this.unit} · ${step.settings.duration_minutes} min</li>`).join("")}</ol>
+          ${this.batchPlan.skipped?.length ? `<p>${t.batchSkipped}: ${escapeHtml(this.batchPlan.skipped.join(", "))}</p>` : ""}
+          ${!this.batchRunning && !this.batchRunId ? `<p>${t.batchConsent}</p><button class="primary" type="button" data-action="batch-start" ${this.busy ? "disabled" : ""}>${t.batchStart}</button>` : ""}` : ""}
+          ${this.batchMessage ? `<p class="message" role="status">${escapeHtml(this.batchMessage)}</p>` : ""}
+          ${this.batchResults.length ? `<ol>${this.batchResults.map((item) => `<li>${t.zone} ${item.zone_id} · ${escapeHtml(this.programName(item.settings.program))} · ${item.settings.temperature_c} °C · ${item.settings.duration_minutes} min ✓</li>`).join("")}</ol>` : ""}
+        </section>` : ""}
         ${this.admin ? `<section class="preview" id="device-preview"><h2>${t.devicePreview}</h2>
           <p>${t.devicePreviewInfo}</p>
           ${this.deviceError ? `<p class="message error" role="alert">${escapeHtml(this.deviceError)}</p>` : ""}
@@ -477,7 +505,13 @@ class AirfryerRecipesPanel extends HTMLElement {
       </main>`;
   }
 
+  disconnectedCallback() {
+    this.batchStopRequested = true;
+    if (this.batchRunId) this.request("batch_stop", { run_id: this.batchRunId }).catch(() => {});
+  }
+
   onInput(event) {
+    if (this.batchRunning) return;
     if (["preview-temperature", "preview-duration"].includes(event.target.id)) {
       if (event.target.id === "preview-temperature") this.manualPreviewTemperatureC = this.fromDisplay(Number(event.target.value));
       else this.manualPreviewDurationMinutes = Number(event.target.value);
@@ -496,6 +530,16 @@ class AirfryerRecipesPanel extends HTMLElement {
   }
 
   onChange(event) {
+    if (this.batchRunning) { this.render(); return; }
+    if (event.target.id === "batch-device") {
+      this.selectedDeviceId = event.target.value;
+      this.selectedZoneId = String(this.selectedDevice()?.zones?.[0]?.zone_id || "");
+      this.batchPlan = null;
+      this.batchRunId = null;
+      this.betaTest = null;
+      this.render();
+      return;
+    }
     if (event.target.id === "category") {
       this.category = event.target.value;
       this.render();
@@ -563,7 +607,10 @@ class AirfryerRecipesPanel extends HTMLElement {
       this.dispatchEvent(new Event("hass-toggle-menu", { bubbles: true, composed: true }));
       return;
     }
-    if (this.busy || this.devicesBusy) return;
+    if (type === "batch-stop" && this.admin) return this.stopBatch();
+    if (this.busy || this.devicesBusy || this.batchRunning) return;
+    if (this.admin && type === "batch-prepare") return this.prepareBatch();
+    if (this.admin && type === "batch-start") return this.startBatch();
     const recipe = this.recipes.find((item) => item.id === button.dataset.id);
     const t = this.words;
     if (type === "refresh") return this.load();
@@ -625,6 +672,7 @@ class AirfryerRecipesPanel extends HTMLElement {
   }
 
   onSubmit(event) {
+    if (this.batchRunning) { event.preventDefault(); return; }
     if (event.target.id === "device-preview-form") {
       event.preventDefault();
       if (event.submitter?.dataset?.betaSelection === "true") return this.prepareSelectedBeta(event.target);
@@ -667,6 +715,64 @@ class AirfryerRecipesPanel extends HTMLElement {
       not_configured: "notConfigured",
     }[error?.message];
     return `${this.words.betaNoSend} ${this.words[key || "genericError"]}`;
+  }
+
+  showBatch() {
+    this.shadowRoot.getElementById("batch-test")?.scrollIntoView?.({ block: "start", behavior: "smooth" });
+  }
+
+  async prepareBatch() {
+    if (!this.admin || this.busy || this.batchRunning || !this.selectedDeviceId) return;
+    this.busy = true;
+    this.batchPlan = null;
+    this.batchRunId = null;
+    this.batchResults = [];
+    this.batchMessage = this.words.batchLoading;
+    this.render();
+    try {
+      this.batchPlan = await this.request("batch_prepare", { device_id: this.selectedDeviceId });
+      this.batchMessage = "";
+    } catch (error) { this.batchMessage = this.betaError(error); }
+    finally { this.busy = false; this.render(); this.showBatch(); }
+  }
+
+  async stopBatch() {
+    this.batchStopRequested = true;
+    this.batchMessage = this.words.batchStopped;
+    this.render();
+    if (this.batchRunId) {
+      try { await this.request("batch_stop", { run_id: this.batchRunId }); } catch (_) { /* never retry */ }
+    }
+  }
+
+  async startBatch() {
+    if (!this.admin || this.busy || this.batchRunning || !this.batchPlan || this.batchRunId) return;
+    this.batchRunning = true;
+    this.batchStopRequested = false;
+    this.batchResults = [];
+    this.batchRunId = this.batchPlan.token;
+    this.render();
+    this.showBatch();
+    try {
+      const run = await this.request("batch_start", { token: this.batchPlan.token, acknowledge_supervised_batch: true });
+      let nonce = run.next_token;
+      while (!this.batchStopRequested && nonce) {
+        const next = this.batchPlan.steps[this.batchResults.length];
+        this.batchMessage = `${this.words.batchProgress} ${this.batchResults.length + 1} ${this.words.batchOf} ${run.total}: ${this.programName(next.settings.program)} · ${this.words.zone} ${next.zone_id}`;
+        this.render();
+        const result = await this.request("batch_next", { run_id: run.run_id, next_token: nonce });
+        this.batchResults.push(result);
+        nonce = result.done ? null : result.next_token;
+      }
+      this.batchMessage = this.batchStopRequested ? this.words.batchStopped : this.words.batchDone;
+    } catch (error) {
+      const reason = { zones: "betaZones", freshness: "betaFreshness", refresh_failed: "betaRefreshFailed",
+        batch_connection: "batchConnection", state_changed: "betaState", unauthorized: "unauthorized" }[error?.message];
+      this.batchMessage = this.batchStopRequested ? this.words.batchStopped
+        : `${this.words.batchFailed}${reason ? ` ${this.words[reason]}` : ""}`;
+      this.batchStopRequested = true;
+      try { await this.request("batch_stop", { run_id: this.batchRunId }); } catch (_) { /* no replay */ }
+    } finally { this.batchRunning = false; this.render(); this.showBatch(); }
   }
 
   async prepareSelectedBeta(formElement) {
