@@ -519,3 +519,32 @@ class AdapterTests(unittest.IsolatedAsyncioTestCase):
             with self.assertRaisesRegex(BetaTestBlocked, "capabilities"):
                 await read_target(self.hass, "ha-device", 1, settings=CookingPhase(program, low, 1))
         self.assertTrue(all(call.args[1] == "faehigkeiten" for call in self.hass.services.async_call.await_args_list))
+
+    async def test_batch_can_only_replace_prepared_values_owned_and_verified_by_that_run(self):
+        previous = CookingPhase("airfry", 170, 1)
+        self.fryer.state.status = "wartet_auf_start"
+        self.zones[1].status = "wartet_auf_start"
+        self.zones[1].mode = "AirFry"
+        self.zones[1].set_temp = 170
+        self.zones[1].set_time_s = 60
+        target = await read_target(self.hass, "ha-device", 2, prepared_zones={1: previous})
+        self.assertTrue(target.unchanged())
+        with self.assertRaisesRegex(BetaTestBlocked, "zones"):
+            await self.read()  # Individual sending still blocks prepared zones.
+        self.zones[1].set_temp = 180
+        self.assertFalse(target.unchanged())
+        with self.assertRaisesRegex(BetaTestBlocked, "zones"):
+            await read_target(self.hass, "ha-device", 2, prepared_zones={1: previous})
+        self.zones[1].set_temp = 170
+        self.zones[1].active = True
+        with self.assertRaisesRegex(BetaTestBlocked, "zones"):
+            await read_target(self.hass, "ha-device", 2, prepared_zones={1: previous})
+
+    async def test_batch_waits_for_debounced_read_without_repeating_service_call(self):
+        async def deferred_report(*args):
+            self.fryer.last_report = datetime.now(timezone.utc)
+            self.payload["letzte_meldung"] = self.fryer.last_report.isoformat()
+        with patch("custom_components.airfryer_recipes.beta_send.asyncio.sleep", side_effect=deferred_report) as sleep:
+            await read_target(self.hass, "ha-device", 1, refresh=True, context="admin", wait_for_report=True)
+        sleep.assert_awaited_once()
+        self.assertEqual(self.hass.services.async_call.await_count, 2)  # One update and one capability read.

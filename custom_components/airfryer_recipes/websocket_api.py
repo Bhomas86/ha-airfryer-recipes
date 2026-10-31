@@ -333,6 +333,81 @@ async def ws_beta_confirm(hass: Any, connection: Any, msg: dict[str, Any]) -> No
     await _respond(hass, connection, msg, run)
 
 
+def _batch(hass: Any) -> Any:
+    from .beta_batch import BatchRunner
+
+    state = hass.data[DOMAIN]
+    sender = state.get("beta_sender")
+    if sender is None:
+        raise BetaTestBlocked("not_configured")
+    batch = state.get("beta_batch")
+    if batch is None or batch.sender is not sender:
+        batch = state["beta_batch"] = BatchRunner(sender)
+    return batch
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command({voluptuous.Required("type"): f"{DOMAIN}/batch_prepare",
+                                   voluptuous.Required("device_id"): str})
+@websocket_api.async_response
+async def ws_batch_prepare(hass: Any, connection: Any, msg: dict[str, Any]) -> None:
+    async def run(repo: RecipeRepository) -> dict[str, Any]:
+        from homeassistant.core import Context
+        if set(msg) != {"id", "type", "device_id"}:
+            raise RecipeValidationError("Unexpected batch parameter")
+        return await _batch(hass).prepare(connection.user.id, connection, msg["device_id"],
+                                          Context(user_id=connection.user.id))
+    await _respond(hass, connection, msg, run)
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command({voluptuous.Required("type"): f"{DOMAIN}/batch_start",
+    voluptuous.Required("token"): str, voluptuous.Required("acknowledge_supervised_batch"): bool})
+@websocket_api.async_response
+async def ws_batch_start(hass: Any, connection: Any, msg: dict[str, Any]) -> None:
+    async def run(repo: RecipeRepository) -> dict[str, Any]:
+        if set(msg) != {"id", "type", "token", "acknowledge_supervised_batch"}:
+            raise RecipeValidationError("Unexpected batch parameter")
+        batch = _batch(hass)
+        result = await batch.start(connection.user.id, connection, msg["token"],
+                                   msg["acknowledge_supervised_batch"])
+        active = batch.runs[result["run_id"]]
+        # Public HA subscription cleanup stops a run when its websocket closes.
+        connection.subscriptions[msg["id"]] = lambda: batch.stop(active, disconnected=True)
+        active.cleanup = lambda: connection.subscriptions.pop(msg["id"], None)
+        return result
+    await _respond(hass, connection, msg, run)
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command({voluptuous.Required("type"): f"{DOMAIN}/batch_next",
+    voluptuous.Required("run_id"): str, voluptuous.Required("next_token"): str})
+@websocket_api.async_response
+async def ws_batch_next(hass: Any, connection: Any, msg: dict[str, Any]) -> None:
+    async def run(repo: RecipeRepository) -> dict[str, Any]:
+        from homeassistant.core import Context
+        if set(msg) != {"id", "type", "run_id", "next_token"}:
+            raise RecipeValidationError("Unexpected batch parameter")
+        return await _batch(hass).next(connection.user.id, connection, msg["run_id"],
+                                       msg["next_token"], Context(user_id=connection.user.id))
+    await _respond(hass, connection, msg, run)
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command({voluptuous.Required("type"): f"{DOMAIN}/batch_stop",
+                                  voluptuous.Required("run_id"): str})
+@websocket_api.async_response
+async def ws_batch_stop(hass: Any, connection: Any, msg: dict[str, Any]) -> None:
+    async def run(repo: RecipeRepository) -> dict[str, Any]:
+        if set(msg) != {"id", "type", "run_id"}:
+            raise RecipeValidationError("Unexpected batch parameter")
+        batch = _batch(hass)
+        active = batch.owned(connection.user.id, connection, msg["run_id"])
+        batch.stop(active)
+        return {"stopped": True}
+    await _respond(hass, connection, msg, run)
+
+
 COMMANDS = (
     ws_list,
     ws_get,
@@ -349,6 +424,7 @@ COMMANDS = (
     ws_prepare_send,
     ws_beta_prepare,
     ws_beta_confirm,
+    ws_batch_prepare, ws_batch_start, ws_batch_next, ws_batch_stop,
 )
 
 

@@ -23,6 +23,8 @@ MODEL = "CAF-DC111S-AEU"
 VERSION = "1.0.2-beta.1"
 TTL_SECONDS = 15
 MAX_REPORT_AGE = 15
+MODE_NAMES = {"airfry": "airfry", "roast": "roast", "bake": "bake", "grill": "grill", "reheat": "reheat", "dry": "dry"}
+
 TEST_SETTINGS = {"program": "airfry", "temperature_c": 170, "duration_minutes": 1}
 # Reviewed upstream contract bounds, NOT verified CAF-DC111S-AEU capabilities.
 # Recipe schema v1 caps duration at 1440 minutes, including manual beta input.
@@ -59,7 +61,8 @@ class Target:
 
 async def read_target(
     hass: Any, device_id: str, zone_id: int, *, refresh: bool = False, context: Any = None,
-    settings: CookingPhase | None = None,
+    settings: CookingPhase | None = None, prepared_zones: dict[int, CookingPhase] | None = None,
+    wait_for_report: bool = False,
 ) -> Target:
     """Read a coherent idle snapshot; optionally request a read-only refresh.
 
@@ -114,6 +117,16 @@ async def read_target(
                     "homeassistant", "update_entity", {"entity_id": [sensors[0]]},
                     blocking=True, context=context,
                 )
+                if wait_for_report:
+                    # HA may debounce the public refresh. Wait only for reads;
+                    # never repeat a control command or fabricate freshness.
+                    while True:
+                        current = getattr(fryer, "last_report", None)
+                        if (isinstance(current, datetime) and current.tzinfo is not None
+                                and current >= requested_at
+                                and (not isinstance(before, datetime) or before.tzinfo is None or current > before)):
+                            break
+                        await asyncio.sleep(0.25)
         except Exception:
             raise BetaTestBlocked("refresh_failed") from None
         after = getattr(fryer, "last_report", None)
@@ -135,13 +148,31 @@ async def read_target(
     require(caps["reported_at"] == reported.isoformat(), "freshness")
     revision = getattr(fryer, "revision", None)
     require(type(revision) is int and revision >= 0 and caps["revision"] == revision, "freshness")
+    expected = dict(prepared_zones or {})
     state = fryer.state
+    def safe_zones() -> bool:
+        if set(state.zones) != {1, 2} or any(type(z) is not int for z in state.zones):
+            return False
+        for z, item in state.zones.items():
+            if item.active is not False:
+                return False
+            if z in expected:
+                wanted = expected[z]
+                if not (item.status == "wartet_auf_start" and isinstance(item.mode, str)
+                        and item.mode.lower() == MODE_NAMES[wanted.program]
+                        and item.set_temp == wanted.temperature_c
+                        and item.set_time_s == wanted.duration_minutes * 60):
+                    return False
+            elif item.status not in ("aus", "bereit"):
+                return False
+        return True
+    safe_statuses = ("aus", "bereit", "wartet_auf_start") if expected else ("aus", "bereit")
     require(type(state.sync_type) is int and state.sync_type == 0, "zones")
     require(state.temp_unit == "celsius", "zones")
-    require(state.status in ("aus", "bereit") and state.active is False, "zones")
+    require(state.status in safe_statuses and state.active is False, "zones")
     require(set(state.zones) == {1, 2} and all(type(z) is int for z in state.zones), "zones")
     statuses = tuple((z, state.zones[z].status) for z in (1, 2))
-    require(all(s in ("aus", "bereit") and state.zones[z].active is False for z, s in statuses), "zones")
+    require(safe_zones(), "zones")
     program = next((p for p in caps["programs"] if p["id"] == phase.program), None)
     require(program is not None and program["limits_status"] in ("confirmed", "estimated")
             and program["send_status"] in ("confirmed", "unverified"), "capabilities")
@@ -159,11 +190,11 @@ async def read_target(
             and entry in hass.config_entries.async_loaded_entries(UPSTREAM)
             and fryer.state is state and fryer.online is True and not fryer.last_error
             and fryer.last_report == reported and fryer.revision == revision
-            and state.status in ("aus", "bereit") and state.active is False
+            and state.status in safe_statuses and state.active is False
             and type(state.sync_type) is int and state.sync_type == 0
             and state.temp_unit == "celsius" and set(state.zones) == {1, 2}
             and tuple((z, state.zones[z].status) for z in (1, 2)) == statuses
-            and all(state.zones[z].active is False for z in (1, 2))
+            and safe_zones()
             and 0 <= (datetime.now(timezone.utc) - reported).total_seconds() <= MAX_REPORT_AGE
         )
 
@@ -195,6 +226,7 @@ class BetaSender:
         # Survive integration reload, including old service calls still in flight.
         self.busy: set[str] = state.setdefault("beta_busy", set())
         self.uncertain: set[str] = state.setdefault("beta_uncertain", set())
+        self.batch_devices: dict[str, str] = {}
         self.closed = False
 
     def close(self) -> None:
@@ -221,7 +253,7 @@ class BetaSender:
     ) -> dict:
         require(acknowledge is True, "acknowledgement")
         await self._authorized(user_id)
-        require(device_id not in self.busy, "busy")
+        require(device_id not in self.busy and device_id not in self.batch_devices, "busy")
         require(device_id not in self.uncertain, "outcome_unknown")
         self.busy.add(device_id)
         try:
@@ -278,7 +310,7 @@ class BetaSender:
         self.pending.pop(token)  # Consume before any await, including failed validation.
         require(time.monotonic() < prepared.expires, "confirmation")
         device_id = prepared.device_id
-        require(device_id not in self.busy, "busy")
+        require(device_id not in self.busy and device_id not in self.batch_devices, "busy")
         require(device_id not in self.uncertain, "outcome_unknown")
         self.busy.add(device_id)
         try:
@@ -297,35 +329,39 @@ class BetaSender:
             except Exception:
                 unchanged = False
             require(unchanged, "state_changed")
-            # This is the only control call. Never invoke raw, SYNC/MATCH or a
-            # start-capable service, and never trust upstream cached confirmation.
-            try:
-                self.uncertain.add(device_id)
-                result = await self.hass.services.async_call(
-                    UPSTREAM, "programm_senden",
-                    {"geraet": device_id, "zone": prepared.zone_id, "programm": phase.program,
-                     "temperatur": phase.temperature_c, "minuten": phase.duration_minutes, "variante": "multi_app",
-                     "einmal": True, "streng": True, "bestaetigen": False},
-                    blocking=True, return_response=True, context=context,
-                )
-            except asyncio.CancelledError:
-                raise  # Uncertain latch remains set; never permit a replay.
-            except Exception:
-                return self._result("unknown")
-            # Only accept a complete, exact response contract. Nothing from the
-            # upstream response (including error strings or raw data) is exposed.
-            exact = {"programm": phase.program, "temperatur": phase.temperature_c,
-                     "minuten": phase.duration_minutes, "zone": prepared.zone_id}
-            if (isinstance(result, dict) and result.get("ok") is True
-                    and result.get("ergebnis") == "angenommen"
-                    and type(result.get("versuche")) is int and result["versuche"] == 1
-                    and result.get("variante") == "multi_app" and result.get("gesendet") == exact
-                    and all(type(result["gesendet"][k]) is type(v) for k, v in exact.items())):
-                self.uncertain.discard(device_id)
-                return self._result("accepted")
-            return self._result("unknown")
+            return await self.send_once(device_id, prepared.zone_id, phase, context)
         finally:
             self.busy.discard(device_id)
+
+    async def send_once(self, device_id: str, zone_id: int, phase: CookingPhase, context: Any) -> dict:
+        """One public transport attempt; caller owns validation and per-device lock."""
+        # This is the only control call. Never invoke raw, SYNC/MATCH or a
+        # start-capable service, and never trust upstream cached confirmation.
+        try:
+            self.uncertain.add(device_id)
+            result = await self.hass.services.async_call(
+                UPSTREAM, "programm_senden",
+                {"geraet": device_id, "zone": zone_id, "programm": phase.program,
+                 "temperatur": phase.temperature_c, "minuten": phase.duration_minutes, "variante": "multi_app",
+                 "einmal": True, "streng": True, "bestaetigen": False},
+                blocking=True, return_response=True, context=context,
+            )
+        except asyncio.CancelledError:
+            raise  # Uncertain latch remains set; never permit a replay.
+        except Exception:
+            return self._result("unknown")
+        # Only accept a complete, exact response contract. Nothing from the
+        # upstream response (including error strings or raw data) is exposed.
+        exact = {"programm": phase.program, "temperatur": phase.temperature_c,
+                 "minuten": phase.duration_minutes, "zone": zone_id}
+        if (isinstance(result, dict) and result.get("ok") is True
+                and result.get("ergebnis") == "angenommen"
+                and type(result.get("versuche")) is int and result["versuche"] == 1
+                and result.get("variante") == "multi_app" and result.get("gesendet") == exact
+                and all(type(result["gesendet"][k]) is type(v) for k, v in exact.items())):
+            self.uncertain.discard(device_id)
+            return self._result("accepted")
+        return self._result("unknown")
 
     @staticmethod
     def _result(outcome: str) -> dict:

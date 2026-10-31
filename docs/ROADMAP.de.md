@@ -60,3 +60,5 @@ Keine konkreten Veröffentlichungstermine, bevor Installation und Sicherheitspr�
 - Reale Cosori-Tests nur mit den Angaben BESTANDEN / FEHLGESCHLAGEN / NICHT GETESTET dokumentieren
 
 Beta 0.1.0b5: Auf Eigentümerwunsch beaufsichtigte Rezept-/manuelle Übertragung aller sechs aktuell gemeldeten, im geprüften Vertrag enthaltenen Programme. Keine allgemeine Modellfreigabe. [Umsetzung und Grenzen](reports/ISSUE_7_RECIPE_SEND.de.md), [60-teilige Abnahme](reports/BETA_0_1_0B5_TEST_PLAN.de.md). Ausschließlich lokal geprüft; keine GitHub Actions.
+
+Eigentümerentscheidung: Einmalige Bestätigung der vollständigen beaufsichtigten Testliste, danach einzeln sequenzielle Schritte mit frischer Zustandsprüfung und Abbruch. Beta 0.1.0b6 enthält maximal zwölf normale Testeinstellungen auf beiden Fächern, keine automatische Garfolge. [Umsetzung und Abnahme](reports/ISSUE_7_GUIDED_BATCH.de.md). Keine GitHub Actions.
