@@ -2,12 +2,14 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
+import asyncio
 import secrets
 import time
 from typing import Any
 
 from .beta_send import BetaSender, BetaTestBlocked, Target, require
 from .recipe_model import CookingPhase
+from .zone_reset import zone_switch
 
 SAMPLES = (("airfry", 180, 7), ("roast", 190, 10), ("bake", 180, 6),
            ("grill", 205, 1), ("reheat", 70, 5), ("dry", 55, 10))
@@ -81,9 +83,14 @@ class BatchRunner:
                 steps.extend((zone, CookingPhase(program, temp, minutes)) for zone in (1, 2))
             require(bool(steps), "capabilities")
             token = secrets.token_urlsafe(32)
+            # Verify reset controls before offering a sequence that needs them.
+            resets = len({p.program for _, p in steps}) > 1
+            if resets:
+                for zone in (1, 2):
+                    zone_switch(self.sender.hass, device, target.fingerprint[0], zone)
             self.runs[token] = Run(token, user, owner, device, target.name, identity(target),
                                    tuple(steps), tuple(skipped), time.monotonic() + 60)
-            return {"token": token, "device_name": target.name, "expires_seconds": 60,
+            return {"resets_between_programs": resets, "token": token, "device_name": target.name, "expires_seconds": 60,
                     "steps": [{"zone_id": z, "settings": asdict(p)} for z, p in steps],
                     "skipped": skipped, "transmitted": False}
         finally:
@@ -109,7 +116,7 @@ class BatchRunner:
                 and run.device not in self.sender.batch_devices, "busy")
         require(run.device not in self.sender.uncertain, "outcome_unknown")
         run.started = True
-        run.expires = time.monotonic() + 600
+        run.expires = time.monotonic() + 1200
         run.nonce = secrets.token_urlsafe(32)
         self.sender.batch_devices[run.device] = token
         return {"run_id": token, "next_token": run.nonce, "total": len(run.steps)}
@@ -131,6 +138,35 @@ class BatchRunner:
             await self.sender._authorized(user)
             require(not run.stopped and time.monotonic() < run.expires, "confirmation")
             require(identity(target) == run.signature and target.unchanged(), "state_changed")
+            if run.index and phase.program != run.steps[run.index - 1][1].program:
+                # Only end exactly the prepared values owned by this run. Each
+                # turn_off has its own fresh check and readback; never toggle.
+                for prepared_zone in sorted(run.expected):
+                    await self.sender._authorized(user)
+                    require(not run.stopped and time.monotonic() < run.expires, "confirmation")
+                    require(identity(target) == run.signature and target.unchanged(), "state_changed")
+                    entity_id = zone_switch(self.sender.hass, run.device, target.fingerprint[0], prepared_zone)
+                    attempted = True
+                    self.sender.uncertain.add(run.device)
+                    try:
+                        async with asyncio.timeout(20):
+                            await self.sender.hass.services.async_call(
+                                "switch", "turn_off", {"entity_id": entity_id},
+                                blocking=True, context=context)
+                    except Exception:
+                        raise BetaTestBlocked("reset_failed") from None
+                    require(not run.stopped, "batch_stopped")
+                    remaining = {z: p for z, p in run.expected.items() if z != prepared_zone}
+                    target = await self.sender._read(run.device, zone, refresh=True, context=context,
+                        wait_for_report=True, settings=phase, prepared_zones=remaining)
+                    await self.sender._authorized(user)
+                    require(not run.stopped and identity(target) == run.signature
+                            and target.unchanged(), "state_changed")
+                    run.expected = remaining
+                    self.sender.uncertain.discard(run.device)
+                    attempted = False
+            await self.sender._authorized(user)
+            require(not run.stopped and time.monotonic() < run.expires and target.unchanged(), "state_changed")
             attempted = True
             result = await self.sender.send_once(run.device, zone, phase, context)
             if result["outcome"] == "rejected":

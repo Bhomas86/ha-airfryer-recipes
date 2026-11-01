@@ -291,6 +291,14 @@ test("adapter rejection identifies the failed batch step and does not claim unkn
   assert.equal(panel.batchResults.length, 0);
 });
 
+test("guided plan displays zone-ending actions before the single start consent", async () => {
+  const panel = betaPanel(async () => ({ ...batchPlan, resets_between_programs: true }));
+  await panel.prepareBatch();
+  assert.match(panel.shadowRoot.innerHTML, /eigene vorbereitete Einstellungen in Fach 1 und 2 gezielt beenden/);
+  assert.match(panel.shadowRoot.innerHTML, /sowie die angezeigten Schritte zum Beenden der Fächer/);
+  assert.match(panel.shadowRoot.innerHTML, /<li value="2">/);
+});
+
 test("navigation remains available during loading and uses the HA sidebar event", async () => {
   const panel = panelWith(async () => ({ recipes: [] }));
   panel.busy = true;

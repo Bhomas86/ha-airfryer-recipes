@@ -1,11 +1,13 @@
 // Local Home Assistant custom panel. All mutations go through the authenticated API.
 const WORDS = {
   en: {
+    batchReset: "Before changing program: end this run's prepared settings in zones 1 and 2 and verify idle state.", resetUnavailable: "No uniquely assigned loaded zone switch is available for ending. Check the Airfryer Control entities.", resetFailed: "Ending a zone failed or has an unknown outcome. Check the appliance and use re-arming before another attempt.",
+
     betaRecover: "Device checked – enable a new test", betaRecoverInfo: "For a new attempt, cancel prepared programs at the appliance first. Both zones must report idle/off. This check sends no control command and requires no HA restart.", betaRecoverConfirm: "Have you canceled all prepared programs at the appliance, checked both zones and remained beside it? Request a fresh read-only check and enable a new test?", betaRecovered: "Fresh idle status confirmed. Old confirmations discarded. You can show and start a new sequence without restarting HA.", betaRejected: "The adapter rejected the request. Cancel prepared programs at the appliance and use the device check before a new attempt.",
 
-    batchTitle: "Guided appliance test", batchInfo: "One confirmation for the displayed sequence. Six reported programs are prepared on both zones, one command at a time. Remain beside the empty appliance; do not press Start. The run checks reported settings between commands and stops on errors. Cancel the prepared programs at the appliance after the run.",
+    batchTitle: "Guided appliance test", batchInfo: "One confirmation for the displayed sequence. Six reported programs are prepared on both zones, one command at a time. Remain beside the empty appliance; do not press Start. The run checks reported settings between commands and stops on errors. Own prepared settings are ended before each program change. Cancel the final prepared programs at the appliance after the run.",
     batchPrepare: "Show test sequence", batchStart: "Confirm displayed sequence and start", batchStop: "Stop remaining steps",
-    batchConsent: "By starting, I confirm that I am supervising the appliance and authorize every setting in this list once. No cooking start is requested.",
+    batchConsent: "By starting, I confirm that I am supervising the appliance and authorize every setting and the displayed zone-ending steps in this list once. No cooking start is requested.",
     batchLoading: "Reading device status and preparing the list… No settings are being sent.", batchProgress: "Step", batchOf: "of", batchDone: "Sequence completed. Reported settings matched after each command. Check both zones physically and cancel the prepared programs. No compatibility approval is implied.",
     batchStopped: "Remaining steps stopped. A submitted command cannot be recalled; inspect the appliance.", batchFailed: "Sequence stopped. A command may have arrived. Inspect the appliance; do not repeat the run until the outcome is clear.", batchSkipped: "Not included because not reported or sample values outside bounds", batchConnection: "Connection changed; this run cannot resume.",
 
@@ -76,11 +78,13 @@ const WORDS = {
     statusDrawerOpen: "Drawer open", statusHolding: "Holding", statusKeepingWarm: "Keeping warm", statusPreheated: "Preheated",
   },
   de: {
+    batchReset: "Vor Programmwechsel: eigene vorbereitete Einstellungen in Fach 1 und 2 gezielt beenden und Bereitschaft prüfen.", resetUnavailable: "Kein eindeutig zugeordneter, geladener Fach-Schalter zum Beenden verfügbar. Bitte die Entitäten in Airfryer Control prüfen.", resetFailed: "Das Beenden eines Fachs ist fehlgeschlagen oder unklar. Gerät prüfen und vor einem neuen Versuch die Wiederfreigabe verwenden.",
+
     betaRecover: "Gerät geprüft – neuen Test freigeben", betaRecoverInfo: "Für einen neuen Versuch zuerst vorbereitete Programme am Gerät abbrechen. Beide Fächer müssen bereit/aus gemeldet werden. Diese Prüfung sendet keinen Steuerbefehl und benötigt keinen HA-Neustart.", betaRecoverConfirm: "Hast du alle vorbereiteten Programme am Gerät abgebrochen, beide Fächer geprüft und bleibst daneben? Jetzt den Zustand frisch lesen und einen neuen Test freigeben?", betaRecovered: "Frischer Bereitschaftszustand bestätigt. Alte Bestätigungen verworfen. Du kannst die Testfolge ohne HA-Neustart neu anzeigen und starten.", betaRejected: "Der Adapter hat die Anfrage abgelehnt. Vorbereitete Programme am Gerät abbrechen und vor einem neuen Versuch die Geräteprüfung benutzen.",
 
-    batchTitle: "Geführter Gerätetest", batchInfo: "Eine Bestätigung für die angezeigte Folge. Sechs gemeldete Programme werden nacheinander an beiden Fächern bereitgestellt, jeweils ein Befehl. Am leeren Gerät bleiben; nicht Start drücken. Der Lauf prüft gemeldete Werte zwischen den Befehlen und stoppt bei Fehlern. Nach dem Lauf die vorbereiteten Programme am Gerät abbrechen.",
+    batchTitle: "Geführter Gerätetest", batchInfo: "Eine Bestätigung für die angezeigte Folge. Sechs gemeldete Programme werden nacheinander an beiden Fächern bereitgestellt, jeweils ein Befehl. Am leeren Gerät bleiben; nicht Start drücken. Der Lauf prüft gemeldete Werte zwischen den Befehlen und stoppt bei Fehlern. Vor jedem Programmwechsel werden die eigenen vorbereiteten Einstellungen beendet. Nach dem Lauf die letzten vorbereiteten Programme am Gerät abbrechen.",
     batchPrepare: "Testfolge anzeigen", batchStart: "Angezeigte Testfolge bestätigen und starten", batchStop: "Restliche Schritte abbrechen",
-    batchConsent: "Mit Start bestätige ich, dass ich das Gerät beaufsichtige, und erlaube jede Einstellung dieser Liste genau einmal. Es wird kein Garstart angefordert.",
+    batchConsent: "Mit Start bestätige ich, dass ich das Gerät beaufsichtige, und erlaube jede Einstellung sowie die angezeigten Schritte zum Beenden der Fächer genau einmal. Es wird kein Garstart angefordert.",
     batchLoading: "Gerätestatus und Testliste werden gelesen … Es werden keine Einstellungen gesendet.", batchProgress: "Schritt", batchOf: "von", batchDone: "Testfolge abgeschlossen. Nach jedem Befehl wurden passende Werte gemeldet. Beide Fächer am Gerät kontrollieren und vorbereitete Programme abbrechen. Das ist keine allgemeine Kompatibilitätsfreigabe.",
     batchStopped: "Restliche Schritte abgebrochen. Ein bereits gesendeter Befehl kann nicht zurückgeholt werden; Gerät prüfen.", batchFailed: "Testfolge gestoppt. Ein Befehl kann angekommen sein. Gerät prüfen und den Lauf erst nach geklärtem Ergebnis wiederholen.", batchSkipped: "Nicht enthalten, weil nicht gemeldet oder Testwerte außerhalb der Grenzen", batchConnection: "Die Verbindung hat gewechselt; dieser Lauf wird nicht fortgesetzt.",
 
@@ -457,7 +461,7 @@ class AirfryerRecipesPanel extends HTMLElement {
           <label for="batch-device">${t.device}</label><select id="batch-device" ${this.busy || this.batchRunning ? "disabled" : ""}>${this.deviceState.devices.map((item) => `<option value="${escapeHtml(item.device_id)}" ${item.device_id === this.selectedDeviceId ? "selected" : ""}>${escapeHtml(item.name)}</option>`).join("")}</select>
           <div class="actions"><button type="button" data-action="batch-prepare" ${this.busy || this.devicesBusy || this.batchRunning || !device ? "disabled" : ""}>${t.batchPrepare}</button>
           ${this.batchRunning ? `<button type="button" data-action="batch-stop">${t.batchStop}</button>` : `<button type="button" data-action="beta-recover" ${this.busy || !device ? "disabled" : ""}>${t.betaRecover}</button>`}</div><p class="muted">${t.betaRecoverInfo}</p>
-          ${this.batchPlan ? `<p><strong>${escapeHtml(this.batchPlan.device_name)}</strong></p><ol>${this.batchPlan.steps.map((step) => `<li>${t.zone} ${step.zone_id} · ${escapeHtml(this.programName(step.settings.program))} · ${this.toDisplay(step.settings.temperature_c)} ${this.unit} · ${step.settings.duration_minutes} min</li>`).join("")}</ol>
+          ${this.batchPlan ? `<p><strong>${escapeHtml(this.batchPlan.device_name)}</strong></p><ol>${this.batchPlan.steps.map((step, index) => `${this.batchPlan.resets_between_programs && index > 0 && step.settings.program !== this.batchPlan.steps[index - 1].settings.program ? `<li style="list-style:none" class="muted">${t.batchReset}</li>` : ""}<li value="${index + 1}">${t.zone} ${step.zone_id} · ${escapeHtml(this.programName(step.settings.program))} · ${this.toDisplay(step.settings.temperature_c)} ${this.unit} · ${step.settings.duration_minutes} min</li>`).join("")}</ol>
           ${this.batchPlan.skipped?.length ? `<p>${t.batchSkipped}: ${escapeHtml(this.batchPlan.skipped.join(", "))}</p>` : ""}
           ${!this.batchRunning && !this.batchRunId ? `<p>${t.batchConsent}</p><button class="primary" type="button" data-action="batch-start" ${this.busy ? "disabled" : ""}>${t.batchStart}</button>` : ""}` : ""}
           ${this.batchMessage ? `<p class="message" role="status">${escapeHtml(this.batchMessage)}</p>` : ""}
@@ -712,7 +716,7 @@ class AirfryerRecipesPanel extends HTMLElement {
 
   betaError(error) {
     const key = {
-      source: "betaSource", program_unsupported: "betaProgram", test_range: "betaRange", recipe_changed: "betaRecipeChanged",
+      reset_unavailable: "resetUnavailable", reset_failed: "resetFailed", source: "betaSource", program_unsupported: "betaProgram", test_range: "betaRange", recipe_changed: "betaRecipeChanged",
       freshness: "betaFreshness", refresh_unavailable: "betaRefreshUnavailable", refresh_failed: "betaRefreshFailed", state_changed: "betaState", zones: "betaZones",
       adapter_version: "betaAdapter", adapter_data: "adapterIncompatible", model: "betaModel", capabilities: "betaCaps",
       busy: "betaBusy", confirmation: "betaExpired", outcome_unknown: "betaUnknown",
@@ -779,6 +783,7 @@ class AirfryerRecipesPanel extends HTMLElement {
       while (!this.batchStopRequested && nonce) {
         const next = this.batchPlan.steps[this.batchResults.length];
         this.batchMessage = `${this.words.batchProgress} ${this.batchResults.length + 1} ${this.words.batchOf} ${run.total}: ${this.programName(next.settings.program)} · ${this.words.zone} ${next.zone_id}`;
+        if (this.batchPlan.resets_between_programs && this.batchResults.length > 0 && next.settings.program !== this.batchPlan.steps[this.batchResults.length - 1].settings.program) this.batchMessage += ` · ${this.words.batchReset}`;
         this.render();
         const result = await this.request("batch_next", { run_id: run.run_id, next_token: nonce });
         if (result.stopped) {
@@ -791,7 +796,7 @@ class AirfryerRecipesPanel extends HTMLElement {
       }
       this.batchMessage = this.batchStopRequested ? this.words.batchStopped : this.words.batchDone;
     } catch (error) {
-      const reason = { zones: "betaZones", freshness: "betaFreshness", refresh_failed: "betaRefreshFailed",
+      const reason = { reset_unavailable: "resetUnavailable", reset_failed: "resetFailed", zones: "betaZones", freshness: "betaFreshness", refresh_failed: "betaRefreshFailed",
         batch_connection: "batchConnection", state_changed: "betaState", unauthorized: "unauthorized" }[error?.message];
       const failed = this.batchPlan.steps[this.batchResults.length];
       this.batchMessage = this.batchStopRequested ? this.words.batchStopped

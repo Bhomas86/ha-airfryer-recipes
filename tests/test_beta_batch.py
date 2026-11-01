@@ -1,7 +1,7 @@
 """Simulated guided runs: no appliance/network access."""
 import unittest
 from types import SimpleNamespace as NS
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 from custom_components.airfryer_recipes.beta_send import BetaSender, BetaTestBlocked, Target, REVIEWED_PROGRAM_LIMITS
 from custom_components.airfryer_recipes.beta_batch import BatchRunner
 from custom_components.airfryer_recipes.const import DOMAIN
@@ -9,7 +9,7 @@ from custom_components.airfryer_recipes.const import DOMAIN
 
 class BatchTests(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
-        self.hass = NS(data={DOMAIN: {}}, auth=NS(async_get_user=AsyncMock(return_value=NS(is_admin=True,is_active=True))))
+        self.hass = NS(services=NS(async_call=AsyncMock()), data={DOMAIN: {}}, auth=NS(async_get_user=AsyncMock(return_value=NS(is_admin=True,is_active=True))))
         self.sender = BetaSender(self.hass)
         self.hass.data[DOMAIN]['beta_sender'] = self.sender
         metadata = tuple((p,lo,hi,1,minutes,'estimated','unverified') for p,(lo,hi,minutes) in REVIEWED_PROGRAM_LIMITS.items())
@@ -18,6 +18,10 @@ class BatchTests(unittest.IsolatedAsyncioTestCase):
         self.sender.send_once = AsyncMock(return_value={'outcome':'accepted'})
         self.batch = BatchRunner(self.sender)
         self.owner = NS(subscriptions={})
+        reset = patch("custom_components.airfryer_recipes.beta_batch.zone_switch",
+                      side_effect=lambda h, d, e, z: f"switch.fixture_zone_{z}")
+        self.resolve_reset = reset.start()
+        self.addCleanup(reset.stop)
 
     async def start(self):
         self.plan = await self.batch.prepare('u', self.owner, 'device', 'context')
@@ -41,7 +45,12 @@ class BatchTests(unittest.IsolatedAsyncioTestCase):
         actual=[(c.args[1],c.args[2].program) for c in self.sender.send_once.await_args_list]
         self.assertEqual(len(set(actual)),12)
         self.assertNotIn('device',self.sender.batch_devices)
-        self.assertEqual(self.sender._read.await_count,25)
+        self.assertEqual(self.sender._read.await_count,35)
+        calls = self.hass.services.async_call.await_args_list
+        self.assertEqual(len(calls), 10)  # Two ends before each of five program changes.
+        self.assertEqual([c.args[2]["entity_id"] for c in calls],
+                         ["switch.fixture_zone_1", "switch.fixture_zone_2"] * 5)
+        self.assertTrue(all(c.args[:2] == ("switch", "turn_off") for c in calls))
 
     async def test_missing_program_is_explicitly_skipped_without_substitution(self):
         f=list(self.target.fingerprint);f[6]=tuple(p for p in f[6] if p[0]!='dry')
@@ -132,3 +141,41 @@ class BatchTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(result['zone_id'], 1)
         self.assertEqual(result['error_code'], 11912000)
         self.assertEqual(self.sender.send_once.await_count, 3)
+
+    async def test_reset_failure_stops_before_third_setting_and_does_not_retry(self):
+        run = await self.start()
+        await self.step(run); await self.step(run)
+        self.hass.services.async_call.side_effect = TimeoutError('private')
+        with self.assertRaisesRegex(BetaTestBlocked, 'reset_failed'):
+            await self.step(run)
+        self.assertEqual(self.sender.send_once.await_count, 2)
+        self.hass.services.async_call.assert_awaited_once()
+        self.assertIn('device', self.sender.uncertain)
+
+    async def test_failed_reset_readback_stops_before_second_reset_or_setting(self):
+        run = await self.start()
+        await self.step(run); await self.step(run)
+        self.sender._read.side_effect = [self.target, BetaTestBlocked('zones')]
+        with self.assertRaisesRegex(BetaTestBlocked, 'zones'):
+            await self.step(run)
+        self.assertEqual(self.sender.send_once.await_count, 2)
+        self.hass.services.async_call.assert_awaited_once()
+        self.assertIn('device', self.sender.uncertain)
+
+    async def test_stop_during_first_reset_prevents_second_reset_and_new_program(self):
+        run = await self.start()
+        await self.step(run); await self.step(run)
+        async def reset(*args, **kwargs):
+            self.batch.stop(self.batch.runs[run['run_id']])
+        self.hass.services.async_call.side_effect = reset
+        with self.assertRaisesRegex(BetaTestBlocked, 'batch_stopped'):
+            await self.step(run)
+        self.assertEqual(self.sender.send_once.await_count, 2)
+        self.hass.services.async_call.assert_awaited_once()
+
+    async def test_missing_zone_switch_prevents_offering_an_automatic_reset_plan(self):
+        self.resolve_reset.side_effect = BetaTestBlocked('reset_unavailable')
+        with self.assertRaisesRegex(BetaTestBlocked, 'reset_unavailable'):
+            await self.start()
+        self.assertEqual(self.batch.runs, {})
+        self.sender.send_once.assert_not_awaited()

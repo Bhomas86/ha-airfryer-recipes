@@ -4,7 +4,7 @@
 
 Benutzerdefinierte Home-Assistant-Integration zur Verwaltung wiederverwendbarer Heißluftfritteusen-Rezepte. Die gespeicherten Einstellungen sollen über bestehende Home-Assistant-Integrationen an unterstützte Geräte übertragen werden.
 
-> **Projektstatus: Test-Beta 0.1.0b7.** Beaufsichtigte Rezept-/manuelle Übertragung und geführte Testfolge mit Wiederfreigabe ohne HA-Neustart. Der feste Airfry-Test wurde auf beiden Fächern abgenommen; die komplette Folge und weitere Programme sind noch nicht bestätigt. Dashboard und SYNC/MATCH bleiben ausstehend.
+> **Projektstatus: Test-Beta 0.1.0b8.** Geführte Testfolge mit gezieltem Fach-Beenden vor Programmwechsel und Wiederfreigabe ohne HA-Neustart. Der feste Airfry-Test wurde auf beiden Fächern und Braten nach manuellem Zurücksetzen getestet; die neue automatische Folge bleibt zur Abnahme offen.
 
 **Neue Test-Beta 0.1.0b5:** Separater beaufsichtigter Gerätetest mit gewählten Rezept-/manuellen Werten für CAF-DC111S-AEU und exakt Airfryer Control 1.0.2-beta.1. Nur nach ausdrücklicher Bestätigung wird einmalig übertragen; normale Gerätesteuerung bleibt gesperrt. [Installation und Test](docs/releases/0.1.0b5.de.md).
 
@@ -15,6 +15,8 @@ Neu: gewählte Rezepte/manuelle Werte für alle sechs gemeldeten Programme beauf
 **Neu: [Geführter Testlauf mit einer Bestätigung](docs/releases/0.1.0b6.de.md).** 132 Python-/29 Frontend-Tests lokal bestanden; keine GitHub Actions.
 
 **[Neu: Test nach manuellem Zurücksetzen wieder freigeben](docs/releases/0.1.0b7.de.md).** 138 Python-/31 Frontend-Tests lokal bestanden; keine GitHub Actions.
+
+**[Neu: Fach-Einstellungen vor Programmwechsel gezielt beenden](docs/releases/0.1.0b8.de.md).** 145 Python-/32 Frontend-Tests lokal bestanden; keine GitHub Actions.
 
 ## Ziele
 
@@ -59,7 +61,7 @@ Aktuelle Beta: 132 Python-Tests und 29 Frontend-Tests lokal bestanden. Keine Git
 
 ## Installation
 
-**Vorabversion, kein stabiler Release.** Vorher ein Home-Assistant-Backup erstellen. Dieses Repository als benutzerdefiniertes HACS-Integrationsrepository hinzufügen, Vorabversionen anzeigen und über „Neu herunterladen“ `v0.1.0b7` auswählen. Home Assistant neu starten und die Companion-App vollständig neu öffnen.
+**Vorabversion, kein stabiler Release.** Vorher ein Home-Assistant-Backup erstellen. Dieses Repository als benutzerdefiniertes HACS-Integrationsrepository hinzufügen, Vorabversionen anzeigen und über „Neu herunterladen“ `v0.1.0b8` auswählen. Home Assistant neu starten und die Companion-App vollständig neu öffnen.
 
 Die Rezeptverwaltung funktioniert ohne Airfryer Control und benötigt keine Cloud-Zugangsdaten. Für die erweiterte Geräte-Testvorschau Airfryer Control `1.0.2-beta.1` oder neuer installieren. Sie führt keine Steuerbefehle aus. Für CAF-DC111S-AEU sind die sechs gemeldeten Programme und Grenzen noch geschätzt/ungeprüft; `proof` fehlt im Upstream-Vertrag. Normale Übertragung bleibt gesperrt; der separate beaufsichtigte Beta-Test benötigt exakt Airfryer Control 1.0.2-beta.1.
 

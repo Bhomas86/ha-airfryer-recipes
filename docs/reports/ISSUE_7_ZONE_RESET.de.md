@@ -1,0 +1,19 @@
+# Gezieltes Fach-Beenden vor einem Programmwechsel
+
+[Deutsch](ISSUE_7_ZONE_RESET.de.md) | [English](ISSUE_7_ZONE_RESET.md)
+
+Der Eigentümer hat nach manuellem Zurücksetzen eine erfolgreiche Braten-Anzeige gemeldet und die vorhandenen globalen und fachbezogenen HA-Steuerelemente zum Beenden benannt. Der Upstream f43a9bf8 bestätigt: ZoneSwitch.async_turn_off ruft async_end mit genau diesem Fach auf; Einschalten würde Einstellungen senden. Die Beta verwendet ausschließlich switch.turn_off, weder toggle noch turn_on und nicht den globalen Button.
+
+Die beiden Schalter werden aus Geräte-/Entitätsregistry aufgelöst: ausgewähltes Gerät, geladener Upstream-Config-Entry, eindeutige Kennung des geprüften ZoneSwitch, Fach 1 bzw. 2, aktiviert und mit verfügbarem Zustand. Namen und persönliche Entitäts-IDs werden nicht fest einprogrammiert oder veröffentlicht. Fehlende oder mehrdeutige Schalter verhindern bereits das Anbieten einer Folge, die Rücksetzungen benötigt.
+
+Vor jedem Programmwechsel prüft der Lauf frische eigene vorbereitete Werte und unveränderte Identität. Fach 1 wird einmal über den öffentlichen HA-Dienst beendet; erst nach neuem Bereitschaftsnachweis bei unverändertem Fach 2 folgt dessen Beenden. Danach müssen beide Fächer frisch bereit/aus sein. Erst dann wird die nächste Einstellung gesendet. Aktive, unbekannte, geänderte oder fremde vorbereitete Zustände stoppen. Fehler, Zeitüberschreitung oder fehlende Rückmeldung verhindern den nächsten Reset und die nächste Einstellung. Jede öffentliche Reset-Anfrage hat 20 Sekunden Timeout; keine Wiederholung durch Airfryer Recipes.
+
+Die einmal bestätigte Liste zeigt die Rücksetzschritte zusätzlich zu zwölf normalen Einstellungen. Bei sechs Programmen ergeben sich fünf Programmwechsel mit insgesamt zehn turn_off-Aufrufen. Der letzte vorbereitete Zustand bleibt zur physischen Kontrolle stehen und wird vom Eigentümer am Gerät beendet. Der gestartete Lauf ist wegen der zusätzlichen lesenden Prüfungen jetzt auf zwanzig Minuten begrenzt. Abbruch, Verbindungsbindung, Einmaltokens und manuelle Wiederfreigabe ohne HA-Neustart bleiben bestehen.
+
+Die öffentliche Upstream-Funktion async_end verwendet intern dessen normale API-Anmeldung und kann bei Authentifizierungsfehlern wiederholen. Die Garantie eines einzelnen wire-level Transportversuchs aus dem Einstellungsdienst gilt deshalb nicht für diese vom Eigentümer benannten Reset-Aktionen. Unsere Integration ruft jeden Fachdienst einmal auf, umgeht keine privaten APIs und prüft danach die Gerätewerte. Physische Tasten oder andere Apps können den Zustand nach einer Prüfung ändern; der Eigentümer bleibt während der ausdrücklich beaufsichtigten Abnahme am Gerät. Es wird kein Heizstart angefordert.
+
+Lokal bestanden: 145 Python-Tests, 32 Frontend-Tests, Kompilierung und git diff --check. Neue Prüfungen: vollständige Folge mit genau zehn gezielten turn_off-Aufrufen, keine Wiederholung bei Resetfehler, kein zweiter Reset/Programm nach falscher Rückmeldung oder Abbruch, keine Folge bei fehlenden Schaltern, eindeutige Registry-Zuordnung und sichtbare Rücksetz-Zustimmung. Keine GitHub Actions, HACS/Hassfest, Python 3.14 oder reale HA-/Gerätetests.
+
+## Erneute Abnahme
+
+Nach Backup v0.1.0b8 installieren, HA neu starten und App vollständig neu öffnen. Airfryer Control bleibt exakt 1.0.2-beta.1. Vorbereitete Programme am Gerät abbrechen und bei bestehender Sperre „Gerät geprüft – neuen Test freigeben“ benutzen. Beide Fächer geschlossen und bereit/aus, Celsius, SYNC/MATCH aus. Testliste einschließlich der Beenden-Schritte einmal bestätigen. Am leeren Gerät bleiben und nicht Start drücken. Besonders den Übergang nach Schritt 2 beobachten: beide eigenen Airfry-Einstellungen müssen beendet sein, bevor Braten an Fach 1 gesendet wird. Bei Fehler/Heizstart/falschem Fach stoppen und letzten Schritt samt Meldung nennen. Geräteabnahme der automatischen Rücksetzung: NICHT GETESTET.
