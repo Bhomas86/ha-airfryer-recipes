@@ -8,7 +8,7 @@ import unittest
 from unittest.mock import AsyncMock, Mock, patch
 
 from custom_components.airfryer_recipes.beta_send import (
-    BetaSender, BetaTestBlocked, Target, read_target, TEST_SETTINGS,
+    BetaSender, BetaTestBlocked, SendPermit, Target, read_target, TEST_SETTINGS,
 )
 from custom_components.airfryer_recipes.const import DOMAIN
 from custom_components.airfryer_recipes.recipe_model import CookingPhase, create_recipe, RecipeValidationError
@@ -217,6 +217,139 @@ class SenderTests(unittest.IsolatedAsyncioTestCase):
         with self.assertRaisesRegex(BetaTestBlocked, "confirmation"):
             await self.confirm(token)
         self.assertNotIn("device", self.sender.busy)
+        self.hass.services.async_call.assert_not_awaited()
+
+    async def test_confirmation_is_connection_bound_and_cleanup_runs_after_send(self):
+        owner, other = object(), object()
+        cleanup = Mock()
+        permit = SendPermit(owner=owner, cleanup=cleanup)
+        token = (await self.sender.prepare("u1", "device", 1, True, "context", permit=permit))["token"]
+        with self.assertRaisesRegex(BetaTestBlocked, "connection_changed"):
+            await self.sender.confirm("u1", token, True, "context", owner=other)
+        self.hass.services.async_call.assert_not_awaited()
+        self.assertEqual((await self.sender.confirm("u1", token, True, "context", owner=owner))["outcome"], "accepted")
+        cleanup.assert_called_once_with()
+        self.assertFalse(permit.active)
+        self.assertFalse(self.sender.confirming)
+
+    async def test_disconnect_during_preparation_does_not_create_a_late_token(self):
+        permit = SendPermit(owner=object())
+        async def read(*args, **kwargs):
+            self.sender.close_permit(permit, disconnected=True)
+            return Target("Kitchen", ("same",))
+        self.read.side_effect = read
+        with self.assertRaisesRegex(BetaTestBlocked, "connection_changed"):
+            await self.sender.prepare("u1", "device", 1, True, "context", permit=permit)
+        self.assertFalse(self.sender.pending)
+        self.assertNotIn("device", self.sender.busy)
+        self.hass.services.async_call.assert_not_awaited()
+
+    async def test_disconnect_during_final_validation_prevents_a_device_call(self):
+        owner = object()
+        permit = SendPermit(owner=owner)
+        token = (await self.sender.prepare("u1", "device", 1, True, "context", permit=permit))["token"]
+        async def read(*args, **kwargs):
+            self.sender.close_permit(permit, disconnected=True)
+            return Target("Kitchen", ("same",))
+        self.read.side_effect = read
+        with self.assertRaisesRegex(BetaTestBlocked, "connection_changed"):
+            await self.sender.confirm("u1", token, True, "context", owner=owner)
+        self.assertFalse(self.sender.pending)
+        self.assertFalse(self.sender.confirming)
+        self.assertNotIn("device", self.sender.uncertain)
+        self.hass.services.async_call.assert_not_awaited()
+
+    async def test_cancel_is_owned_and_discards_a_pending_confirmation_without_control(self):
+        owner = object()
+        cleanup = Mock()
+        permit = SendPermit(owner=owner, cleanup=cleanup)
+        token = (await self.sender.prepare("u1", "device", 1, True, "context", permit=permit))["token"]
+        for user, connection in (("u2", owner), ("u1", object())):
+            with self.assertRaisesRegex(BetaTestBlocked, "confirmation"):
+                await self.sender.cancel(user, token, owner=connection)
+        self.assertTrue((await self.sender.cancel("u1", token, owner=owner))["discarded"])
+        self.assertFalse((await self.sender.cancel("u1", token, owner=owner))["discarded"])
+        cleanup.assert_called_once_with()
+        with self.assertRaisesRegex(BetaTestBlocked, "confirmation"):
+            await self.sender.confirm("u1", token, True, "context", owner=owner)
+        self.hass.services.async_call.assert_not_awaited()
+
+    async def test_cancel_while_confirmation_is_validating_prevents_send(self):
+        owner = object()
+        token = (await self.sender.prepare("u1", "device", 1, True, "context",
+                                            permit=SendPermit(owner=owner)))["token"]
+        entered, finish = asyncio.Event(), asyncio.Event()
+        async def read(*args, **kwargs):
+            entered.set()
+            await finish.wait()
+            return Target("Kitchen", ("same",))
+        self.read.side_effect = read
+        task = asyncio.create_task(self.sender.confirm("u1", token, True, "context", owner=owner))
+        await entered.wait()
+        self.assertTrue((await self.sender.cancel("u1", token, owner=owner))["discarded"])
+        finish.set()
+        with self.assertRaisesRegex(BetaTestBlocked, "connection_changed"):
+            await task
+        self.assertFalse(self.sender.confirming)
+        self.assertNotIn("device", self.sender.busy)
+        self.hass.services.async_call.assert_not_awaited()
+
+    async def test_disconnect_after_submission_cannot_recall_or_repeat_the_send(self):
+        owner = object()
+        permit = SendPermit(owner=owner)
+        token = (await self.sender.prepare("u1", "device", 1, True, "context", permit=permit))["token"]
+        answer = self.hass.services.async_call.return_value
+        async def call(*args, **kwargs):
+            self.sender.close_permit(permit, disconnected=True)
+            return answer
+        self.hass.services.async_call.side_effect = call
+        self.assertEqual((await self.sender.confirm("u1", token, True, "context", owner=owner))["outcome"], "accepted")
+        with self.assertRaisesRegex(BetaTestBlocked, "confirmation"):
+            await self.sender.confirm("u1", token, True, "context", owner=object())
+        self.hass.services.async_call.assert_awaited_once()
+
+    async def test_cancel_after_submission_keeps_device_locked_until_the_call_finishes(self):
+        owner = object()
+        token = (await self.sender.prepare("u1", "device", 1, True, "context",
+                                            permit=SendPermit(owner=owner)))["token"]
+        entered, finish = asyncio.Event(), asyncio.Event()
+        async def call(*args, **kwargs):
+            entered.set()
+            await finish.wait()
+            return None
+        self.hass.services.async_call.side_effect = call
+        sending = asyncio.create_task(self.sender.confirm("u1", token, True, "context", owner=owner))
+        await entered.wait()
+        try:
+            await self.sender.cancel("u1", token, owner=owner)
+            with self.assertRaisesRegex(BetaTestBlocked, "busy"):
+                await self.sender.recover("u1", "device", True, "context")
+            with self.assertRaisesRegex(BetaTestBlocked, "busy"):
+                await self.prepare()
+            self.hass.services.async_call.assert_awaited_once()
+        finally:
+            finish.set()
+            result = await sending
+        self.assertEqual(result["outcome"], "unknown")
+        self.assertIn("device", self.sender.uncertain)
+        self.assertNotIn("device", self.sender.busy)
+
+    async def test_expiry_and_failed_new_preparation_release_connection_cleanup(self):
+        first_cleanup, second_cleanup = Mock(), Mock()
+        await self.sender.prepare("u1", "device", 1, True, "context", permit=SendPermit(cleanup=first_cleanup))
+        self.read.side_effect = BetaTestBlocked("connection")
+        with self.assertRaisesRegex(BetaTestBlocked, "connection"):
+            await self.sender.prepare("u1", "device", 1, True, "context", permit=SendPermit(cleanup=second_cleanup))
+        first_cleanup.assert_called_once_with()
+        second_cleanup.assert_called_once_with()
+        self.assertFalse(self.sender.pending)
+        self.read.side_effect = None
+        expiry_cleanup = Mock()
+        token = (await self.sender.prepare("u1", "device", 1, True, "context", permit=SendPermit(cleanup=expiry_cleanup)))["token"]
+        with patch("custom_components.airfryer_recipes.beta_send.time.monotonic", return_value=10**12):
+            with self.assertRaisesRegex(BetaTestBlocked, "confirmation"):
+                await self.confirm(token)
+        expiry_cleanup.assert_called_once_with()
         self.hass.services.async_call.assert_not_awaited()
 
     async def selected(self, source, zone=1):

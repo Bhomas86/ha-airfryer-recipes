@@ -1,6 +1,8 @@
 // Local Home Assistant custom panel. All mutations go through the authenticated API.
 const WORDS = {
   en: {
+    betaConnection: "Connection or page changed. Old confirmations were discarded. Prepare a new test; no command will be replayed. A request already submitted cannot be recalled.",
+    betaSelectionChanged: "Selection changed. Prepare the selected settings again.",
     modelTemperatures: "Appliance temperature ranges", modelOwner: "Appliance (owner report)", modelAdapter: "Adapter report",
     modelMissing: "Not reported", modelStep: "step", modelTemperatureInfo: "Supervised sending uses the intersection of the appliance range, the reviewed adapter contract and the current adapter report. Programs missing from the adapter cannot be sent. Duration limits remain unverified.",
     batchReset: "Before changing program: end this run's prepared settings in zones 1 and 2 and verify idle state.", resetUnavailable: "No uniquely assigned loaded zone switch is available for ending. Check the Airfryer Control entities.", resetFailed: "Ending a zone failed or has an unknown outcome. Check the appliance and use re-arming before another attempt.",
@@ -80,6 +82,8 @@ const WORDS = {
     statusDrawerOpen: "Drawer open", statusHolding: "Holding", statusKeepingWarm: "Keeping warm", statusPreheated: "Preheated",
   },
   de: {
+    betaConnection: "Verbindung oder Seite gewechselt. Alte Bestätigungen wurden verworfen. Einen neuen Test vorbereiten; kein Befehl wird nachgeholt. Eine bereits übermittelte Anfrage kann nicht zurückgeholt werden.",
+    betaSelectionChanged: "Auswahl geändert. Die gewählten Werte erneut vorbereiten.",
     modelTemperatures: "Temperaturbereiche des Geräts", modelOwner: "Gerät (Eigentümerangabe)", modelAdapter: "Adaptermeldung",
     modelMissing: "Nicht gemeldet", modelStep: "Schritt", modelTemperatureInfo: "Beaufsichtigtes Senden verwendet die Schnittmenge aus Gerätebereich, geprüftem Adaptervertrag und aktueller Adaptermeldung. Im Adapter fehlende Programme können nicht gesendet werden. Die Zeitgrenzen bleiben ungeprüft.",
     batchReset: "Vor Programmwechsel: eigene vorbereitete Einstellungen in Fach 1 und 2 gezielt beenden und Bereitschaft prüfen.", resetUnavailable: "Kein eindeutig zugeordneter, geladener Fach-Schalter zum Beenden verfügbar. Bitte die Entitäten in Airfryer Control prüfen.", resetFailed: "Das Beenden eines Fachs ist fehlgeschlagen oder unklar. Gerät prüfen und vor einem neuen Versuch die Wiederfreigabe verwenden.",
@@ -190,6 +194,17 @@ class AirfryerRecipesPanel extends HTMLElement {
     this.batchMessage = "";
     this.batchResults = [];
     this.betaTest = null;
+    this.betaSubmittingToken = null;
+    this.selectionRevision = 0;
+    this.controlRevision = 0;
+    this.panelActive = true;
+    this.watchedConnection = null;
+    this.connectionLost = () => {
+      this.invalidateControls();
+      this.betaMessage = this.words.betaConnection;
+      this.batchMessage = this.words.betaConnection;
+      this.render();
+    };
     this.betaMessage = "";
     this.deviceError = "";
     this.devicesBusy = false;
@@ -207,12 +222,18 @@ class AirfryerRecipesPanel extends HTMLElement {
     const oldLanguage = this._hass?.language;
     const oldAdmin = this._hass?.user?.is_admin;
     const oldUnit = this._hass?.config?.unit_system?.temperature;
+    const oldConnection = this._hass?.connection;
+    const controlsChanged = this._hass && (oldConnection !== value?.connection ||
+      this._hass.user?.id !== value?.user?.id || oldAdmin !== value?.user?.is_admin ||
+      oldUnit !== value?.config?.unit_system?.temperature);
+    if (controlsChanged) this.invalidateControls();
     this._hass = value;
+    if (this.panelActive) this.watchConnection(value?.connection);
     if (!this.started && value) {
       this.started = true;
       this.load();
     } else if (oldLanguage !== value?.language || oldAdmin !== value?.user?.is_admin ||
-        oldUnit !== value?.config?.unit_system?.temperature) {
+        oldUnit !== value?.config?.unit_system?.temperature || controlsChanged) {
       this.render();
     }
   }
@@ -238,7 +259,45 @@ class AirfryerRecipesPanel extends HTMLElement {
   }
 
   async request(name, fields = {}) {
+    if ((name.startsWith("beta_") || name.startsWith("batch_")) &&
+        (this._hass?.connection?.connected === false ||
+          (!this.panelActive && !["beta_cancel", "batch_stop"].includes(name)))) {
+      throw { code: "beta_test_blocked", message: "connection_changed" };
+    }
     return this._hass.callWS({ type: `airfryer_recipes/${name}`, ...fields });
+  }
+
+  watchConnection(connection) {
+    if (connection === this.watchedConnection) return;
+    this.watchedConnection?.removeEventListener?.("disconnected", this.connectionLost);
+    this.watchedConnection = connection;
+    connection?.addEventListener?.("disconnected", this.connectionLost);
+  }
+
+  cancelBetaToken(token) {
+    if (token) this.request("beta_cancel", { token }).catch(() => {});
+  }
+
+  forgetBeta() {
+    this.selectionRevision++;
+    this.cancelBetaToken(this.betaTest?.token);
+    this.cancelBetaToken(this.betaSubmittingToken);
+    this.betaTest = null;
+    this.betaMessage = this.betaSubmittingToken ? this.words.betaUnknown : "";
+  }
+
+  invalidateControls() {
+    const run_id = this.batchRunId;
+    this.controlRevision++;
+    this.forgetBeta();
+    this.batchStopRequested = true;
+    this.batchPlan = null;
+    this.batchRunId = null;
+    if (run_id) this.request("batch_stop", { run_id }).catch(() => {});
+  }
+
+  controlCurrent(revision) {
+    return this.panelActive && this.controlRevision === revision && this._hass?.connection?.connected !== false;
   }
 
   showError(error) {
@@ -317,7 +376,7 @@ class AirfryerRecipesPanel extends HTMLElement {
 
   async loadDevices() {
     if (!this.admin) return;
-    this.betaTest = null;
+    this.forgetBeta();
     this.devicesBusy = true;
     this.deviceError = "";
     this.render();
@@ -533,9 +592,15 @@ class AirfryerRecipesPanel extends HTMLElement {
       </main>`;
   }
 
+  connectedCallback() {
+    this.panelActive = true;
+    this.watchConnection(this._hass?.connection);
+  }
+
   disconnectedCallback() {
-    this.batchStopRequested = true;
-    if (this.batchRunId) this.request("batch_stop", { run_id: this.batchRunId }).catch(() => {});
+    this.invalidateControls();
+    this.panelActive = false;
+    this.watchConnection(null);
   }
 
   onInput(event) {
@@ -543,7 +608,7 @@ class AirfryerRecipesPanel extends HTMLElement {
     if (["preview-temperature", "preview-duration"].includes(event.target.id)) {
       if (event.target.id === "preview-temperature") this.manualPreviewTemperatureC = this.fromDisplay(Number(event.target.value));
       else this.manualPreviewDurationMinutes = Number(event.target.value);
-      this.betaTest = null;
+      this.forgetBeta();
       const confirmation = this.shadowRoot.querySelector?.('[data-action="beta-confirm"]');
       if (confirmation) confirmation.disabled = true;
       return;
@@ -564,7 +629,7 @@ class AirfryerRecipesPanel extends HTMLElement {
       this.selectedZoneId = String(this.selectedDevice()?.zones?.[0]?.zone_id || "");
       this.batchPlan = null;
       this.batchRunId = null;
-      this.betaTest = null;
+      this.forgetBeta();
       this.render();
       return;
     }
@@ -581,7 +646,7 @@ class AirfryerRecipesPanel extends HTMLElement {
       this.favoriteFilter = event.target.value;
       this.render();
     } else if (event.target.id === "preview-device") {
-      this.betaTest = null;
+      this.forgetBeta();
       this.selectedDeviceId = event.target.value;
       this.selectedZoneId = this.selectedDevice()?.zones?.[0]
         ? String(this.selectedDevice().zones[0].zone_id) : "";
@@ -589,17 +654,17 @@ class AirfryerRecipesPanel extends HTMLElement {
       this.sendPreview = null;
       this.render();
     } else if (event.target.id === "preview-zone") {
-      this.betaTest = null;
+      this.forgetBeta();
       this.selectedZoneId = event.target.value;
       this.sendPreview = null;
       this.render();
     } else if (event.target.id === "preview-recipe") {
-      this.betaTest = null;
+      this.forgetBeta();
       this.previewRecipeId = event.target.value;
       this.sendPreview = null;
       this.render();
     } else if (event.target.id === "preview-program") {
-      this.betaTest = null;
+      this.forgetBeta();
       this.manualPreviewProgram = event.target.value;
       this.sendPreview = null;
       this.render();
@@ -646,7 +711,7 @@ class AirfryerRecipesPanel extends HTMLElement {
     if (!this.admin) return;
     if (type === "beta-prepare") return this.prepareSelectedBeta(this.shadowRoot.getElementById("device-preview-form"));
     if (type === "beta-confirm") return this.confirmBetaTest();
-    if (type === "beta-cancel") { this.betaTest = null; this.render(); return; }
+    if (type === "beta-cancel") { this.forgetBeta(); this.render(); return; }
     if (type === "refresh-devices") {
       await this.loadDevices();
       this.render();
@@ -736,6 +801,7 @@ class AirfryerRecipesPanel extends HTMLElement {
 
   betaError(error) {
     const key = {
+      connection_changed: "betaConnection",
       reset_unavailable: "resetUnavailable", reset_failed: "resetFailed", source: "betaSource", program_unsupported: "betaProgram", test_range: "betaRange", recipe_changed: "betaRecipeChanged",
       freshness: "betaFreshness", refresh_unavailable: "betaRefreshUnavailable", refresh_failed: "betaRefreshFailed", state_changed: "betaState", zones: "betaZones",
       adapter_version: "betaAdapter", adapter_data: "adapterIncompatible", model: "betaModel", capabilities: "betaCaps",
@@ -751,33 +817,43 @@ class AirfryerRecipesPanel extends HTMLElement {
   }
 
   async recoverBeta() {
-    if (!this.admin || this.busy || this.batchRunning || !this.selectedDeviceId || !confirm(this.words.betaRecoverConfirm)) return;
+    if (!this.admin || this.busy || this.batchRunning || !this.controlCurrent(this.controlRevision) || !this.selectedDeviceId || !confirm(this.words.betaRecoverConfirm)) return;
     this.busy = true;
+    const revision = this.controlRevision;
     this.batchPlan = null;
-    this.betaTest = null;
+    this.forgetBeta();
     this.batchRunId = null;
     this.batchMessage = this.words.batchLoading;
     this.render();
     try {
       await this.request("beta_recover", { device_id: this.selectedDeviceId, acknowledge_physical_reset: true });
-      this.batchMessage = this.words.betaRecovered;
-    } catch (error) { this.batchMessage = this.betaError(error); }
-    finally { this.busy = false; this.render(); this.showBatch(); }
+      if (this.controlCurrent(revision)) this.batchMessage = this.words.betaRecovered;
+    } catch (error) { if (this.controlCurrent(revision)) this.batchMessage = this.betaError(error); }
+    finally { this.busy = false; this.render(); if (this.controlCurrent(revision)) this.showBatch(); }
   }
 
   async prepareBatch() {
-    if (!this.admin || this.busy || this.batchRunning || !this.selectedDeviceId) return;
+    if (!this.admin || this.busy || this.batchRunning || !this.controlCurrent(this.controlRevision) || !this.selectedDeviceId) return;
     this.busy = true;
+    const revision = this.controlRevision;
+    this.forgetBeta();
+    const selection = this.selectionRevision;
+    const device_id = this.selectedDeviceId;
     this.batchPlan = null;
     this.batchRunId = null;
     this.batchResults = [];
     this.batchMessage = this.words.batchLoading;
     this.render();
     try {
-      this.batchPlan = await this.request("batch_prepare", { device_id: this.selectedDeviceId });
-      this.batchMessage = "";
-    } catch (error) { this.batchMessage = this.betaError(error); }
-    finally { this.busy = false; this.render(); this.showBatch(); }
+      const plan = await this.request("batch_prepare", { device_id });
+      if (this.controlCurrent(revision) && this.selectionRevision === selection && this.selectedDeviceId === device_id) {
+        this.batchPlan = plan;
+        this.batchMessage = "";
+      } else if (this.controlCurrent(revision)) {
+        this.batchMessage = this.words.betaSelectionChanged;
+      }
+    } catch (error) { if (this.controlCurrent(revision)) this.batchMessage = this.betaError(error); }
+    finally { this.busy = false; this.render(); if (this.controlCurrent(revision)) this.showBatch(); }
   }
 
   async stopBatch() {
@@ -790,22 +866,25 @@ class AirfryerRecipesPanel extends HTMLElement {
   }
 
   async startBatch() {
-    if (!this.admin || this.busy || this.batchRunning || !this.batchPlan || this.batchRunId) return;
+    if (!this.admin || this.busy || this.batchRunning || !this.controlCurrent(this.controlRevision) || !this.batchPlan || this.batchRunId) return;
     this.batchRunning = true;
+    const revision = this.controlRevision;
+    const plan = this.batchPlan;
     this.batchStopRequested = false;
     this.batchResults = [];
-    this.batchRunId = this.batchPlan.token;
+    this.batchRunId = plan.token;
     this.render();
     this.showBatch();
     try {
-      const run = await this.request("batch_start", { token: this.batchPlan.token, acknowledge_supervised_batch: true });
+      const run = await this.request("batch_start", { token: plan.token, acknowledge_supervised_batch: true });
       let nonce = run.next_token;
-      while (!this.batchStopRequested && nonce) {
-        const next = this.batchPlan.steps[this.batchResults.length];
+      while (this.controlCurrent(revision) && !this.batchStopRequested && nonce) {
+        const next = plan.steps[this.batchResults.length];
         this.batchMessage = `${this.words.batchProgress} ${this.batchResults.length + 1} ${this.words.batchOf} ${run.total}: ${this.programName(next.settings.program)} · ${this.words.zone} ${next.zone_id}`;
-        if (this.batchPlan.resets_between_programs && this.batchResults.length > 0 && next.settings.program !== this.batchPlan.steps[this.batchResults.length - 1].settings.program) this.batchMessage += ` · ${this.words.batchReset}`;
+        if (plan.resets_between_programs && this.batchResults.length > 0 && next.settings.program !== plan.steps[this.batchResults.length - 1].settings.program) this.batchMessage += ` · ${this.words.batchReset}`;
         this.render();
         const result = await this.request("batch_next", { run_id: run.run_id, next_token: nonce });
+        if (!this.controlCurrent(revision)) return;
         if (result.stopped) {
           this.batchMessage = `${this.words.batchProgress} ${result.failed_step}: ${this.programName(result.settings.program)} · ${this.words.zone} ${result.zone_id}. ${this.words.betaRejected}${Number.isInteger(result.error_code) ? ` (Code ${result.error_code})` : ""}`;
           this.batchStopRequested = true;
@@ -814,22 +893,23 @@ class AirfryerRecipesPanel extends HTMLElement {
         this.batchResults.push(result);
         nonce = result.done ? null : result.next_token;
       }
-      this.batchMessage = this.batchStopRequested ? this.words.batchStopped : this.words.batchDone;
+      if (this.controlCurrent(revision)) this.batchMessage = this.batchStopRequested ? this.words.batchStopped : this.words.batchDone;
     } catch (error) {
+      if (!this.controlCurrent(revision)) return;
       const reason = { reset_unavailable: "resetUnavailable", reset_failed: "resetFailed", zones: "betaZones", freshness: "betaFreshness", refresh_failed: "betaRefreshFailed",
         batch_connection: "batchConnection", state_changed: "betaState", unauthorized: "unauthorized" }[error?.message];
-      const failed = this.batchPlan.steps[this.batchResults.length];
+      const failed = plan.steps[this.batchResults.length];
       this.batchMessage = this.batchStopRequested ? this.words.batchStopped
         : `${this.words.batchProgress} ${this.batchResults.length + 1}: ${this.programName(failed.settings.program)} · ${this.words.zone} ${failed.zone_id}. ${this.words.batchFailed}${reason ? ` ${this.words[reason]}` : ""}`;
       this.batchStopRequested = true;
       try { await this.request("batch_stop", { run_id: this.batchRunId }); } catch (_) { /* no replay */ }
-    } finally { this.batchRunning = false; this.render(); this.showBatch(); }
+    } finally { this.batchRunning = false; this.render(); if (this.controlCurrent(revision)) this.showBatch(); }
   }
 
   async prepareSelectedBeta(formElement) {
-    if (!this.admin || this.busy || this.devicesBusy || this.batchRunning) return;
+    if (!this.admin || this.busy || this.devicesBusy || this.batchRunning || !this.controlCurrent(this.controlRevision)) return;
     if (!formElement) {
-      this.betaTest = null;
+      this.forgetBeta();
       this.betaMessage = this.betaError({ message: "source" });
       this.render();
       this.showBeta();
@@ -846,10 +926,12 @@ class AirfryerRecipesPanel extends HTMLElement {
   }
 
   async prepareBetaTest(source = null) {
-    if (!this.admin || this.busy || this.devicesBusy || !this.selectedZone() || !confirm(this.words.betaWarning)) return;
+    if (!this.admin || this.busy || this.devicesBusy || this.batchRunning || !this.controlCurrent(this.controlRevision) || !this.selectedZone() || !confirm(this.words.betaWarning)) return;
     const device_id = this.selectedDeviceId;
     const zone_id = Number(this.selectedZoneId);
-    this.betaTest = null;
+    this.forgetBeta();
+    const revision = this.controlRevision;
+    const selection = this.selectionRevision;
     this.betaMessage = this.words.betaRefreshing;
     this.busy = true;
     this.render();
@@ -857,11 +939,17 @@ class AirfryerRecipesPanel extends HTMLElement {
       const fields = { device_id, zone_id, acknowledge_unverified: true };
       if (source !== null) fields.source = source;
       const result = await this.request("beta_prepare", fields);
-      this.betaMessage = "";
-      if (this.selectedDeviceId === device_id && Number(this.selectedZoneId) === zone_id) this.betaTest = result;
+      if (this.controlCurrent(revision) && this.selectionRevision === selection &&
+          this.selectedDeviceId === device_id && Number(this.selectedZoneId) === zone_id) {
+        this.betaMessage = "";
+        this.betaTest = result;
+      } else {
+        this.cancelBetaToken(result.token);
+        if (this.controlCurrent(revision)) this.betaMessage = this.words.betaSelectionChanged;
+      }
     } catch (error) {
-      this.betaMessage = this.betaError(error);
-    } finally { this.busy = false; this.render(); this.showBeta(); }
+      if (this.controlCurrent(revision)) this.betaMessage = this.betaError(error);
+    } finally { this.busy = false; this.render(); if (this.controlCurrent(revision)) this.showBeta(); }
   }
 
   showBeta() {
@@ -869,20 +957,23 @@ class AirfryerRecipesPanel extends HTMLElement {
   }
 
   async confirmBetaTest() {
-    if (!this.admin || this.busy || this.devicesBusy || !this.betaTest) return;
+    if (!this.admin || this.busy || this.devicesBusy || !this.controlCurrent(this.controlRevision) || !this.betaTest) return;
     const prepared = this.betaTest;
     const exact = `${prepared.device_name} · ${this.words.zone} ${prepared.zone_id} · ${prepared.settings.program} · ${this.toDisplay(prepared.settings.temperature_c)} ${this.unit} · ${prepared.settings.duration_minutes} min`;
     if (!confirm(`${exact}\n${this.words.betaConfirmWarning}`)) return;
+    const revision = this.controlRevision;
+    const selection = this.selectionRevision;
+    this.betaSubmittingToken = prepared.token;
     this.betaTest = null; // Never reuse a confirmation, including after a lost response.
     this.busy = true;
     this.betaMessage = "";
     this.render();
     try {
       const result = await this.request("beta_confirm", { token: prepared.token, acknowledge_supervised_test: true });
-      this.betaMessage = result.outcome === "accepted" ? this.words.betaAccepted : result.outcome === "rejected" ? `${this.words.betaRejected}${Number.isInteger(result.error_code) ? ` (Code ${result.error_code})` : ""}` : this.words.betaUnknown;
+      if (this.controlCurrent(revision) && this.selectionRevision === selection) this.betaMessage = result.outcome === "accepted" ? this.words.betaAccepted : result.outcome === "rejected" ? `${this.words.betaRejected}${Number.isInteger(result.error_code) ? ` (Code ${result.error_code})` : ""}` : this.words.betaUnknown;
     } catch (error) {
-      this.betaMessage = error?.code === "beta_test_blocked" ? this.betaError(error) : this.words.betaUnknown;
-    } finally { this.busy = false; this.render(); }
+      if (this.controlCurrent(revision) && this.selectionRevision === selection) this.betaMessage = error?.code === "beta_test_blocked" ? this.betaError(error) : this.words.betaUnknown;
+    } finally { this.betaSubmittingToken = null; this.busy = false; this.render(); }
   }
 
   async submitDevicePreview(formElement) {

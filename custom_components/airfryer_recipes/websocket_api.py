@@ -20,7 +20,7 @@ from homeassistant.components import websocket_api
 
 from .const import DOMAIN, EXPORT_FILENAME, EXPORT_URL
 from .command_preview import PreviewTargetNotFound
-from .beta_send import BetaTestBlocked
+from .beta_send import BetaTestBlocked, SendPermit
 from .recipe_model import (
     MAX_IMPORT_BYTES,
     RecipeValidationError,
@@ -293,7 +293,7 @@ async def ws_prepare_send(hass: Any, connection: Any, msg: dict[str, Any]) -> No
 })
 @websocket_api.async_response
 async def ws_beta_prepare(hass: Any, connection: Any, msg: dict[str, Any]) -> None:
-    """Prepare a fixed supervised test, never a device command."""
+    """Prepare exact settings with a connection-bound, revocable lifetime."""
     async def run(repo: RecipeRepository) -> dict[str, Any]:
         from homeassistant.core import Context
 
@@ -303,10 +303,17 @@ async def ws_beta_prepare(hass: Any, connection: Any, msg: dict[str, Any]) -> No
         sender = hass.data[DOMAIN].get("beta_sender")
         if sender is None:
             raise BetaTestBlocked("not_configured")
+        permit = SendPermit(owner=connection)
+        connection.subscriptions[msg["id"]] = lambda: sender.close_permit(permit, disconnected=True)
+        permit.cleanup = lambda: connection.subscriptions.pop(msg["id"], None)
         extra = {"source": msg["source"]} if "source" in msg else {}
-        return await sender.prepare(connection.user.id, msg["device_id"], msg["zone_id"],
-                                    msg["acknowledge_unverified"],
-                                    Context(user_id=connection.user.id), **extra)
+        try:
+            return await sender.prepare(connection.user.id, msg["device_id"], msg["zone_id"],
+                                        msg["acknowledge_unverified"],
+                                        Context(user_id=connection.user.id), permit=permit, **extra)
+        except BaseException:
+            permit.close()
+            raise
     await _respond(hass, connection, msg, run)
 
 
@@ -329,7 +336,25 @@ async def ws_beta_confirm(hass: Any, connection: Any, msg: dict[str, Any]) -> No
             raise BetaTestBlocked("not_configured")
         return await sender.confirm(connection.user.id, msg["token"],
                                     msg["acknowledge_supervised_test"],
-                                    Context(user_id=connection.user.id))
+                                    Context(user_id=connection.user.id), owner=connection)
+    await _respond(hass, connection, msg, run)
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command({
+    voluptuous.Required("type"): f"{DOMAIN}/beta_cancel",
+    voluptuous.Required("token"): str,
+})
+@websocket_api.async_response
+async def ws_beta_cancel(hass: Any, connection: Any, msg: dict[str, Any]) -> None:
+    """Revoke an owned confirmation; a submitted device call cannot be recalled."""
+    async def run(repo: RecipeRepository) -> dict[str, Any]:
+        if set(msg) != {"id", "type", "token"}:
+            raise RecipeValidationError("Unexpected beta cancellation parameter")
+        sender = hass.data[DOMAIN].get("beta_sender")
+        if sender is None:
+            raise BetaTestBlocked("not_configured")
+        return await sender.cancel(connection.user.id, msg["token"], owner=connection)
     await _respond(hass, connection, msg, run)
 
 
@@ -445,6 +470,7 @@ COMMANDS = (
     ws_prepare_send,
     ws_beta_prepare,
     ws_beta_confirm,
+    ws_beta_cancel,
     ws_batch_prepare, ws_batch_start, ws_batch_next, ws_batch_stop, ws_beta_recover,
 )
 

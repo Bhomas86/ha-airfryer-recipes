@@ -11,6 +11,8 @@ from functools import wraps
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, Mock, patch
 
+from custom_components.airfryer_recipes.beta_send import BetaSender, Target
+
 from custom_components.airfryer_recipes.const import DOMAIN
 from custom_components.airfryer_recipes.recipe_model import create_recipe, recipe_to_dict
 from custom_components.airfryer_recipes.recipe_repository import RecipeRepository
@@ -174,6 +176,7 @@ class WebsocketTests(unittest.IsolatedAsyncioTestCase):
             ("batch_stop", {"run_id": "x"}),
             ("beta_prepare", {"device_id": "ha-device", "zone_id": 1, "acknowledge_unverified": True}),
             ("beta_confirm", {"token": "forged", "acknowledge_supervised_test": True}),
+            ("beta_cancel", {"token": "forged"}),
             ("devices", {}),
             ("prepare_send", {"device_id": "ha-device", "zone_id": 1, "settings": {}}),
         )
@@ -336,6 +339,7 @@ class WebsocketTests(unittest.IsolatedAsyncioTestCase):
         call = sender.confirm.await_args
         self.assertEqual(call.args[:3], ("u1", "one", True))
         self.assertEqual(call.args[3].user_id, "u1")
+        self.assertIs(call.kwargs["owner"], self.admin)
         forged = await self.call("beta_confirm", self.admin, token="one",
                                  acknowledge_supervised_test=True, device_id="other")
         self.assertEqual(forged[2], "invalid_format")
@@ -350,7 +354,8 @@ class WebsocketTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual((await self.call("beta_prepare", self.user, **params))[2], "unauthorized")
         sender.prepare.assert_not_awaited()
         self.assertEqual((await self.call("beta_prepare", self.admin, **params))[0], "result")
-        self.assertEqual(sender.prepare.await_args.kwargs, {"source": source})
+        self.assertEqual(sender.prepare.await_args.kwargs["source"], source)
+        self.assertIs(sender.prepare.await_args.kwargs["permit"].owner, self.admin)
         self.assertEqual(sender.prepare.await_args.args[0], self.admin.user.id)
 
     async def test_beta_block_reason_is_allowlisted_and_unload_disables_routes(self):
@@ -364,6 +369,106 @@ class WebsocketTests(unittest.IsolatedAsyncioTestCase):
         self.hass.data[DOMAIN].pop("repository")
         self.assertEqual((await self.call("beta_prepare", self.admin, **params))[2], "not_configured")
         self.assertEqual(sender.prepare.await_count, 1)
+
+    def real_beta_sender(self):
+        self.hass.auth = SimpleNamespace(async_get_user=AsyncMock(
+            return_value=SimpleNamespace(is_admin=True, is_active=True)))
+        async def call(domain, service, data, **kwargs):
+            self.assertEqual((domain, service), ("airfryer_control", "programm_senden"))
+            self.assertTrue(data["einmal"])
+            self.assertTrue(data["streng"])
+            self.assertFalse(data["bestaetigen"])
+            return {"ok": True, "ergebnis": "angenommen", "versuche": 1, "variante": "multi_app",
+                    "gesendet": {key: data[key] for key in ("programm", "temperatur", "minuten", "zone")}}
+        self.hass.services = SimpleNamespace(async_call=AsyncMock(side_effect=call))
+        sender = BetaSender(self.hass)
+        sender._read = AsyncMock(return_value=Target("Kitchen", ("same",)))
+        self.hass.data[DOMAIN]["beta_sender"] = sender
+        return sender
+
+    async def test_saved_recipes_through_real_routes_and_sender_preserve_library_on_both_zones(self):
+        sender = self.real_beta_sender()
+        from custom_components.airfryer_recipes.beta_batch import SAMPLES
+        recipes = [await self.repo.async_create(create_recipe(program, program=program,
+                    temperature_c=temp, duration_minutes=minutes)) for program, temp, minutes in SAMPLES]
+        before = await self.repo.async_export_json()
+        for recipe in recipes:
+            for zone in (1, 2):
+                prepared = await self.call("beta_prepare", self.admin, device_id="device", zone_id=zone,
+                    acknowledge_unverified=True, source={"recipe_id": recipe.id})
+                self.assertEqual(prepared[0], "result")
+                self.assertEqual(len(self.admin.subscriptions), 1)
+                result = await self.call("beta_confirm", self.admin, token=prepared[2]["token"],
+                                         acknowledge_supervised_test=True)
+                self.assertEqual(result[2]["outcome"], "accepted")
+                sent = self.hass.services.async_call.await_args.args[2]
+                phase = recipe.phases[0]
+                self.assertEqual((sent["zone"], sent["programm"], sent["temperatur"], sent["minuten"]),
+                                 (zone, phase.program, phase.temperature_c, phase.duration_minutes))
+                self.assertFalse(self.admin.subscriptions)
+        self.assertEqual(self.hass.services.async_call.await_count, 12)
+        self.assertFalse(sender.pending)
+        self.assertEqual(await self.repo.async_export_json(), before)
+
+    async def test_reconnect_and_cancel_routes_cannot_replay_owned_tokens(self):
+        self.real_beta_sender()
+        prepared = await self.call("beta_prepare", self.admin, device_id="device", zone_id=1,
+                                   acknowledge_unverified=True)
+        token = prepared[2]["token"]
+        other = FakeConnection(is_admin=True)
+        result = await self.call("beta_confirm", other, token=token, acknowledge_supervised_test=True)
+        self.assertEqual(result[2:], ("beta_test_blocked", "connection_changed"))
+        result = await self.call("beta_cancel", other, token=token)
+        self.assertEqual(result[2:], ("beta_test_blocked", "confirmation"))
+        self.assertTrue((await self.call("beta_cancel", self.admin, token=token))[2]["discarded"])
+        self.assertFalse(self.admin.subscriptions)
+        self.assertEqual((await self.call("beta_confirm", self.admin, token=token,
+                          acknowledge_supervised_test=True))[2:], ("beta_test_blocked", "confirmation"))
+        self.hass.services.async_call.assert_not_awaited()
+
+    async def test_recipe_edit_via_api_invalidates_old_confirmation_without_overwriting_the_edit(self):
+        self.real_beta_sender()
+        recipe = await self.repo.async_create(make_recipe())
+        prepared = await self.call("beta_prepare", self.admin, device_id="device", zone_id=2,
+                                   acknowledge_unverified=True, source={"recipe_id": recipe.id})
+        from dataclasses import replace
+        edited = replace(recipe, phases=(replace(recipe.phases[0], temperature_c=190),))
+        self.assertEqual((await self.call("update", self.admin, recipe=recipe_to_dict(edited)))[0], "result")
+        before = await self.repo.async_export_json()
+        result = await self.call("beta_confirm", self.admin, token=prepared[2]["token"],
+                                 acknowledge_supervised_test=True)
+        self.assertEqual(result[2:], ("beta_test_blocked", "recipe_changed"))
+        self.hass.services.async_call.assert_not_awaited()
+        self.assertEqual(await self.repo.async_export_json(), before)
+        self.assertEqual((await self.repo.async_get(recipe.id)).phases[0].temperature_c, 190)
+        self.assertFalse(self.admin.subscriptions)
+
+    async def test_disconnect_cleanup_revokes_confirmation_and_failed_prepare_removes_subscription(self):
+        sender = self.real_beta_sender()
+        prepared = await self.call("beta_prepare", self.admin, device_id="device", zone_id=1,
+                                   acknowledge_unverified=True)
+        callback = self.admin.subscriptions[prepared[1]]
+        callback()
+        self.admin.subscriptions.clear()  # HA clears the connection on close.
+        self.assertFalse(sender.pending)
+        self.assertEqual((await self.call("beta_confirm", self.admin, token=prepared[2]["token"],
+            acknowledge_supervised_test=True))[2:], ("beta_test_blocked", "confirmation"))
+        from custom_components.airfryer_recipes.beta_send import BetaTestBlocked
+        sender._read.side_effect = BetaTestBlocked("connection")
+        result = await self.call("beta_prepare", self.admin, device_id="device", zone_id=1,
+                                 acknowledge_unverified=True)
+        self.assertEqual(result[2:], ("beta_test_blocked", "connection"))
+        self.assertFalse(self.admin.subscriptions)
+        self.hass.services.async_call.assert_not_awaited()
+
+    async def test_cancel_route_rejects_extra_targets_and_control_fields(self):
+        sender = SimpleNamespace(cancel=AsyncMock(return_value={"discarded": True, "transmitted": False}))
+        self.hass.data[DOMAIN]["beta_sender"] = sender
+        result = await self.call("beta_cancel", self.admin, token="one", device_id="other")
+        self.assertEqual(result[2], "invalid_format")
+        sender.cancel.assert_not_awaited()
+        await self.call("beta_cancel", self.admin, token="one")
+        sender.cancel.assert_awaited_once_with("u1", "one", owner=self.admin)
 
     async def test_batch_routes_bind_websocket_owner_and_register_disconnect_stop(self):
         active = SimpleNamespace(cleanup=None)
@@ -404,14 +509,14 @@ class WebsocketTests(unittest.IsolatedAsyncioTestCase):
         ws.registered.clear()
         self.api.register_commands(self.hass)
         commands = {handler._ws_command for handler in ws.registered}
-        self.assertEqual(len(commands), 20)
+        self.assertEqual(len(commands), 21)
         self.assertEqual(
             commands,
             {f"{DOMAIN}/{name}" for name in (
                 "list", "get", "create", "update", "duplicate", "delete",
                 "import_preview", "import_confirm", "export", "favorites", "set_favorite",
                 "devices",
-                "prepare_send", "beta_prepare", "beta_confirm",
+                "prepare_send", "beta_prepare", "beta_confirm", "beta_cancel",
                 "batch_prepare", "batch_start", "batch_next", "batch_stop", "beta_recover",
             )},
         )

@@ -210,6 +210,21 @@ async def read_target(
                    statuses, programs, MODEL, VERSION), unchanged)
 
 
+@dataclass
+class SendPermit:
+    """One websocket lifetime; closing never recalls an already submitted call."""
+
+    owner: Any = None
+    active: bool = True
+    cleanup: Callable[[], None] | None = None
+
+    def close(self, *, disconnected: bool = False) -> None:
+        self.active = False
+        cleanup, self.cleanup = self.cleanup, None
+        if cleanup is not None and not disconnected:
+            cleanup()
+
+
 @dataclass(frozen=True)
 class Confirmation:
     user_id: str
@@ -221,6 +236,7 @@ class Confirmation:
     recipe: Recipe | None
     repository: Any
     variable: bool
+    permit: SendPermit
 
 
 class BetaSender:
@@ -229,6 +245,7 @@ class BetaSender:
     def __init__(self, hass: Any) -> None:
         self.hass = hass
         self.pending: dict[str, Confirmation] = {}
+        self.confirming: dict[str, Confirmation] = {}
         state = hass.data[DOMAIN]
         # Survive integration reload, including old service calls still in flight.
         self.busy: set[str] = state.setdefault("beta_busy", set())
@@ -238,7 +255,20 @@ class BetaSender:
 
     def close(self) -> None:
         self.closed = True
+        for prepared in (*self.pending.values(), *self.confirming.values()):
+            prepared.permit.close()
         self.pending.clear()
+
+    def close_permit(self, permit: SendPermit, *, disconnected: bool = False) -> None:
+        """Invalidate waiting and validating work when the connection disappears."""
+        permit.close(disconnected=disconnected)
+        self.pending = {k: v for k, v in self.pending.items() if v.permit is not permit}
+
+    def _discard_pending(self, predicate: Callable[[Confirmation], bool]) -> None:
+        for token, prepared in tuple(self.pending.items()):
+            if predicate(prepared):
+                self.pending.pop(token)
+                prepared.permit.close()
 
     async def _authorized(self, user_id: str) -> None:
         user = await self.hass.auth.async_get_user(user_id)
@@ -256,17 +286,19 @@ class BetaSender:
 
     async def prepare(
         self, user_id: str, device_id: str, zone_id: int, acknowledge: bool, context: Any,
-        *, source: dict | None = None,
+        *, source: dict | None = None, permit: SendPermit | None = None,
     ) -> dict:
         require(acknowledge is True, "acknowledgement")
         await self._authorized(user_id)
         require(device_id not in self.busy and device_id not in self.batch_devices, "busy")
         require(device_id not in self.uncertain, "outcome_unknown")
         self.busy.add(device_id)
+        permit = permit if permit is not None else SendPermit()
         try:
             # Starting a fresh preparation invalidates older confirmations for
             # this user even when the refresh subsequently fails.
-            self.pending = {k: v for k, v in self.pending.items() if v.user_id != user_id}
+            self._discard_pending(lambda prepared: prepared.user_id == user_id)
+            require(permit.active, "connection_changed")
             recipe, repository = None, None
             phase = CookingPhase(**TEST_SETTINGS)
             if source is not None:
@@ -289,42 +321,53 @@ class BetaSender:
                     require(phase.program == raw["program"], "source")
                 validate_settings(phase)
             await self._authorized(user_id)
+            require(permit.active, "connection_changed")
             extra = {"settings": phase} if source is not None else {}
             target = await self._read(device_id, zone_id, refresh=True, context=context, **extra)
             await self._authorized(user_id)
+            require(permit.active, "connection_changed")
             if recipe is not None:
                 require(repository.matches_snapshot(recipe), "recipe_changed")
             now = time.monotonic()
-            self.pending = {k: v for k, v in self.pending.items() if v.expires > now}
+            self._discard_pending(lambda prepared: prepared.expires <= now)
             require(len(self.pending) < 32, "busy")
             token = secrets.token_urlsafe(32)
             self.pending[token] = Confirmation(user_id, device_id, zone_id, target, now + TTL_SECONDS,
-                                               phase, recipe, repository, source is not None)
+                                               phase, recipe, repository, source is not None, permit)
             return {"mode": "supervised_beta_test", "token": token, "expires_seconds": TTL_SECONDS,
                     "device_id": device_id, "device_name": target.name, "zone_id": zone_id,
                     "settings": asdict(phase), "recipe_name": recipe.name if recipe else None,
                     "transmitted": False,
                     "compatibility_verified": False}
+        except BaseException:
+            permit.close()
+            raise
         finally:
             self.busy.discard(device_id)
 
-    async def confirm(self, user_id: str, token: str, acknowledge: bool, context: Any) -> dict:
+    async def confirm(self, user_id: str, token: str, acknowledge: bool, context: Any,
+                      *, owner: Any = None) -> dict:
         require(acknowledge is True, "acknowledgement")
         await self._authorized(user_id)
         require(isinstance(token, str) and 0 < len(token) <= 128, "confirmation")
         prepared = self.pending.get(token)
         require(prepared is not None and prepared.user_id == user_id, "confirmation")
+        require(prepared.permit.owner is owner and prepared.permit.active, "connection_changed")
         self.pending.pop(token)  # Consume before any await, including failed validation.
-        require(time.monotonic() < prepared.expires, "confirmation")
         device_id = prepared.device_id
-        require(device_id not in self.busy and device_id not in self.batch_devices, "busy")
-        require(device_id not in self.uncertain, "outcome_unknown")
-        self.busy.add(device_id)
+        locked = False
+        self.confirming[token] = prepared
         try:
+            require(time.monotonic() < prepared.expires, "confirmation")
+            require(device_id not in self.busy and device_id not in self.batch_devices, "busy")
+            require(device_id not in self.uncertain, "outcome_unknown")
+            self.busy.add(device_id)
+            locked = True
             extra = {"settings": prepared.phase} if prepared.variable else {}
             target = await self._read(device_id, prepared.zone_id, **extra)
             require(target.fingerprint == prepared.target.fingerprint, "state_changed")
             await self._authorized(user_id)
+            require(prepared.permit.active, "connection_changed")
             require(time.monotonic() < prepared.expires, "confirmation")
             if prepared.recipe is not None:
                 require(self.hass.data[DOMAIN].get("repository") is prepared.repository
@@ -338,7 +381,21 @@ class BetaSender:
             require(unchanged, "state_changed")
             return await self.send_once(device_id, prepared.zone_id, phase, context)
         finally:
-            self.busy.discard(device_id)
+            self.confirming.pop(token, None)
+            prepared.permit.close()
+            if locked:
+                self.busy.discard(device_id)
+
+    async def cancel(self, user_id: str, token: str, *, owner: Any = None) -> dict:
+        """Discard pending work, including validation; never send a stop command."""
+        await self._authorized(user_id)
+        require(isinstance(token, str) and 0 < len(token) <= 128, "confirmation")
+        prepared = self.pending.get(token) or self.confirming.get(token)
+        if prepared is None:
+            return {"discarded": False, "transmitted": False}
+        require(prepared.user_id == user_id and prepared.permit.owner is owner, "confirmation")
+        self.close_permit(prepared.permit)
+        return {"discarded": True, "transmitted": False}
 
     async def recover(self, user_id: str, device_id: str, ack: bool, context: Any) -> dict:
         """Explicit local re-arm after physical reset; read-only, never a retry."""
@@ -350,7 +407,7 @@ class BetaSender:
             target = await self._read(device_id, 1, refresh=True, wait_for_report=True, context=context)
             await self._authorized(user_id)
             require(target.unchanged(), "state_changed")
-            self.pending = {k: v for k, v in self.pending.items() if v.device_id != device_id}
+            self._discard_pending(lambda prepared: prepared.device_id == device_id)
             self.uncertain.discard(device_id)
             return {"rearmed": True, "transmitted": False}
         finally:

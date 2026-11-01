@@ -5,6 +5,15 @@ import vm from "node:vm";
 
 const source = readFileSync(new URL("../custom_components/airfryer_recipes/frontend/panel.js", import.meta.url), "utf8");
 
+function fakeConnection() {
+  const listeners = new Set();
+  return { connected: true, listeners,
+    addEventListener(type, callback) { if (type === "disconnected") listeners.add(callback); },
+    removeEventListener(type, callback) { if (type === "disconnected") listeners.delete(callback); },
+    disconnect() { this.connected = false; for (const callback of [...listeners]) callback(); },
+  };
+}
+
 function panelWith(api, admin = true, confirmDialog = () => true) {
   let Panel;
   const events = [];
@@ -38,7 +47,8 @@ function panelWith(api, admin = true, confirmDialog = () => true) {
   };
   vm.runInNewContext(source, context);
   const panel = new Panel();
-  panel._hass = { language: "de", user: { is_admin: admin }, callWS: api };
+  panel._hass = { language: "de", user: { id: "u1", is_admin: admin }, connection: fakeConnection(), callWS: api };
+  panel.watchConnection(panel._hass.connection);
   panel.events = events;
   panel.createdElements = createdElements;
   return panel;
@@ -216,8 +226,8 @@ test("invalid Dry temperature shows the backend error and discards the old Air F
   panel.shadowRoot.getElementById = (id) => id === "beta-device-test"
     ? { scrollIntoView() { scrolled++; } } : undefined;
   await panel.prepareSelectedBeta({ values: { program: "dry", temperature_c: "120", duration_minutes: "360" } });
-  assert.equal(calls.length, 1);
-  assert.equal(calls[0].source.settings.temperature_c, 120);
+  assert.deepEqual(calls.map(call => call.type), ["airfryer_recipes/beta_cancel", "airfryer_recipes/beta_prepare"]);
+  assert.equal(calls[1].source.settings.temperature_c, 120);
   assert.equal(panel.betaTest, null);
   assert.match(panel.shadowRoot.innerHTML, /Werte liegen außerhalb/);
   assert.doesNotMatch(panel.shadowRoot.innerHTML, /data-action="beta-confirm"/);
@@ -229,7 +239,7 @@ test("missing selection form blocks the lower button without preparing a fixed t
   const panel = betaPanel(async (request) => { calls.push(request); return betaPrepared; });
   panel.betaTest = betaPrepared;
   await panel.onClick({ target: { closest: () => ({ dataset: { action: "beta-prepare" } }) } });
-  assert.equal(calls.length, 0);
+  assert.deepEqual(calls.map(call => call.type), ["airfryer_recipes/beta_cancel"]);
   assert.equal(panel.betaTest, null);
   assert.match(panel.betaMessage, /gültige manuelle Werte auswählen/);
 });
@@ -245,7 +255,188 @@ test("editing selected values invalidates a pending confirmation and preserves m
   assert.match(panel.shadowRoot.innerHTML, /id="preview-temperature"[^>]*value="190"/);
   assert.match(panel.shadowRoot.innerHTML, /id="preview-duration"[^>]*value="8"/);
   await panel.confirmBetaTest();
+  assert.deepEqual(calls.map(call => call.type), ["airfryer_recipes/beta_cancel"]);
+});
+
+test("late preparation after an input edit is canceled and cannot restore old values", async () => {
+  let finish;
+  const calls = [];
+  const panel = betaPanel(r => {
+    calls.push(r);
+    return r.type.endsWith("beta_prepare") ? new Promise(resolve => { finish = resolve; }) : Promise.resolve({ discarded: true });
+  });
+  const preparing = panel.prepareSelectedBeta({ values: { program: "airfry", temperature_c: "180", duration_minutes: "7" } });
+  panel.onInput({ target: { id: "preview-temperature", value: "190" } });
+  finish(betaPrepared);
+  await preparing;
+  assert.equal(panel.betaTest, null);
+  assert.equal(panel.manualPreviewTemperatureC, 190);
+  assert.match(panel.betaMessage, /Auswahl geändert/);
+  await panel.confirmBetaTest();
+  assert.deepEqual(calls.map(r => r.type), ["airfryer_recipes/beta_prepare", "airfryer_recipes/beta_cancel"]);
+});
+
+test("leaving during preparation discards the late result without restoring a confirmation on return", async () => {
+  let finish;
+  const calls = [];
+  const panel = betaPanel(r => {
+    calls.push(r);
+    return r.type.endsWith("beta_prepare") ? new Promise(resolve => { finish = resolve; }) : Promise.resolve({ discarded: true });
+  });
+  const preparing = panel.prepareBetaTest();
+  panel.disconnectedCallback();
+  finish(betaPrepared);
+  await preparing;
+  panel.connectedCallback();
+  await panel.confirmBetaTest();
+  assert.equal(panel.betaTest, null);
+  assert.deepEqual(calls.map(r => r.type), ["airfryer_recipes/beta_prepare", "airfryer_recipes/beta_cancel"]);
+});
+
+test("websocket disconnect clears a token and makes no queued control request", async () => {
+  const calls = [];
+  const panel = betaPanel(async r => { calls.push(r); return betaPrepared; });
+  panel.betaTest = betaPrepared;
+  panel._hass.connection.disconnect();
+  await panel.confirmBetaTest();
+  await panel.prepareBetaTest();
+  assert.equal(panel.betaTest, null);
+  assert.match(panel.betaMessage, /kein Befehl wird nachgeholt/);
   assert.equal(calls.length, 0);
+  panel._hass.connection.connected = true;
+  await panel.confirmBetaTest();
+  assert.equal(calls.length, 0);
+});
+
+test("replacing the HA connection cancels the old token before binding the new connection", async () => {
+  const calls = [];
+  const panel = betaPanel(async r => { calls.push(r); return {}; });
+  const old = panel._hass.connection;
+  panel.started = true;
+  panel.betaTest = betaPrepared;
+  const next = fakeConnection();
+  panel.hass = { ...panel._hass, connection: next };
+  await panel.confirmBetaTest();
+  assert.equal(panel.betaTest, null);
+  assert.equal(old.listeners.size, 0);
+  assert.equal(next.listeners.size, 1);
+  assert.deepEqual(calls.map(r => r.type), ["airfryer_recipes/beta_cancel"]);
+  panel.disconnectedCallback();
+  assert.equal(next.listeners.size, 0);
+});
+
+test("discard button revokes the server token without a confirm or device request", async () => {
+  const calls = [];
+  const panel = betaPanel(async r => { calls.push(r); return { discarded: true }; });
+  panel.betaTest = betaPrepared;
+  await panel.onClick({ target: { closest: () => ({ dataset: { action: "beta-cancel" } }) } });
+  await panel.confirmBetaTest();
+  assert.equal(panel.betaTest, null);
+  assert.deepEqual(calls.map(r => r.type), ["airfryer_recipes/beta_cancel"]);
+});
+
+test("double tapping confirm creates exactly one request while its reply is pending", async () => {
+  let finish;
+  const calls = [];
+  const panel = betaPanel(r => { calls.push(r); return new Promise(resolve => { finish = resolve; }); });
+  panel.betaTest = betaPrepared;
+  const sending = panel.confirmBetaTest();
+  await panel.confirmBetaTest();
+  assert.equal(calls.length, 1);
+  finish({ outcome: "accepted" });
+  await sending;
+  assert.match(panel.betaMessage, /Adapter hat die Anfrage angenommen/);
+});
+
+test("leaving during confirmation asks to revoke validation and ignores its late response", async () => {
+  let finish;
+  const calls = [];
+  const panel = betaPanel(r => {
+    calls.push(r);
+    return r.type.endsWith("beta_confirm") ? new Promise(resolve => { finish = resolve; }) : Promise.resolve({ discarded: true });
+  });
+  panel.betaTest = betaPrepared;
+  const sending = panel.confirmBetaTest();
+  panel.disconnectedCallback();
+  finish({ outcome: "accepted" });
+  await sending;
+  panel.connectedCallback();
+  await panel.confirmBetaTest();
+  assert.equal(panel.betaTest, null);
+  assert.doesNotMatch(panel.betaMessage, /Adapter hat die Anfrage angenommen/);
+  assert.deepEqual(calls.map(r => r.type), ["airfryer_recipes/beta_confirm", "airfryer_recipes/beta_cancel"]);
+});
+
+test("late batch preparation after disconnect cannot enable a start", async () => {
+  let finish;
+  const calls = [];
+  const panel = betaPanel(r => { calls.push(r); return new Promise(resolve => { finish = resolve; }); });
+  const preparing = panel.prepareBatch();
+  panel._hass.connection.disconnect();
+  finish(batchPlan);
+  await preparing;
+  panel._hass.connection.connected = true;
+  await panel.startBatch();
+  assert.equal(panel.batchPlan, null);
+  assert.equal(calls.length, 1);
+});
+
+test("disconnect during a batch step ignores its late result and never requests the next nonce", async () => {
+  let finish;
+  const calls = [];
+  const panel = betaPanel(r => {
+    calls.push(r);
+    if (r.type.endsWith("batch_start")) return Promise.resolve({ run_id: "batch", next_token: "one", total: 2 });
+    if (r.type.endsWith("batch_next")) return new Promise(resolve => { finish = resolve; });
+    return Promise.resolve({ stopped: true });
+  });
+  panel.batchPlan = batchPlan;
+  const running = panel.startBatch();
+  await Promise.resolve(); await Promise.resolve(); await Promise.resolve();
+  panel._hass.connection.disconnect();
+  finish({ ...batchPlan.steps[0], done: false, next_token: "two" });
+  await running;
+  assert.equal(panel.batchRunning, false);
+  assert.equal(panel.batchPlan, null);
+  assert.equal(panel.batchResults.length, 0);
+  assert.deepEqual(calls.map(r => r.type), ["airfryer_recipes/batch_start", "airfryer_recipes/batch_next"]);
+});
+
+test("admin permission loss discards the visible token and cannot submit it", async () => {
+  const calls = [];
+  const panel = betaPanel(async r => { calls.push(r); return {}; });
+  panel.betaTest = betaPrepared;
+  panel.started = true;
+  panel.hass = { ...panel._hass, user: { id: "u1", is_admin: false } };
+  await panel.confirmBetaTest();
+  assert.equal(panel.betaTest, null);
+  assert.doesNotMatch(panel.shadowRoot.innerHTML, /data-action="beta-confirm"/);
+  assert.deepEqual(calls.map(r => r.type), ["airfryer_recipes/beta_cancel"]);
+});
+
+test("changing the selected zone during list preparation discards the late list", async () => {
+  let finish;
+  const calls = [];
+  const panel = betaPanel(r => { calls.push(r); return new Promise(resolve => { finish = resolve; }); });
+  const preparing = panel.prepareBatch();
+  panel.onChange({ target: { id: "preview-zone", value: "2" } });
+  finish(batchPlan);
+  await preparing;
+  await panel.startBatch();
+  assert.equal(panel.batchPlan, null);
+  assert.match(panel.batchMessage, /Auswahl geändert/);
+  assert.equal(calls.length, 1);
+});
+
+test("a late re-arm result cannot overwrite a disconnect message", async () => {
+  let finish;
+  const panel = betaPanel(() => new Promise(resolve => { finish = resolve; }));
+  const recovering = panel.recoverBeta();
+  panel._hass.connection.disconnect();
+  finish({ rearmed: true, transmitted: false });
+  await recovering;
+  assert.match(panel.batchMessage, /kein Befehl wird nachgeholt/);
+  assert.doesNotMatch(panel.batchMessage, /Frischer Bereitschaftszustand bestätigt/);
 });
 
 test("unsupported program rejection remains visible and enables no confirmation", async () => {
