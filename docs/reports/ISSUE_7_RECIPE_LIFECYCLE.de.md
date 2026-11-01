@@ -2,7 +2,7 @@
 
 [Deutsch](ISSUE_7_RECIPE_LIFECYCLE.de.md) | [English](ISSUE_7_RECIPE_LIFECYCLE.md)
 
-Beta 0.1.0b11 setzt die Rezept-/manuelle Abnahme fort; Gären und erweiterte Temperaturunterstützung bleiben zurückgestellt. Bestehender Vertrag mit sechs Programmen, Temperatur-Schnittmenge, reine Administratorfreigabe, 15-Sekunden-Ablaufzeit, strenge Einmalübertragung und Rezeptspeicherung bleiben unverändert. Die bisherige [Zwölf-Schritte-Geräteabnahme](ISSUE_7_LOCAL_ACCEPTANCE.de.md) bleibt Nachweis für ihre Beispielwerte; die unten genannte neue reale Abnahme ist offen.
+Beta 0.1.0b11 setzt die Rezept-/manuelle Abnahme fort; Gären und erweiterte Temperaturunterstützung bleiben zurückgestellt. Bestehender Vertrag mit sechs Programmen, Temperatur-Schnittmenge, reine Administratorfreigabe, 15-Sekunden-Ablaufzeit, strenge Einmalübertragung und Rezeptspeicherung bleiben unverändert. Die bisherige [Zwölf-Schritte-Geräteabnahme](ISSUE_7_LOCAL_ACCEPTANCE.de.md) bleibt Nachweis für ihre Beispielwerte; R1/R2 sind nun als bestanden gemeldet; R3–R7 bleiben offen.
 
 ## Änderungen und Zusicherungen
 
@@ -26,19 +26,21 @@ Weitere Prüfungen betreffen fremde Verbindungen, Abbruch während Vorbereitung/
 
 ## Gezielte Eigentümerabnahme
 
-Nachtrag: Der Eigentümer war bei der Rezepterstellung blockiert, weil der Editor Programmtext verlangte; der Screenshot zeigte die nicht gemeldete Kennung `Airfry`. Beta 0.1.0b12 ergänzt eine Liste gemeldeter Programme und einen ausdrücklichen Korrekturweg. [Editor-Korrektur und erneutes Vorgehen](ISSUE_7_EDITOR_PROGRAM_PICKER.de.md). R1/R2 bleiben bis zum Test des korrigierten gespeicherten Rezepts offen.
+Nachtrag: Der Eigentümer war bei der Rezepterstellung blockiert, weil der Editor Programmtext verlangte; der Screenshot zeigte die nicht gemeldete Kennung `Airfry`. Beta 0.1.0b12 ergänzt eine Liste gemeldeter Programme und einen ausdrücklichen Korrekturweg. [Editor-Korrektur und erneutes Vorgehen](ISSUE_7_EDITOR_PROGRAM_PICKER.de.md). Am 01.11.2026 bestätigte der Eigentümer anschließend, dass der Test für Fach 1 und 2 geklappt hat. R1/R2 werden nun für die Rezeptübertragung als bestanden erfasst; R3–R7 bleiben offen. [Nachweisumfang](ISSUE_7_LOCAL_ACCEPTANCE.de.md).
 
 Backup erstellen, v0.1.0b11 installieren, HA neu starten und die App vollständig neu öffnen. Für dieses Paket exakt Airfryer Control 1.0.2-beta.1 beibehalten. Alte Vorbereitungen am Gerät abbrechen, auf beide Fächer bereit/aus warten und bei Bedarf wieder freigeben. Am Gerät bleiben; nicht Start drücken. Ein separates einphasiges Testrezept mit dem bereits abgenommenen Airfry / 180 °C / 7 Minuten erstellen; kein persönliches Rezept überschreiben.
 
 | ID | Prüfung | Erwartetes Ergebnis | Status |
 | --- | --- | --- | --- |
-| R1 | Gespeichertes Testrezept und Fach 1 wählen; vorbereiten, exakte Werte prüfen und einmal senden | Werte auf Fach 1 passen; Fach 2 unverändert; keine Heizung; Rezept unverändert | NICHT GETESTET |
-| R2 | R1 physisch abbrechen, Bereitschaft abwarten, gleiches Rezept an Fach 2 senden | Werte auf Fach 2 passen; Fach 1 unverändert; keine Heizung | NICHT GETESTET |
+| R1 | Gespeichertes Testrezept und Fach 1 wählen; vorbereiten, exakte Werte prüfen und einmal senden | Werte auf Fach 1 passen; Fach 2 unverändert; keine Heizung; Rezept unverändert | BESTANDEN — Übertragung gemeldet |
+| R2 | R1 physisch abbrechen, Bereitschaft abwarten, gleiches Rezept an Fach 2 senden | Werte auf Fach 2 passen; Fach 1 unverändert; keine Heizung | BESTANDEN — Übertragung gemeldet |
 | R3 | R2 physisch abbrechen, erneut vorbereiten und Test verwerfen | Verwerfen sendet keine Einstellungen; keine nutzbare alte Bestätigung | NICHT GETESTET |
 | R4 | Ohne Senden vorbereiten, Panel verlassen und zurückkehren | Alte Bestätigung verschwunden; keine automatische Übertragung | NICHT GETESTET |
 | R5 | Manuelle Werte vorbereiten, danach Temperatur/Zeit vor dem Bestätigen ändern | Alte Bestätigung unbenutzbar; erneute Vorbereitung zeigt neue Werte | NICHT GETESTET |
 | R6 | Ohne Senden vorbereiten, Verbindung des Telefons zu HA trennen und wiederherstellen | Alte Bestätigung verschwunden; kein Nachholen oder Fortsetzen einer Folge | NICHT GETESTET |
 | R7 | Gespeichertes Rezept vorbereiten, in anderer Sitzung ändern, alte Bestätigung versuchen | Gesperrt; kein Geräteaufruf, geändertes Rezept bleibt unverändert | NICHT GETESTET |
+
+Der Status von R1/R2 erfasst den vom Eigentümer gemeldeten Übertragungserfolg. Einzelbeobachtungen (anderes Fach, Heizung, gespeicherte Werte) wurden in diesem Nachtrag nicht separat wiederholt. Die Erwartungsspalte bleibt das vollständige Abnahmeziel.
 
 Abschließend vorbereitete Einstellungen am Gerät abbrechen. Wurde vor Verlassen/Abbruch bereits ein Sendeaufruf übermittelt, physisch prüfen: Verwerfen beweist nicht, dass er nie angekommen ist. ID, angezeigten Hinweis, gewähltes Fach und physisches Ergebnis notieren; Rohdiagnosen oder Kennungen sind nicht nötig.
 

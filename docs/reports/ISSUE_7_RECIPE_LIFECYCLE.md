@@ -2,7 +2,7 @@
 
 [Deutsch](ISSUE_7_RECIPE_LIFECYCLE.de.md) | [English](ISSUE_7_RECIPE_LIFECYCLE.md)
 
-Beta 0.1.0b11 continues recipe/manual acceptance while Proof and wider temperature support remain deferred. The existing six-program contract, temperature intersection, administrator-only access, 15-second expiry, strict single transmission and recipe storage are unchanged. The earlier [twelve-step appliance acceptance](ISSUE_7_LOCAL_ACCEPTANCE.md) remains evidence for its nominal settings; new real acceptance below is pending.
+Beta 0.1.0b11 continues recipe/manual acceptance while Proof and wider temperature support remain deferred. The existing six-program contract, temperature intersection, administrator-only access, 15-second expiry, strict single transmission and recipe storage are unchanged. The earlier [twelve-step appliance acceptance](ISSUE_7_LOCAL_ACCEPTANCE.md) remains evidence for its nominal settings; R1/R2 are now reported passed and R3–R7 remain pending.
 
 ## Changes and guarantees
 
@@ -26,19 +26,21 @@ Additional checks cover cross-connection rejection, disconnect during preparatio
 
 ## Focused owner acceptance
 
-Follow-up: the owner was blocked at recipe authoring because the editor required program text, and the screenshot showed the unreported identifier `Airfry`. Beta 0.1.0b12 adds a reported-program dropdown and an explicit correction path. [Editor correction and repeat procedure](ISSUE_7_EDITOR_PROGRAM_PICKER.md). R1/R2 remain pending until the corrected saved recipe is tested.
+Follow-up: the owner was blocked at recipe authoring because the editor required program text, and the screenshot showed the unreported identifier `Airfry`. Beta 0.1.0b12 adds a reported-program dropdown and an explicit correction path. [Editor correction and repeat procedure](ISSUE_7_EDITOR_PROGRAM_PICKER.md). On 2026-11-01 the owner subsequently confirmed that the test worked on zones 1 and 2. R1/R2 are now recorded as passed for saved-recipe transmission; R3–R7 remain pending. [Evidence scope](ISSUE_7_LOCAL_ACCEPTANCE.md).
 
 Back up, install v0.1.0b11, restart HA and fully reopen the app. Retain exactly Airfryer Control 1.0.2-beta.1 for this package. Cancel old appliance preparations, wait for both zones idle/off and re-arm if required. Remain beside the appliance; do not press Start. Create a separate single-phase test recipe using the previously accepted Air Fry / 180 °C / 7 minutes; do not overwrite a personal recipe.
 
 | ID | Check | Expected result | Status |
 | --- | --- | --- | --- |
-| R1 | Select the saved test recipe and zone 1; prepare, check exact values and send once | Values on zone 1 match; zone 2 unchanged; no heat; recipe unchanged | NOT TESTED |
-| R2 | Physically cancel R1, wait idle, then send the same recipe to zone 2 | Values on zone 2 match; zone 1 unchanged; no heat | NOT TESTED |
+| R1 | Select the saved test recipe and zone 1; prepare, check exact values and send once | Values on zone 1 match; zone 2 unchanged; no heat; recipe unchanged | PASS — transmission reported |
+| R2 | Physically cancel R1, wait idle, then send the same recipe to zone 2 | Values on zone 2 match; zone 1 unchanged; no heat | PASS — transmission reported |
 | R3 | Physically cancel R2, prepare again and choose Discard test | No settings transmitted by discard; no usable old confirmation | NOT TESTED |
 | R4 | Prepare without sending, leave the panel and return | Old confirmation gone; no automatic transmission | NOT TESTED |
 | R5 | Prepare manual settings, then edit temperature/time before confirming | Old confirmation unusable; prepare again to see the new values | NOT TESTED |
 | R6 | Prepare without sending, disconnect the phone's connection to HA and reconnect | Old confirmation gone; no replay or resumed sequence | NOT TESTED |
 | R7 | Prepare the saved recipe, edit it in another session, then try its old confirmation | Blocked; no device call and the edited recipe remains unchanged | NOT TESTED |
+
+R1/R2 status records the owner’s reported transmission success. Individual observations (other zone, heat, stored values) were not separately restated in this follow-up. The expected-result column remains the complete acceptance target.
 
 Cancel final prepared settings at the appliance. If a send was already submitted before leaving/disconnect, inspect it physically: cancellation does not prove that it never arrived. Record ID, displayed guidance, selected zone and physical result; no raw diagnostics or identifiers are needed.
 

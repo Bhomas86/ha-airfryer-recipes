@@ -4,7 +4,7 @@
 
 Benutzerdefinierte Home-Assistant-Integration zur Verwaltung wiederverwendbarer Heißluftfritteusen-Rezepte. Die gespeicherten Einstellungen sollen über bestehende Home-Assistant-Integrationen an unterstützte Geräte übertragen werden.
 
-> **Projektstatus: Test-Beta 0.1.0b12.** Der Rezepteditor bietet gemeldete Programme als Auswahlliste und einen ausdrücklichen Korrekturweg für alte Kennungen. Neue Rezept-/Editorabnahme noch offen; frühere Zwölf-Schritte-Gerätefolge bestanden. Gären und erweiterte Temperaturen bleiben zurückgestellt.
+> **Projektstatus: Test-Beta 0.1.0b12.** Der Rezepteditor bietet gemeldete Programme als Auswahlliste und einen ausdrücklichen Korrekturweg für alte Kennungen. Rezeptübertragung auf Fach 1 und 2 vom Eigentümer als bestanden gemeldet; übrige Editor-/Abbruchfälle noch offen. Frühere Zwölf-Schritte-Gerätefolge bestanden. Gären und erweiterte Temperaturen bleiben zurückgestellt.
 
 **[Lokale Abnahme: sechs Programme, beide Fächer bestanden](docs/reports/ISSUE_7_LOCAL_ACCEPTANCE.de.md).** Nachweis für die dokumentierten Beispielwerte; keine allgemeine Freigabe aller Grenzen.
 

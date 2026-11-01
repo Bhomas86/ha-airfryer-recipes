@@ -77,6 +77,7 @@ Last consolidated: 2026-10-24. Project language policy: English default UI langu
   CAF-DC111S-AEU**: the complete supervised twelve-setting sequence passed on
   both zones on 2026-11-01, and the appliance was off afterward. See the
   [exact settings and evidence scope](reports/ISSUE_7_LOCAL_ACCEPTANCE.md).
+- The owner subsequently confirmed saved-recipe transmission on zones 1 and 2 (R1/R2); R3–R7 remain pending for real acceptance. [Follow-up](reports/ISSUE_7_LOCAL_ACCEPTANCE.md).
 - This does not establish all temperature/duration endpoints, Proof,
   active-zone changes, SYNC/MATCH or general compatibility.
 - Code review, tests and documented local test outcomes precede stable releases.

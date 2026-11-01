@@ -26,4 +26,4 @@ Install v0.1.0b12 and restart HA; fully reopen the app. Keep the same Airfryer C
 2. Create a separate test recipe using the dropdown without typing a program identifier. Select program, temperature and duration and save. Check that reopening the recipe retains the choice and values.
 3. Continue [R1/R2 and interruption acceptance](ISSUE_7_RECIPE_LIFECYCLE.md) with the corrected saved recipe. Remain beside the appliance, do not press Start and cancel prepared settings between sends.
 
-New editor and corrected saved-recipe acceptance on the owner's HA: **NOT TESTED**. The earlier twelve-program/zone settings sequence remains accepted at its documented nominal values; this fix does not expand that scope.
+Owner follow-up on 2026-11-01: **saved-recipe transmission on zones 1 and 2 PASS**, reported after the editor correction. [Exact evidence scope](ISSUE_7_LOCAL_ACCEPTANCE.md). This confirms R1/R2 in that context; the remaining editor variants and R3–R7 are not independently accepted. The earlier twelve-program/zone settings sequence remains accepted at its documented nominal values; no general capability approval is inferred.

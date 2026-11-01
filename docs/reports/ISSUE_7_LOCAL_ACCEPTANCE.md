@@ -2,6 +2,14 @@
 
 [Deutsch](ISSUE_7_LOCAL_ACCEPTANCE.de.md) | [English](ISSUE_7_LOCAL_ACCEPTANCE.md)
 
+## Saved recipe on both zones — 2026-11-01
+
+The owner confirmed: “Test hat für Fach 1 und 2 geklappt” (“The test worked for zones 1 and 2”). This follows the program-picker correction and instructions to save the reported `airfry` program and test the saved recipe at 180 °C / 7 minutes. **R1 and R2: PASS for owner-reported saved-recipe transmission.** No additional screenshot, exact installed version or separate per-observation checklist was supplied with this confirmation.
+
+The report establishes successful saved-recipe transmission to both selected zones in this test context. It does not mark the remaining editor variants, all recipes/programs, independent recipe-storage comparisons, discard, page changes, input changes, reconnect or edit-after-preparation as physically accepted. [R3–R7 remain NOT TESTED on the appliance](ISSUE_7_RECIPE_LIFECYCLE.md); existing automated coverage remains separate.
+
+Documentation only: German/English parity, local links and git diff --check checked. No code-test rerun, new device calls, GitHub Actions or beta release. No capability or permission changes.
+
 ## Complete supervised sequence — 2026-11-01
 
 **PASS for all twelve displayed settings.** The owner supplied the completed sequence screenshot (`Screenshot_20261101_143711_Home Assistant.jpg`) and stated: “Alle Prüfungen bestanden und Gerät ist wieder aus.” (“All checks passed and the appliance is off again.”) The panel shows twelve successful entries and reports matching settings after every command. Test appliance: Cosori Turbo Tower Pro Smart CAF-DC111S-AEU. This is owner-performed local acceptance; Cloud Codex had no appliance access.

@@ -2,6 +2,8 @@
 
 [Deutsch](ROADMAP.de.md) | [English](ROADMAP.md)
 
+**Rezeptabnahme 01.11.2026: R1/R2 als bestanden gemeldet.** Nach der Editor-Korrektur bestätigt der Eigentümer die gespeicherte Rezeptübertragung auf Fach 1 und 2. R3–R7 und restliche Editorvarianten bleiben separat offen. [Nachweis und nächste Prüfungen](reports/ISSUE_7_LOCAL_ACCEPTANCE.de.md). Dashboard samt Backend-Benutzerrechten bleibt das nächste Umsetzungspaket nach gezielter Abnahme. Nur Dokumentation; kein neuer Release und keine GitHub Actions.
+
 **Lokale Abnahme 01.11.2026: Alle zwölf Schritte BESTANDEN.** Der Eigentümer bestätigt die vollständige geführte Folge mit sechs Programmen auf Fach 1 und 2 sowie das anschließend ausgeschaltete Gerät. [Exakte Werte und Nachweisgrenzen](reports/ISSUE_7_LOCAL_ACCEPTANCE.de.md). Nächster offener Gerätepunkt: modellabhängige Adaptergrenzen und Gären; anschließend gezielte Grenzwert-/Fehlerabnahme. Kein neues App-Update und keine GitHub Actions für diesen Dokumentationsnachtrag.
 
 **Status (29.10.2026):** Alle 31 Anforderungen sind beschlossen. Rezeptspeicher, authentifizierte API und lokal abgenommene Admin-Verwaltung sind gemergt. PR #19 mit Geräte-Testvorschau und Programmauswahl ist seit 25.10.2026 gemergt; HACS-Vorabversion `0.1.0b2` wurde auf dem Handy erfolgreich abgenommen. PR #20 korrigiert die HACS-Versionsanzeige. Issue #7 bleibt für die sichere echte Übertragung offen: Beta-Vertrag und modellspezifische Fähigkeiten müssen lokal verifiziert werden. Danach folgt das Dashboard (#8). Siehe [Abnahmebericht](reports/ISSUE_7_DRY_RUN_UI.de.md) und [Architektur](ARCHITECTURE.de.md).

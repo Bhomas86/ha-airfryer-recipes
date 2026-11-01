@@ -2,6 +2,14 @@
 
 [Deutsch](ISSUE_7_LOCAL_ACCEPTANCE.de.md) | [English](ISSUE_7_LOCAL_ACCEPTANCE.md)
 
+## Gespeichertes Rezept auf beiden Fächern — 01.11.2026
+
+Der Eigentümer bestätigte: „Test hat für Fach 1 und 2 geklappt“. Dies folgt auf die Programmauswahl-Korrektur und die Anleitung, das gemeldete Programm `airfry` zu speichern und das gespeicherte Rezept mit 180 °C / 7 Minuten zu prüfen. **R1 und R2: BESTANDEN für die vom Eigentümer bestätigte Rezeptübertragung.** Mit dieser Bestätigung wurden kein zusätzlicher Screenshot, keine genaue installierte Version und keine separate Liste einzelner Beobachtungen geliefert.
+
+Die Meldung belegt die erfolgreiche Übertragung eines gespeicherten Rezepts an beide gewählten Fächer in diesem Testkontext. Sie gibt nicht die restlichen Editorvarianten, sämtliche Rezepte/Programme, unabhängige Vergleiche der Rezeptspeicherung, Verwerfen, Seitenwechsel, Eingabeänderungen, Wiederverbindung oder Rezeptänderung nach Vorbereitung physisch frei. [R3–R7 bleiben am Gerät NICHT GETESTET](ISSUE_7_RECIPE_LIFECYCLE.de.md); bestehende automatisierte Prüfungen bleiben getrennt.
+
+Nur Dokumentation: deutsche/englische Fassung, lokale Links und git diff --check geprüft. Keine erneuten Code-Tests, neuen Geräteaufrufe, GitHub Actions oder Beta-Veröffentlichung. Keine Änderung an Fähigkeiten oder Rechten.
+
 ## Vollständige beaufsichtigte Folge — 01.11.2026
 
 **Alle zwölf angezeigten Einstellungen BESTANDEN.** Der Eigentümer lieferte den Screenshot der abgeschlossenen Folge (`Screenshot_20261101_143711_Home Assistant.jpg`) und bestätigte: „Alle Prüfungen bestanden und Gerät ist wieder aus.“ Das Panel zeigt zwölf erfolgreiche Einträge und meldet nach jedem Befehl passende Werte. Testgerät: Cosori Turbo Tower Pro Smart CAF-DC111S-AEU. Dies ist eine lokal vom Eigentümer durchgeführte Abnahme; Cloud Codex hatte keinen Gerätezugriff.

@@ -70,6 +70,7 @@ Letzte Zusammenfassung: 24.10.2026. Projektstandard: Englisch als Fallback; Proj
 ## Validierung und Abnahme
 
 - Vom Eigentümer lokal bestätigt am **Cosori Turbo Tower Pro Smart CAF-DC111S-AEU**: vollständige beaufsichtigte Folge mit zwölf Einstellungen auf beiden Fächern am 01.11.2026 bestanden; Gerät anschließend aus. Siehe [exakte Werte und Nachweisumfang](reports/ISSUE_7_LOCAL_ACCEPTANCE.de.md).
+- Anschließend bestätigte der Eigentümer die gespeicherte Rezeptübertragung auf Fach 1 und 2 (R1/R2); R3–R7 bleiben für die reale Abnahme offen. [Nachtrag](reports/ISSUE_7_LOCAL_ACCEPTANCE.de.md).
 - Das bestimmt nicht sämtliche Temperatur-/Zeitgrenzen, Gären, Änderungen aktiver Fächer, SYNC/MATCH oder allgemeine Kompatibilität.
 - Vor stabilen Releases: Codeprüfung, automatisierte Tests und dokumentierte lokale Testergebnisse.
 

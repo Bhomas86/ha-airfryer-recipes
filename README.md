@@ -4,7 +4,7 @@
 
 A Home Assistant custom integration for managing reusable air fryer recipes and sending their settings to supported air fryers through existing Home Assistant integrations.
 
-> **Project status: Test beta 0.1.0b12.** The recipe editor offers reported programs in a dropdown and explicit correction of old identifiers. New recipe/editor acceptance remains pending; the earlier twelve-step appliance sequence passed. Proof and wider temperatures remain deferred.
+> **Project status: Test beta 0.1.0b12.** The recipe editor offers reported programs in a dropdown and explicit correction of old identifiers. The owner reports saved-recipe transmission passed on zones 1 and 2; other editor/interruption cases remain pending. The earlier twelve-step appliance sequence passed. Proof and wider temperatures remain deferred.
 
 **[Local acceptance: six programs passed on both zones](docs/reports/ISSUE_7_LOCAL_ACCEPTANCE.md).** Evidence covers the documented nominal settings, not general approval of all limits.
 
