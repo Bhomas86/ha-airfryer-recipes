@@ -121,7 +121,8 @@ test("changing beta target discards the visible confirmation and English message
   panel._hass.language = "en";
   panel.render();
   assert.match(panel.shadowRoot.innerHTML, /Supervised beta device test/);
-  assert.match(panel.shadowRoot.innerHTML, /170 °C, 1 minute/);
+  assert.match(panel.shadowRoot.innerHTML, /Both prepare buttons use the selected recipe or manual settings/);
+  assert.doesNotMatch(panel.shadowRoot.innerHTML, /fixed Air Fry test/);
 });
 
 test("beta preparation shows read-only refresh progress and a failed refresh never enables send", async () => {
@@ -167,6 +168,70 @@ test("selected manual Fahrenheit values are converted and never mixed with previ
   assert.equal(calls[0].type, "airfryer_recipes/beta_prepare");
   assert.equal(calls[0].source.settings.temperature_c, 180);
   assert.equal(calls[0].source.settings.duration_minutes, 7);
+});
+
+test("lower prepare button transfers Dry settings and zone 2 without a fixed-test fallback", async () => {
+  const calls = [];
+  let scrolled = 0;
+  const panel = betaPanel(async (request) => {
+    calls.push(request);
+    return { ...betaPrepared, zone_id: request.zone_id, settings: request.source.settings };
+  });
+  panel.selectedZoneId = "2";
+  panel.shadowRoot.getElementById = (id) => id === "device-preview-form"
+    ? { values: { recipe_id: "", program: "dry", temperature_c: "55", duration_minutes: "360" } }
+    : id === "beta-device-test" ? { scrollIntoView() { scrolled++; } } : undefined;
+  await panel.onClick({ target: { closest: () => ({ dataset: { action: "beta-prepare" } }) } });
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].type, "airfryer_recipes/beta_prepare");
+  assert.equal(calls[0].zone_id, 2);
+  assert.deepEqual({ ...calls[0].source.settings }, { program: "dry", temperature_c: 55, duration_minutes: 360 });
+  assert.match(panel.shadowRoot.innerHTML, /Fach 2 · Dörren · 55 °C · 360 min/);
+  assert.doesNotMatch(panel.shadowRoot.innerHTML, /170 °C · 1 min/);
+  assert.equal(scrolled, 1);
+});
+
+test("lower prepare button uses the saved recipe ID and never mixes in manual fields", async () => {
+  const calls = [];
+  const panel = betaPanel(async (request) => {
+    calls.push(request);
+    return { ...betaPrepared, recipe_name: "Dry recipe", settings: { program: "dry", temperature_c: 55, duration_minutes: 360 } };
+  });
+  panel.shadowRoot.getElementById = (id) => id === "device-preview-form"
+    ? { values: { recipe_id: "dry-recipe", program: "airfry", temperature_c: "170", duration_minutes: "1" } } : undefined;
+  await panel.onClick({ target: { closest: () => ({ dataset: { action: "beta-prepare" } }) } });
+  assert.equal(calls.length, 1);
+  assert.deepEqual({ ...calls[0].source }, { recipe_id: "dry-recipe" });
+  assert.match(panel.shadowRoot.innerHTML, /Dörren · 55 °C · 360 min/);
+});
+
+test("invalid Dry temperature shows the backend error and discards the old Air Fry confirmation", async () => {
+  const calls = [];
+  let scrolled = 0;
+  const panel = betaPanel(async (request) => {
+    calls.push(request);
+    throw { code: "beta_test_blocked", message: "test_range" };
+  });
+  panel.betaTest = betaPrepared;
+  panel.shadowRoot.getElementById = (id) => id === "beta-device-test"
+    ? { scrollIntoView() { scrolled++; } } : undefined;
+  await panel.prepareSelectedBeta({ values: { program: "dry", temperature_c: "120", duration_minutes: "360" } });
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].source.settings.temperature_c, 120);
+  assert.equal(panel.betaTest, null);
+  assert.match(panel.shadowRoot.innerHTML, /Werte liegen außerhalb/);
+  assert.doesNotMatch(panel.shadowRoot.innerHTML, /data-action="beta-confirm"/);
+  assert.equal(scrolled, 1);
+});
+
+test("missing selection form blocks the lower button without preparing a fixed test", async () => {
+  const calls = [];
+  const panel = betaPanel(async (request) => { calls.push(request); return betaPrepared; });
+  panel.betaTest = betaPrepared;
+  await panel.onClick({ target: { closest: () => ({ dataset: { action: "beta-prepare" } }) } });
+  assert.equal(calls.length, 0);
+  assert.equal(panel.betaTest, null);
+  assert.match(panel.betaMessage, /gültige manuelle Werte auswählen/);
 });
 
 test("editing selected values invalidates a pending confirmation and preserves manual inputs", async () => {

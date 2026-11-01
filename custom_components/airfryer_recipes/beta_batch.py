@@ -12,7 +12,7 @@ from .recipe_model import CookingPhase
 from .zone_reset import zone_switch
 
 SAMPLES = (("airfry", 180, 7), ("roast", 190, 10), ("bake", 180, 6),
-           ("grill", 205, 1), ("reheat", 70, 5), ("dry", 55, 10))
+           ("grill", 205, 1), ("reheat", 70, 5), ("dry", 55, 360))
 
 
 def identity(target: Target) -> tuple:

@@ -284,6 +284,24 @@ class SenderTests(unittest.IsolatedAsyncioTestCase):
                 await self.selected({"settings": {"program": program, "temperature_c": temp, "duration_minutes": minutes}})
         self.read.assert_not_awaited()
 
+    async def test_owner_reported_dry_temperature_bounds_reject_outside_values_before_reading(self):
+        for temperature in (34, 96, 120):
+            with self.subTest(temperature=temperature):
+                with self.assertRaisesRegex(BetaTestBlocked, "test_range"):
+                    await self.selected({"settings": {"program": "dry", "temperature_c": temperature,
+                                                       "duration_minutes": 360}})
+        self.read.assert_not_awaited()
+        self.hass.services.async_call.assert_not_awaited()
+
+    async def test_owner_reported_dry_endpoints_can_be_prepared_without_sending(self):
+        for temperature in (35, 95):
+            with self.subTest(temperature=temperature):
+                prepared = await self.selected({"settings": {"program": "dry", "temperature_c": temperature,
+                                                            "duration_minutes": 360}})
+                self.assertEqual(prepared["settings"], {"program": "dry", "temperature_c": temperature,
+                                                       "duration_minutes": 360})
+        self.hass.services.async_call.assert_not_awaited()
+
     async def test_missing_and_multiphase_recipes_cannot_be_sent(self):
         repo = await self.library()
         with self.assertRaisesRegex(BetaTestBlocked, "recipe_changed"):
@@ -563,12 +581,12 @@ class AdapterTests(unittest.IsolatedAsyncioTestCase):
             self.payload["programme"] = {program: {"temperatur": [low, high], "minuten": [1, minutes],
                 "grenzen": "geschaetzt", "senden": "ungeprueft"}}
             for zone in (1, 2):
-                for temp, duration in ((low, 1), (high, minutes)):
+                for temp, duration in ((35 if program == "dry" else low, 1), (high, minutes)):
                     await read_target(self.hass, "ha-device", zone,
                                       settings=CookingPhase(program, temp, duration))
             self.payload["programme"][program]["grenzen"] = "unknown-source"
             with self.assertRaisesRegex(BetaTestBlocked, "capabilities"):
-                await read_target(self.hass, "ha-device", 1, settings=CookingPhase(program, low, 1))
+                await read_target(self.hass, "ha-device", 1, settings=CookingPhase(program, 35 if program == "dry" else low, 1))
         self.assertTrue(all(call.args[1] == "faehigkeiten" for call in self.hass.services.async_call.await_args_list))
 
     async def test_batch_can_only_replace_prepared_values_owned_and_verified_by_that_run(self):

@@ -33,6 +33,9 @@ REVIEWED_PROGRAM_LIMITS = {
     "bake": (80, 205, 240), "grill": (205, 240, 30),
     "reheat": (40, 205, 60), "dry": (34, 95, 1440),
 }
+# Owner-reported CAF-DC111S-AEU range, narrower than upstream's estimate.
+# This does not mark sending or duration bounds as model-confirmed.
+MODEL_TEMPERATURE_LIMITS = {"dry": (35, 95)}
 
 
 def validate_settings(phase: CookingPhase) -> None:
@@ -41,6 +44,9 @@ def validate_settings(phase: CookingPhase) -> None:
     low, high, minutes = REVIEWED_PROGRAM_LIMITS[phase.program]
     require(low <= phase.temperature_c <= high and 1 <= phase.duration_minutes <= minutes,
             "test_range")
+    if phase.program in MODEL_TEMPERATURE_LIMITS:
+        low, high = MODEL_TEMPERATURE_LIMITS[phase.program]
+        require(low <= phase.temperature_c <= high, "test_range")
 
 
 class BetaTestBlocked(ValueError):

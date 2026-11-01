@@ -86,3 +86,5 @@ Eigentümerentscheidung: Einmalige Bestätigung der vollständigen beaufsichtigt
 Eigentümervorgabe: Nach beaufsichtigtem Abbruch muss ein neuer Test ohne HA-Neustart möglich sein. Beta 0.1.0b7 erlaubt manuelle Wiederfreigabe erst nach frischem Bereitschaftsnachweis und verwirft alte Tokens; kein Replay. [Umsetzung und offener Abbruchgrund](reports/ISSUE_7_MANUAL_RECOVERY.de.md). Keine GitHub Actions.
 
 Beta 0.1.0b8: Vom Eigentümer benannte Fach-Schalter zum gezielten Beenden eigener vorbereiteter Einstellungen vor Programmwechsel integrieren. Je Fach frische Kontrolle, nur turn_off, kein globales Beenden. [Verhalten und Abnahme](reports/ISSUE_7_ZONE_RESET.de.md). Keine GitHub Actions.
+
+Beta 0.1.0b9: Beide Einzeltest-Buttons übernehmen dieselbe Formularauswahl; Bestätigung/Fehler werden ins Bild gescrollt. Dörren auf 35–95 °C begrenzen (Eigentümerangabe); Testfolge 55 °C / 360 Minuten nach erfolgreichem Einzeltest beider Fächer. Keine Mindestdauer daraus ableiten. [Korrektur und Abnahme](reports/ISSUE_7_SELECTED_TEST_SETTINGS.de.md). Keine GitHub Actions.

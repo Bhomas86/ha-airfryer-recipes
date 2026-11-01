@@ -35,6 +35,9 @@ class BatchTests(unittest.IsolatedAsyncioTestCase):
     async def test_full_twelve_step_run_is_preconfirmed_and_one_attempt_per_step(self):
         run = await self.start()
         self.assertEqual(len(self.plan['steps']),12)
+        self.assertEqual([step for step in self.plan['steps'] if step['settings']['program'] == 'dry'],
+                         [{'zone_id': zone, 'settings': {'program': 'dry', 'temperature_c': 55,
+                                                        'duration_minutes': 360}} for zone in (1, 2)])
         self.sender.send_once.assert_not_awaited()
         for i in range(12):
             result = await self.step(run)
@@ -51,6 +54,9 @@ class BatchTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual([c.args[2]["entity_id"] for c in calls],
                          ["switch.fixture_zone_1", "switch.fixture_zone_2"] * 5)
         self.assertTrue(all(c.args[:2] == ("switch", "turn_off") for c in calls))
+        self.assertEqual([(c.args[1], c.args[2].temperature_c, c.args[2].duration_minutes)
+                          for c in self.sender.send_once.await_args_list if c.args[2].program == 'dry'],
+                         [(1, 55, 360), (2, 55, 360)])
 
     async def test_missing_program_is_explicitly_skipped_without_substitution(self):
         f=list(self.target.fingerprint);f[6]=tuple(p for p in f[6] if p[0]!='dry')

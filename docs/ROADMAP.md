@@ -66,3 +66,5 @@ Owner decision: one confirmation for the complete supervised list, then sequenti
 Owner requirement: a supervised stopped test must allow a new attempt without HA restart. Beta 0.1.0b7 permits explicit re-arming only after a fresh idle-state check, invalidating old tokens; no replay. [Implementation and unresolved failure](reports/ISSUE_7_MANUAL_RECOVERY.md). No GitHub Actions.
 
 Beta 0.1.0b8: Integrate owner-identified zone switches to end own prepared settings before program changes. Fresh per-zone checks, turn_off only, no global stop. [Behavior and acceptance](reports/ISSUE_7_ZONE_RESET.md). No GitHub Actions.
+
+Beta 0.1.0b9: Both individual-test buttons use the same form selection; scroll confirmation/errors into view. Limit Dry to 35–95 °C (owner report); sequence uses 55 °C / 360 minutes after successful single tests on both zones. This does not establish a minimum duration. [Correction and acceptance](reports/ISSUE_7_SELECTED_TEST_SETTINGS.md). No GitHub Actions.

@@ -1,0 +1,15 @@
+# Selected single-test settings and Dry acceptance
+
+[Deutsch](ISSUE_7_SELECTED_TEST_SETTINGS.de.md) | [English](ISSUE_7_SELECTED_TEST_SETTINGS.md)
+
+Owner evidence on 2026-11-01: the b8 guided run reported matched settings for steps 1–10, including zone ending before program changes. Step 11, Dry / 55 °C / 10 minutes / zone 1, was rejected with code 11009000. No specific meaning is assigned to this code. The controller screenshot used 360 minutes. The owner subsequently confirmed successful individual transmission of Dry / 55 °C / 360 minutes on both zones and reported a temperature range of 35–95 °C. This does not establish duration bounds or general device compatibility.
+
+The single-test screenshot showed Dry / 120 °C / 360 minutes in the form but Air Fry / 170 °C / 1 minute in the confirmation. The lower prepare button intentionally used the original fixed test, while the form button used selected settings. Beta b9 routes both buttons through the same selected-input method. Manual values are captured before rendering; recipes send only their ID and are resolved by the backend. Missing forms never fall back to the fixed test. Preparation never transmits settings. The separate backend default remains for older clients; the panel does not expose it.
+
+Preparation scrolls the resulting confirmation or allowlisted error into view. Rejected values clear any previous token. No automatic send, substitution, clamping, retry or heating start is added. Existing exact server confirmation, 15-second expiry, admin/device checks and explicit re-arming remain.
+
+The Dry sample is now 55 °C / 360 minutes for zones 1 and 2. An additional model temperature guard narrows upstream's 34–95 °C estimate to the owner's 35–95 °C range. The adapter's own bounds continue to apply. Capability provenance remains unchanged; the owner report does not relabel estimated upstream limits as confirmed. Saved recipes and the independent dry-run API remain unchanged.
+
+Passed locally: 147 Python tests, 36 frontend tests, compilation and git diff --check. Coverage includes the lower button with Dry / 55 °C / 360 minutes / zone 2, recipe-ID isolation, missing-form blocking, invalid 120 °C with no stale confirmation, scrolling, backend rejection at 34/96/120 °C before device refresh/control, allowed preparation at 35/95 °C, and both Dry samples in the complete mocked sequence. Frontend tests use VM/DOM stubs, not native HA/Companion. No GitHub Actions, HACS/Hassfest or Python 3.14 checks.
+
+For real acceptance, install b9 with HA restart/app reopen. Cancel old preparations and re-arm if required. With both zones idle, compare the form and confirmation through either button using Dry / 55 °C / 360 minutes. Verify each zone physically without pressing Start. For the full guided sequence, show the new list and check steps 11/12 before consent, observe both Dry results and cancel the final preparations. Complete updated sequence and new button behavior on the real app: pending owner acceptance. Temperature endpoints have not been transmitted by this test suite.

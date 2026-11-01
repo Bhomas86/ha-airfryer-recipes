@@ -1,6 +1,7 @@
 // Local Home Assistant custom panel. All mutations go through the authenticated API.
 const WORDS = {
   en: {
+    betaDryRange: "Dry on CAF-DC111S-AEU: 35–95 °C (reported by the owner). Duration limits still require appliance testing.",
     batchReset: "Before changing program: end this run's prepared settings in zones 1 and 2 and verify idle state.", resetUnavailable: "No uniquely assigned loaded zone switch is available for ending. Check the Airfryer Control entities.", resetFailed: "Ending a zone failed or has an unknown outcome. Check the appliance and use re-arming before another attempt.",
 
     betaRecover: "Device checked – enable a new test", betaRecoverInfo: "For a new attempt, cancel prepared programs at the appliance first. Both zones must report idle/off. This check sends no control command and requires no HA restart.", betaRecoverConfirm: "Have you canceled all prepared programs at the appliance, checked both zones and remained beside it? Request a fresh read-only check and enable a new test?", betaRecovered: "Fresh idle status confirmed. Old confirmations discarded. You can show and start a new sequence without restarting HA.", betaRejected: "The adapter rejected the request. Cancel prepared programs at the appliance and use the device check before a new attempt.",
@@ -20,9 +21,9 @@ const WORDS = {
     betaRefreshing: "Requesting a fresh device status… No settings are being sent.",
     betaRefreshUnavailable: "No loaded, enabled Airfryer Control sensor is available for this device. Enable a status sensor and check the integration.",
     betaRefreshFailed: "No new successful device report followed the status request. Check the device connection in Airfryer Control. No settings were sent.",
-    betaTitle: "Supervised beta device test", betaIntro: "CAF-DC111S-AEU only, zone 1 or 2. Prepare selected recipe/manual settings in the form above, or use the fixed Air Fry test (170 °C, 1 minute) below. This is a real settings transmission with unverified device compatibility. Both zones must be idle. No cooking start is requested.",
+    betaTitle: "Supervised beta device test", betaIntro: "CAF-DC111S-AEU only, zone 1 or 2. Both prepare buttons use the selected recipe or manual settings from the form above. Check the exact settings shown in the confirmation before sending. This is a real settings transmission with unverified device compatibility. Both zones must be idle. No cooking start is requested.",
     betaWarning: "Remain beside the empty appliance. Do not press Start. Device compatibility is unverified. If heating starts or the other zone changes, stop at the appliance and end testing. Prepare this supervised test?",
-    betaPrepare: "Prepare real device test", betaConfirm: "Send once to the appliance", betaCancel: "Discard test",
+    betaPrepare: "Prepare selected settings", betaConfirm: "Send once to the appliance", betaCancel: "Discard test",
     betaConfirmWarning: "Send these exact settings ONCE? Do not press Start. Observe the appliance and both zones.",
     betaPending: "Ready for one explicit test send (expires after 15 seconds)",
     betaAccepted: "The adapter accepted the request. This is not device confirmation. Check program, temperature, duration and both zones at the appliance. Do not press Start; no heating should occur.",
@@ -78,6 +79,7 @@ const WORDS = {
     statusDrawerOpen: "Drawer open", statusHolding: "Holding", statusKeepingWarm: "Keeping warm", statusPreheated: "Preheated",
   },
   de: {
+    betaDryRange: "Dörren beim CAF-DC111S-AEU: 35–95 °C (Angabe des Eigentümers). Die Zeitgrenzen müssen noch am Gerät geprüft werden.",
     batchReset: "Vor Programmwechsel: eigene vorbereitete Einstellungen in Fach 1 und 2 gezielt beenden und Bereitschaft prüfen.", resetUnavailable: "Kein eindeutig zugeordneter, geladener Fach-Schalter zum Beenden verfügbar. Bitte die Entitäten in Airfryer Control prüfen.", resetFailed: "Das Beenden eines Fachs ist fehlgeschlagen oder unklar. Gerät prüfen und vor einem neuen Versuch die Wiederfreigabe verwenden.",
 
     betaRecover: "Gerät geprüft – neuen Test freigeben", betaRecoverInfo: "Für einen neuen Versuch zuerst vorbereitete Programme am Gerät abbrechen. Beide Fächer müssen bereit/aus gemeldet werden. Diese Prüfung sendet keinen Steuerbefehl und benötigt keinen HA-Neustart.", betaRecoverConfirm: "Hast du alle vorbereiteten Programme am Gerät abgebrochen, beide Fächer geprüft und bleibst daneben? Jetzt den Zustand frisch lesen und einen neuen Test freigeben?", betaRecovered: "Frischer Bereitschaftszustand bestätigt. Alte Bestätigungen verworfen. Du kannst die Testfolge ohne HA-Neustart neu anzeigen und starten.", betaRejected: "Der Adapter hat die Anfrage abgelehnt. Vorbereitete Programme am Gerät abbrechen und vor einem neuen Versuch die Geräteprüfung benutzen.",
@@ -97,9 +99,9 @@ const WORDS = {
     betaRefreshing: "Aktueller Gerätestatus wird angefordert … Es werden keine Einstellungen gesendet.",
     betaRefreshUnavailable: "Für dieses Gerät ist kein geladener, aktivierter Airfryer-Control-Sensor verfügbar. Einen Statussensor aktivieren und die Integration prüfen.",
     betaRefreshFailed: "Die Statusabfrage hat keinen neuen erfolgreichen Gerätebericht geliefert. Die Geräteverbindung in Airfryer Control prüfen. Es wurden keine Einstellungen gesendet.",
-    betaTitle: "Beaufsichtigter Beta-Gerätetest", betaIntro: "Nur CAF-DC111S-AEU, Fach 1 oder 2. Gewählte Rezept-/manuelle Werte im Formular oben vorbereiten oder unten den festen Airfry-Test (170 °C, 1 Minute) verwenden. Dies ist eine echte Einstellungsübertragung bei ungeprüfter Gerätekompatibilität. Beide Fächer müssen ruhen. Es wird kein Garstart angefordert.",
+    betaTitle: "Beaufsichtigter Beta-Gerätetest", betaIntro: "Nur CAF-DC111S-AEU, Fach 1 oder 2. Beide Vorbereiten-Buttons verwenden das gewählte Rezept oder die manuellen Werte aus dem Formular oben. Vor dem Senden die exakten Werte in der Bestätigung prüfen. Dies ist eine echte Einstellungsübertragung bei ungeprüfter Gerätekompatibilität. Beide Fächer müssen ruhen. Es wird kein Garstart angefordert.",
     betaWarning: "Am leeren Gerät bleiben. Nicht auf Start drücken. Die Gerätekompatibilität ist ungeprüft. Falls Heizen beginnt oder sich das andere Fach ändert, am Gerät stoppen und den Test beenden. Diesen beaufsichtigten Test vorbereiten?",
-    betaPrepare: "Echten Gerätetest vorbereiten", betaConfirm: "Einmalig ans Gerät senden", betaCancel: "Test verwerfen",
+    betaPrepare: "Gewählte Werte vorbereiten", betaConfirm: "Einmalig ans Gerät senden", betaCancel: "Test verwerfen",
     betaConfirmWarning: "Diese exakten Einstellungen EINMAL senden? Nicht auf Start drücken. Gerät und beide Fächer beobachten.",
     betaPending: "Für einen ausdrücklich bestätigten Test bereit (nach 15 Sekunden abgelaufen)",
     betaAccepted: "Der Adapter hat die Anfrage angenommen. Das ist keine Gerätebestätigung. Programm, Temperatur, Zeit und beide Fächer am Gerät prüfen. Nicht auf Start drücken; es darf kein Heizen beginnen.",
@@ -482,6 +484,7 @@ class AirfryerRecipesPanel extends HTMLElement {
               : `<input id="preview-program" name="program" maxlength="64" required ${previewRecipe ? "readonly" : ""} value="${escapeHtml(previewPhase.program)}">`}</div>
             <div><label for="preview-temperature">${t.temperature} (${this.unit})</label><input id="preview-temperature" name="temperature_c" type="number" min="${this.unit === "°F" ? 32 : 0}" max="${this.unit === "°F" ? 752 : 400}" step="1" required ${previewRecipe ? "readonly" : ""} value="${escapeHtml(this.toDisplay(previewPhase.temperature_c))}"></div>
             <div><label for="preview-duration">${t.duration}</label><input id="preview-duration" name="duration_minutes" type="number" min="1" max="1440" step="1" required ${previewRecipe ? "readonly" : ""} value="${escapeHtml(previewPhase.duration_minutes)}"></div></div>
+            ${previewPhase.program === "dry" && device.model === "CAF-DC111S-AEU" ? `<p class="muted">${t.betaDryRange}</p>` : ""}
             <div class="actions"><button class="primary" type="submit" ${this.busy || this.devicesBusy || !zones.length ? "disabled" : ""}>${t.checkPreview}</button>
             <button type="submit" data-beta-selection="true" ${this.busy || this.devicesBusy || !zones.length ? "disabled" : ""}>${t.betaSelection}</button></div>
             <p class="muted">${t.betaSelectionInfo}</p>
@@ -624,7 +627,7 @@ class AirfryerRecipesPanel extends HTMLElement {
     const t = this.words;
     if (type === "refresh") return this.load();
     if (!this.admin) return;
-    if (type === "beta-prepare") return this.prepareBetaTest();
+    if (type === "beta-prepare") return this.prepareSelectedBeta(this.shadowRoot.getElementById("device-preview-form"));
     if (type === "beta-confirm") return this.confirmBetaTest();
     if (type === "beta-cancel") { this.betaTest = null; this.render(); return; }
     if (type === "refresh-devices") {
@@ -807,7 +810,14 @@ class AirfryerRecipesPanel extends HTMLElement {
   }
 
   async prepareSelectedBeta(formElement) {
-    if (!this.admin || this.busy || this.devicesBusy) return;
+    if (!this.admin || this.busy || this.devicesBusy || this.batchRunning) return;
+    if (!formElement) {
+      this.betaTest = null;
+      this.betaMessage = this.betaError({ message: "source" });
+      this.render();
+      this.showBeta();
+      return;
+    }
     const form = new FormData(formElement);
     const recipeId = String(form.get("recipe_id") || "");
     const source = recipeId ? { recipe_id: recipeId } : { settings: {
@@ -834,7 +844,11 @@ class AirfryerRecipesPanel extends HTMLElement {
       if (this.selectedDeviceId === device_id && Number(this.selectedZoneId) === zone_id) this.betaTest = result;
     } catch (error) {
       this.betaMessage = this.betaError(error);
-    } finally { this.busy = false; this.render(); }
+    } finally { this.busy = false; this.render(); this.showBeta(); }
+  }
+
+  showBeta() {
+    this.shadowRoot.getElementById("beta-device-test")?.scrollIntoView?.({ block: "start", behavior: "smooth" });
   }
 
   async confirmBetaTest() {
