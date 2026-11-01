@@ -119,3 +119,16 @@ class BatchTests(unittest.IsolatedAsyncioTestCase):
         self.batch.runs[run['run_id']].expires=0
         with self.assertRaisesRegex(BetaTestBlocked,'confirmation'):await self.step(run)
         self.sender.send_once.assert_not_awaited()
+
+    async def test_rejection_reports_exact_failed_step_without_retry(self):
+        run = await self.start()
+        await self.step(run)
+        await self.step(run)
+        self.sender.send_once.return_value = {'outcome': 'rejected', 'error_code': 11912000}
+        result = await self.step(run)
+        self.assertTrue(result['stopped'])
+        self.assertEqual(result['failed_step'], 3)
+        self.assertEqual(result['settings']['program'], 'roast')
+        self.assertEqual(result['zone_id'], 1)
+        self.assertEqual(result['error_code'], 11912000)
+        self.assertEqual(self.sender.send_once.await_count, 3)

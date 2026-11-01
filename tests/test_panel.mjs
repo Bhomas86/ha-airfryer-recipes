@@ -265,6 +265,32 @@ test("guided controls are admin-only and leaving the panel stops further request
   assert.equal(panel.batchStopRequested, true);
 });
 
+test("recovery sends only an explicit read-only re-arm and discards the old plan", async () => {
+  const calls = [];
+  const panel = betaPanel(async r => { calls.push(r); return { rearmed: true, transmitted: false }; });
+  panel.batchPlan = batchPlan;
+  panel.batchRunId = "old";
+  await panel.recoverBeta();
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].type, "airfryer_recipes/beta_recover");
+  assert.equal(calls[0].acknowledge_physical_reset, true);
+  assert.equal(panel.batchPlan, null);
+  assert.equal(panel.batchRunId, null);
+  assert.match(panel.batchMessage, /ohne HA-Neustart/);
+});
+
+test("adapter rejection identifies the failed batch step and does not claim unknown transport", async () => {
+  const panel = betaPanel(async r => r.type.endsWith("batch_start")
+    ? { run_id: "batch", next_token: "one", total: 2 }
+    : { stopped: true, failed_step: 1, settings: { program: "airfry" }, zone_id: 1, error_code: 11912000 });
+  panel.batchPlan = batchPlan;
+  await panel.startBatch();
+  assert.match(panel.batchMessage, /Schritt 1/);
+  assert.match(panel.batchMessage, /Code 11912000/);
+  assert.match(panel.batchMessage, /abgelehnt/);
+  assert.equal(panel.batchResults.length, 0);
+});
+
 test("navigation remains available during loading and uses the HA sidebar event", async () => {
   const panel = panelWith(async () => ({ recipes: [] }));
   panel.busy = true;

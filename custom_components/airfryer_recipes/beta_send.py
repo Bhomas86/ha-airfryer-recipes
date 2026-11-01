@@ -333,6 +333,22 @@ class BetaSender:
         finally:
             self.busy.discard(device_id)
 
+    async def recover(self, user_id: str, device_id: str, ack: bool, context: Any) -> dict:
+        """Explicit local re-arm after physical reset; read-only, never a retry."""
+        require(ack is True, "acknowledgement")
+        await self._authorized(user_id)
+        require(device_id not in self.busy and device_id not in self.batch_devices, "busy")
+        self.busy.add(device_id)
+        try:
+            target = await self._read(device_id, 1, refresh=True, wait_for_report=True, context=context)
+            await self._authorized(user_id)
+            require(target.unchanged(), "state_changed")
+            self.pending = {k: v for k, v in self.pending.items() if v.device_id != device_id}
+            self.uncertain.discard(device_id)
+            return {"rearmed": True, "transmitted": False}
+        finally:
+            self.busy.discard(device_id)
+
     async def send_once(self, device_id: str, zone_id: int, phase: CookingPhase, context: Any) -> dict:
         """One public transport attempt; caller owns validation and per-device lock."""
         # This is the only control call. Never invoke raw, SYNC/MATCH or a
@@ -350,6 +366,11 @@ class BetaSender:
             raise  # Uncertain latch remains set; never permit a replay.
         except Exception:
             return self._result("unknown")
+        if isinstance(result, dict) and result.get("ok") is False and result.get("ergebnis") == "abgelehnt":
+            rejected = self._result("rejected")
+            code = result.get("code")
+            rejected["error_code"] = code if type(code) is int and -(2**31) <= code < 2**31 else None
+            return rejected
         # Only accept a complete, exact response contract. Nothing from the
         # upstream response (including error strings or raw data) is exposed.
         exact = {"programm": phase.program, "temperatur": phase.temperature_c,

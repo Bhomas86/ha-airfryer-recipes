@@ -408,6 +408,27 @@ async def ws_batch_stop(hass: Any, connection: Any, msg: dict[str, Any]) -> None
     await _respond(hass, connection, msg, run)
 
 
+@websocket_api.require_admin
+@websocket_api.websocket_command({voluptuous.Required("type"): f"{DOMAIN}/beta_recover",
+    voluptuous.Required("device_id"): str, voluptuous.Required("acknowledge_physical_reset"): bool})
+@websocket_api.async_response
+async def ws_beta_recover(hass: Any, connection: Any, msg: dict[str, Any]) -> None:
+    async def run(repo: RecipeRepository) -> dict[str, Any]:
+        from homeassistant.core import Context
+        if set(msg) != {"id", "type", "device_id", "acknowledge_physical_reset"}:
+            raise RecipeValidationError("Unexpected recovery parameter")
+        if msg["acknowledge_physical_reset"] is not True:
+            raise BetaTestBlocked("acknowledgement")
+        batch = _batch(hass)
+        await batch.sender._authorized(connection.user.id)
+        for old in list(batch.runs.values()):
+            if old.device == msg["device_id"]:
+                batch.stop(old)
+        return await batch.sender.recover(connection.user.id, msg["device_id"], True,
+                                           Context(user_id=connection.user.id))
+    await _respond(hass, connection, msg, run)
+
+
 COMMANDS = (
     ws_list,
     ws_get,
@@ -424,7 +445,7 @@ COMMANDS = (
     ws_prepare_send,
     ws_beta_prepare,
     ws_beta_confirm,
-    ws_batch_prepare, ws_batch_start, ws_batch_next, ws_batch_stop,
+    ws_batch_prepare, ws_batch_start, ws_batch_next, ws_batch_stop, ws_beta_recover,
 )
 
 

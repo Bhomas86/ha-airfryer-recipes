@@ -1,6 +1,8 @@
 // Local Home Assistant custom panel. All mutations go through the authenticated API.
 const WORDS = {
   en: {
+    betaRecover: "Device checked – enable a new test", betaRecoverInfo: "For a new attempt, cancel prepared programs at the appliance first. Both zones must report idle/off. This check sends no control command and requires no HA restart.", betaRecoverConfirm: "Have you canceled all prepared programs at the appliance, checked both zones and remained beside it? Request a fresh read-only check and enable a new test?", betaRecovered: "Fresh idle status confirmed. Old confirmations discarded. You can show and start a new sequence without restarting HA.", betaRejected: "The adapter rejected the request. Cancel prepared programs at the appliance and use the device check before a new attempt.",
+
     batchTitle: "Guided appliance test", batchInfo: "One confirmation for the displayed sequence. Six reported programs are prepared on both zones, one command at a time. Remain beside the empty appliance; do not press Start. The run checks reported settings between commands and stops on errors. Cancel the prepared programs at the appliance after the run.",
     batchPrepare: "Show test sequence", batchStart: "Confirm displayed sequence and start", batchStop: "Stop remaining steps",
     batchConsent: "By starting, I confirm that I am supervising the appliance and authorize every setting in this list once. No cooking start is requested.",
@@ -22,7 +24,7 @@ const WORDS = {
     betaConfirmWarning: "Send these exact settings ONCE? Do not press Start. Observe the appliance and both zones.",
     betaPending: "Ready for one explicit test send (expires after 15 seconds)",
     betaAccepted: "The adapter accepted the request. This is not device confirmation. Check program, temperature, duration and both zones at the appliance. Do not press Start; no heating should occur.",
-    betaUnknown: "Outcome unknown. Do not send again. Check the appliance and stop testing. Further beta attempts for this device are blocked until Home Assistant restarts.",
+    betaUnknown: "Outcome unknown. Do not send again. Check the appliance and stop testing. Use the device check after physically canceling prepared programs to enable a new test.",
     betaNoSend: "Test blocked; no command was sent.", betaFreshness: "The refreshed report could not be verified. No settings were sent. Check Airfryer Control and prepare a new test. Reports must be at most 15 seconds old.",
     betaState: "The report or device state changed. Check both zones and prepare a new test.", betaZones: "Both reported zones must be idle/off, Celsius selected and SYNC/MATCH off. Cancel any prepared program at the appliance first.",
     betaAdapter: "This test requires exactly Airfryer Control 1.0.2-beta.1, the reviewed version.", betaModel: "This beta test supports only CAF-DC111S-AEU.",
@@ -74,6 +76,8 @@ const WORDS = {
     statusDrawerOpen: "Drawer open", statusHolding: "Holding", statusKeepingWarm: "Keeping warm", statusPreheated: "Preheated",
   },
   de: {
+    betaRecover: "Gerät geprüft – neuen Test freigeben", betaRecoverInfo: "Für einen neuen Versuch zuerst vorbereitete Programme am Gerät abbrechen. Beide Fächer müssen bereit/aus gemeldet werden. Diese Prüfung sendet keinen Steuerbefehl und benötigt keinen HA-Neustart.", betaRecoverConfirm: "Hast du alle vorbereiteten Programme am Gerät abgebrochen, beide Fächer geprüft und bleibst daneben? Jetzt den Zustand frisch lesen und einen neuen Test freigeben?", betaRecovered: "Frischer Bereitschaftszustand bestätigt. Alte Bestätigungen verworfen. Du kannst die Testfolge ohne HA-Neustart neu anzeigen und starten.", betaRejected: "Der Adapter hat die Anfrage abgelehnt. Vorbereitete Programme am Gerät abbrechen und vor einem neuen Versuch die Geräteprüfung benutzen.",
+
     batchTitle: "Geführter Gerätetest", batchInfo: "Eine Bestätigung für die angezeigte Folge. Sechs gemeldete Programme werden nacheinander an beiden Fächern bereitgestellt, jeweils ein Befehl. Am leeren Gerät bleiben; nicht Start drücken. Der Lauf prüft gemeldete Werte zwischen den Befehlen und stoppt bei Fehlern. Nach dem Lauf die vorbereiteten Programme am Gerät abbrechen.",
     batchPrepare: "Testfolge anzeigen", batchStart: "Angezeigte Testfolge bestätigen und starten", batchStop: "Restliche Schritte abbrechen",
     batchConsent: "Mit Start bestätige ich, dass ich das Gerät beaufsichtige, und erlaube jede Einstellung dieser Liste genau einmal. Es wird kein Garstart angefordert.",
@@ -95,7 +99,7 @@ const WORDS = {
     betaConfirmWarning: "Diese exakten Einstellungen EINMAL senden? Nicht auf Start drücken. Gerät und beide Fächer beobachten.",
     betaPending: "Für einen ausdrücklich bestätigten Test bereit (nach 15 Sekunden abgelaufen)",
     betaAccepted: "Der Adapter hat die Anfrage angenommen. Das ist keine Gerätebestätigung. Programm, Temperatur, Zeit und beide Fächer am Gerät prüfen. Nicht auf Start drücken; es darf kein Heizen beginnen.",
-    betaUnknown: "Ergebnis unklar. Nicht erneut senden. Gerät prüfen und Test beenden. Weitere Beta-Versuche für dieses Gerät bleiben bis zum Home-Assistant-Neustart gesperrt.",
+    betaUnknown: "Ergebnis unklar. Nicht erneut senden. Gerät prüfen und Test beenden. Nach dem Abbrechen vorbereiteter Programme am Gerät die Geräteprüfung für einen neuen Test benutzen.",
     betaNoSend: "Test gesperrt; es wurde kein Befehl gesendet.", betaFreshness: "Der aktualisierte Bericht konnte nicht bestätigt werden. Es wurden keine Einstellungen gesendet. Airfryer Control prüfen und den Test neu vorbereiten. Meldungen dürfen höchstens 15 Sekunden alt sein.",
     betaState: "Meldung oder Gerätezustand hat sich geändert. Beide Fächer prüfen und einen neuen Test vorbereiten.", betaZones: "Beide gemeldeten Fächer müssen bereit/aus sein, Celsius gewählt und SYNC/MATCH aus. Vorbereitete Programme zuerst am Gerät abbrechen.",
     betaAdapter: "Dieser Test benötigt exakt Airfryer Control 1.0.2-beta.1, die geprüfte Version.", betaModel: "Dieser Beta-Test unterstützt nur CAF-DC111S-AEU.",
@@ -452,7 +456,7 @@ class AirfryerRecipesPanel extends HTMLElement {
         ${this.admin ? `<section class="preview" id="batch-test"><h2>${t.batchTitle}</h2><p>${t.batchInfo}</p>
           <label for="batch-device">${t.device}</label><select id="batch-device" ${this.busy || this.batchRunning ? "disabled" : ""}>${this.deviceState.devices.map((item) => `<option value="${escapeHtml(item.device_id)}" ${item.device_id === this.selectedDeviceId ? "selected" : ""}>${escapeHtml(item.name)}</option>`).join("")}</select>
           <div class="actions"><button type="button" data-action="batch-prepare" ${this.busy || this.devicesBusy || this.batchRunning || !device ? "disabled" : ""}>${t.batchPrepare}</button>
-          ${this.batchRunning ? `<button type="button" data-action="batch-stop">${t.batchStop}</button>` : ""}</div>
+          ${this.batchRunning ? `<button type="button" data-action="batch-stop">${t.batchStop}</button>` : `<button type="button" data-action="beta-recover" ${this.busy || !device ? "disabled" : ""}>${t.betaRecover}</button>`}</div><p class="muted">${t.betaRecoverInfo}</p>
           ${this.batchPlan ? `<p><strong>${escapeHtml(this.batchPlan.device_name)}</strong></p><ol>${this.batchPlan.steps.map((step) => `<li>${t.zone} ${step.zone_id} · ${escapeHtml(this.programName(step.settings.program))} · ${this.toDisplay(step.settings.temperature_c)} ${this.unit} · ${step.settings.duration_minutes} min</li>`).join("")}</ol>
           ${this.batchPlan.skipped?.length ? `<p>${t.batchSkipped}: ${escapeHtml(this.batchPlan.skipped.join(", "))}</p>` : ""}
           ${!this.batchRunning && !this.batchRunId ? `<p>${t.batchConsent}</p><button class="primary" type="button" data-action="batch-start" ${this.busy ? "disabled" : ""}>${t.batchStart}</button>` : ""}` : ""}
@@ -609,6 +613,7 @@ class AirfryerRecipesPanel extends HTMLElement {
     }
     if (type === "batch-stop" && this.admin) return this.stopBatch();
     if (this.busy || this.devicesBusy || this.batchRunning) return;
+    if (this.admin && type === "beta-recover") return this.recoverBeta();
     if (this.admin && type === "batch-prepare") return this.prepareBatch();
     if (this.admin && type === "batch-start") return this.startBatch();
     const recipe = this.recipes.find((item) => item.id === button.dataset.id);
@@ -721,6 +726,21 @@ class AirfryerRecipesPanel extends HTMLElement {
     this.shadowRoot.getElementById("batch-test")?.scrollIntoView?.({ block: "start", behavior: "smooth" });
   }
 
+  async recoverBeta() {
+    if (!this.admin || this.busy || this.batchRunning || !this.selectedDeviceId || !confirm(this.words.betaRecoverConfirm)) return;
+    this.busy = true;
+    this.batchPlan = null;
+    this.betaTest = null;
+    this.batchRunId = null;
+    this.batchMessage = this.words.batchLoading;
+    this.render();
+    try {
+      await this.request("beta_recover", { device_id: this.selectedDeviceId, acknowledge_physical_reset: true });
+      this.batchMessage = this.words.betaRecovered;
+    } catch (error) { this.batchMessage = this.betaError(error); }
+    finally { this.busy = false; this.render(); this.showBatch(); }
+  }
+
   async prepareBatch() {
     if (!this.admin || this.busy || this.batchRunning || !this.selectedDeviceId) return;
     this.busy = true;
@@ -761,6 +781,11 @@ class AirfryerRecipesPanel extends HTMLElement {
         this.batchMessage = `${this.words.batchProgress} ${this.batchResults.length + 1} ${this.words.batchOf} ${run.total}: ${this.programName(next.settings.program)} · ${this.words.zone} ${next.zone_id}`;
         this.render();
         const result = await this.request("batch_next", { run_id: run.run_id, next_token: nonce });
+        if (result.stopped) {
+          this.batchMessage = `${this.words.batchProgress} ${result.failed_step}: ${this.programName(result.settings.program)} · ${this.words.zone} ${result.zone_id}. ${this.words.betaRejected}${Number.isInteger(result.error_code) ? ` (Code ${result.error_code})` : ""}`;
+          this.batchStopRequested = true;
+          return;
+        }
         this.batchResults.push(result);
         nonce = result.done ? null : result.next_token;
       }
@@ -768,8 +793,9 @@ class AirfryerRecipesPanel extends HTMLElement {
     } catch (error) {
       const reason = { zones: "betaZones", freshness: "betaFreshness", refresh_failed: "betaRefreshFailed",
         batch_connection: "batchConnection", state_changed: "betaState", unauthorized: "unauthorized" }[error?.message];
+      const failed = this.batchPlan.steps[this.batchResults.length];
       this.batchMessage = this.batchStopRequested ? this.words.batchStopped
-        : `${this.words.batchFailed}${reason ? ` ${this.words[reason]}` : ""}`;
+        : `${this.words.batchProgress} ${this.batchResults.length + 1}: ${this.programName(failed.settings.program)} · ${this.words.zone} ${failed.zone_id}. ${this.words.batchFailed}${reason ? ` ${this.words[reason]}` : ""}`;
       this.batchStopRequested = true;
       try { await this.request("batch_stop", { run_id: this.batchRunId }); } catch (_) { /* no replay */ }
     } finally { this.batchRunning = false; this.render(); this.showBatch(); }
@@ -817,7 +843,7 @@ class AirfryerRecipesPanel extends HTMLElement {
     this.render();
     try {
       const result = await this.request("beta_confirm", { token: prepared.token, acknowledge_supervised_test: true });
-      this.betaMessage = result.outcome === "accepted" ? this.words.betaAccepted : this.words.betaUnknown;
+      this.betaMessage = result.outcome === "accepted" ? this.words.betaAccepted : result.outcome === "rejected" ? `${this.words.betaRejected}${Number.isInteger(result.error_code) ? ` (Code ${result.error_code})` : ""}` : this.words.betaUnknown;
     } catch (error) {
       this.betaMessage = error?.code === "beta_test_blocked" ? this.betaError(error) : this.words.betaUnknown;
     } finally { this.busy = false; this.render(); }

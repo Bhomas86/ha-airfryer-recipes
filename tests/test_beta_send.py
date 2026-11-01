@@ -153,7 +153,7 @@ class SenderTests(unittest.IsolatedAsyncioTestCase):
             token = (await self.prepare())["token"]
             self.hass.services.async_call.return_value = response
             result = await self.confirm(token)
-            self.assertEqual(result["outcome"], "unknown")
+            self.assertEqual(result["outcome"], "rejected" if isinstance(response, dict) and response.get("ergebnis") == "abgelehnt" else "unknown")
             self.assertFalse(result["confirmed_on_device"])
             self.assertNotIn("private", str(result))
         self.assertEqual(self.hass.services.async_call.await_count, 3)
@@ -334,6 +334,57 @@ class SenderTests(unittest.IsolatedAsyncioTestCase):
             finish.set()
             await task
         self.hass.services.async_call.assert_not_awaited()
+
+    async def test_explicit_recovery_clears_latch_and_old_tokens_without_sending(self):
+        old = (await self.prepare())["token"]
+        self.sender.uncertain.add("device")
+        result = await self.sender.recover("u1", "device", True, "context")
+        self.assertEqual(result, {"rearmed": True, "transmitted": False})
+        self.assertNotIn("device", self.sender.uncertain)
+        self.assertNotIn(old, self.sender.pending)
+        self.read.assert_awaited_with(self.hass, "device", 1, refresh=True, wait_for_report=True, context="context")
+        self.hass.services.async_call.assert_not_awaited()
+        await self.prepare()
+        with self.assertRaisesRegex(BetaTestBlocked, "confirmation"):
+            await self.confirm(old)
+
+    async def test_recovery_refuses_inflight_active_batch_or_failed_fresh_read(self):
+        self.sender.uncertain.add("device")
+        self.sender.busy.add("device")
+        with self.assertRaisesRegex(BetaTestBlocked, "busy"):
+            await self.sender.recover("u1", "device", True, "context")
+        self.sender.busy.clear()
+        self.sender.batch_devices["device"] = "run"
+        with self.assertRaisesRegex(BetaTestBlocked, "busy"):
+            await self.sender.recover("u1", "device", True, "context")
+        self.sender.batch_devices.clear()
+        self.read.side_effect = BetaTestBlocked("zones")
+        with self.assertRaisesRegex(BetaTestBlocked, "zones"):
+            await self.sender.recover("u1", "device", True, "context")
+        self.assertIn("device", self.sender.uncertain)
+        self.hass.services.async_call.assert_not_awaited()
+
+    async def test_recovery_requires_explicit_ack_current_admin_and_unchanged_snapshot(self):
+        self.sender.uncertain.add("device")
+        with self.assertRaisesRegex(BetaTestBlocked, "acknowledgement"):
+            await self.sender.recover("u1", "device", False, "context")
+        self.hass.auth.async_get_user.return_value.is_admin = False
+        with self.assertRaisesRegex(BetaTestBlocked, "unauthorized"):
+            await self.sender.recover("u1", "device", True, "context")
+        self.hass.auth.async_get_user.return_value.is_admin = True
+        self.read.return_value = Target("Kitchen", ("same",), lambda: False)
+        with self.assertRaisesRegex(BetaTestBlocked, "state_changed"):
+            await self.sender.recover("u1", "device", True, "context")
+        self.assertIn("device", self.sender.uncertain)
+
+    async def test_numeric_adapter_rejection_code_is_exposed_without_raw_errors(self):
+        token = (await self.prepare())["token"]
+        self.hass.services.async_call.return_value = {
+            "ok": False, "ergebnis": "abgelehnt", "code": 11912000, "fehler": "private"}
+        result = await self.confirm(token)
+        self.assertEqual(result["outcome"], "rejected")
+        self.assertEqual(result["error_code"], 11912000)
+        self.assertNotIn("private", str(result))
 
 
 class AdapterTests(unittest.IsolatedAsyncioTestCase):

@@ -167,6 +167,7 @@ class WebsocketTests(unittest.IsolatedAsyncioTestCase):
             ("import_preview", {"payload": '{"schema_version":1,"recipes":[]}'}),
             ("import_confirm", {"token": "a-token"}),
             ("export", {}),
+            ("beta_recover", {"device_id": "device", "acknowledge_physical_reset": True}),
             ("batch_prepare", {"device_id": "device"}),
             ("batch_start", {"token": "x", "acknowledge_supervised_batch": True}),
             ("batch_next", {"run_id": "x", "next_token": "x"}),
@@ -384,12 +385,26 @@ class WebsocketTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(forged[2], "invalid_format")
             self.assertEqual(batch.next.await_count, 1)
 
+    async def test_recovery_requires_ack_stops_old_plans_and_uses_server_user_context(self):
+        old = SimpleNamespace(device="device")
+        sender = SimpleNamespace(_authorized=AsyncMock(), recover=AsyncMock(return_value={"rearmed": True, "transmitted": False}))
+        batch = SimpleNamespace(sender=sender, runs={"old": old}, stop=Mock())
+        with patch.object(self.api, "_batch", return_value=batch):
+            params = {"device_id": "device", "acknowledge_physical_reset": False}
+            self.assertEqual((await self.call("beta_recover", self.admin, **params))[2], "beta_test_blocked")
+            batch.stop.assert_not_called()
+            params["acknowledge_physical_reset"] = True
+            self.assertEqual((await self.call("beta_recover", self.admin, **params))[0], "result")
+            batch.stop.assert_called_once_with(old)
+            self.assertEqual(sender.recover.await_args.args[:3], (self.admin.user.id, "device", True))
+            self.assertEqual(sender.recover.await_args.args[3].user_id, self.admin.user.id)
+
     def test_commands_register_once_per_explicit_call(self):
         ws = self.modules["homeassistant.components.websocket_api"]
         ws.registered.clear()
         self.api.register_commands(self.hass)
         commands = {handler._ws_command for handler in ws.registered}
-        self.assertEqual(len(commands), 19)
+        self.assertEqual(len(commands), 20)
         self.assertEqual(
             commands,
             {f"{DOMAIN}/{name}" for name in (
@@ -397,7 +412,7 @@ class WebsocketTests(unittest.IsolatedAsyncioTestCase):
                 "import_preview", "import_confirm", "export", "favorites", "set_favorite",
                 "devices",
                 "prepare_send", "beta_prepare", "beta_confirm",
-                "batch_prepare", "batch_start", "batch_next", "batch_stop",
+                "batch_prepare", "batch_start", "batch_next", "batch_stop", "beta_recover",
             )},
         )
 

@@ -133,6 +133,11 @@ class BatchRunner:
             require(identity(target) == run.signature and target.unchanged(), "state_changed")
             attempted = True
             result = await self.sender.send_once(run.device, zone, phase, context)
+            if result["outcome"] == "rejected":
+                self.stop(run)
+                return {"done": True, "stopped": True, "reason": "adapter_rejected",
+                        "error_code": result.get("error_code"), "failed_step": run.index + 1,
+                        "zone_id": zone, "settings": asdict(phase), "next_token": None}
             require(result["outcome"] == "accepted", "outcome_unknown")
             require(not run.stopped, "batch_stopped")
             run.expected[zone] = phase
