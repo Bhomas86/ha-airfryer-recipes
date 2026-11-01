@@ -69,8 +69,8 @@ Letzte Zusammenfassung: 24.10.2026. Projektstandard: Englisch als Fallback; Proj
 
 ## Validierung und Abnahme
 
-- Mit Airfryer Control bereits real getestet: **Cosori Turbo Tower Pro Smart CAF-DC111S-AEU**, Temperatur- und Zeitübertragung an Fach 2.
-- Das bestätigt **noch nicht** SYNC/MATCH oder Funktionen in diesem neuen Projekt.
+- Vom Eigentümer lokal bestätigt am **Cosori Turbo Tower Pro Smart CAF-DC111S-AEU**: vollständige beaufsichtigte Folge mit zwölf Einstellungen auf beiden Fächern am 01.11.2026 bestanden; Gerät anschließend aus. Siehe [exakte Werte und Nachweisumfang](reports/ISSUE_7_LOCAL_ACCEPTANCE.de.md).
+- Das bestimmt nicht sämtliche Temperatur-/Zeitgrenzen, Gären, Änderungen aktiver Fächer, SYNC/MATCH oder allgemeine Kompatibilität.
 - Vor stabilen Releases: Codeprüfung, automatisierte Tests und dokumentierte lokale Testergebnisse.
 
 Umsetzungsstand zu Anforderungen 14/15/26: Issue #7 liefert lesende Geräteerkennung mit deaktivierten Steuerfähigkeiten. Airfryer Control `1.0.2-beta.1` ergänzt den öffentlichen lesenden Dienst `faehigkeiten`; die Administrator-Vorschau übernimmt daraus ausschließlich erlaubte Programme, Bereiche, Herkunft, Verbindung, Meldezeit und Revision. Geschätzte oder nicht gemeldete Programme bleiben sichtbar ungeprüft und erteilen niemals eine Sendeerlaubnis. Die adminpflichtige API `prepare_send` und ihre [Handy-Oberfläche](reports/ISSUE_7_DRY_RUN_UI.de.md) bleiben serverseitig erzwungener Testmodus und können nicht übertragen. Siehe [Sendevertrag](reports/ISSUE_7_COMMAND_CONTRACT.de.md) und [Prüfbericht](reports/ISSUE_7_DISCOVERY.de.md).

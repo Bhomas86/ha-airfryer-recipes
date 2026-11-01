@@ -73,10 +73,12 @@ Last consolidated: 2026-10-24. Project language policy: English default UI langu
 
 ## Validation and acceptance
 
-- Real device currently proven via upstream Airfryer Control: **Cosori Turbo
-  Tower Pro Smart CAF-DC111S-AEU**, zone 2 temperature/time transmission.
-- This does **not** confirm upstream SYNC/MATCH on the device or any
-  functionality in this new project.
+- Owner-confirmed local acceptance on **Cosori Turbo Tower Pro Smart
+  CAF-DC111S-AEU**: the complete supervised twelve-setting sequence passed on
+  both zones on 2026-11-01, and the appliance was off afterward. See the
+  [exact settings and evidence scope](reports/ISSUE_7_LOCAL_ACCEPTANCE.md).
+- This does not establish all temperature/duration endpoints, Proof,
+  active-zone changes, SYNC/MATCH or general compatibility.
 - Code review, tests and documented local test outcomes precede stable releases.
 
 Implementation note for requirements 14/15/26: Issue #7 exposes read-only discovery with disabled control capabilities. Airfryer Control `1.0.2-beta.1` adds the public read-only `faehigkeiten` service; the administrator preview allowlists its reported programs, ranges, provenance, connection, report time and revision. Estimated or unreported programs remain visibly unverified and never authorize transmission. The administrator-only `prepare_send` API and its [phone UI](reports/ISSUE_7_DRY_RUN_UI.md) remain server-enforced dry run and cannot transmit. See the [send contract](reports/ISSUE_7_COMMAND_CONTRACT.md) and [review](reports/ISSUE_7_DISCOVERY.md).

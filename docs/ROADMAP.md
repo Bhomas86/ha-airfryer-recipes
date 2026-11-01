@@ -2,6 +2,8 @@
 
 [English](ROADMAP.md) | [Deutsch](ROADMAP.de.md)
 
+**Local acceptance 2026-11-01: All twelve steps PASS.** The owner confirmed the complete guided sequence with six programs on zones 1 and 2 and the appliance off afterward. [Exact settings and evidence limits](reports/ISSUE_7_LOCAL_ACCEPTANCE.md). Next open device work: model-aware adapter limits and Proof, followed by focused endpoint/error acceptance. No new app update or GitHub Actions for this documentation follow-up.
+
 **Status (2026-10-29):** All 31 requirements are agreed. Recipe storage, authenticated API and locally accepted administrator management are merged. PR #19 with device preview and program selection was merged on 2026-10-25; HACS prerelease `0.1.0b2` passed phone acceptance. PR #20 corrects the HACS version listing. Issue #7 remains open for safe live transmission: the beta contract and model-specific capabilities require local verification. The dashboard (#8) follows. See the [acceptance report](reports/ISSUE_7_DRY_RUN_UI.md) and [architecture](ARCHITECTURE.md).
 
 **Review on 2026-10-30:** The unchanged beta contract still does not justify live approval. Model-specific evidence and fresh device confirmation remain missing; see the [contract re-review](reports/ISSUE_7_BETA_REVIEW.md).

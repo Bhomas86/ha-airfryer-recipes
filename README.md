@@ -4,7 +4,9 @@
 
 A Home Assistant custom integration for managing reusable air fryer recipes and sending their settings to supported air fryers through existing Home Assistant integrations.
 
-> **Project status: Test beta 0.1.0b10.** Turbo Tower model profile with seven owner-reported temperature ranges. UI compares appliance and adapter limits; sending stays within their reviewed intersection. Proof is still missing from the adapter. The guided list retains six programs and Dry at 55 °C / 360 minutes.
+> **Project status: Test beta 0.1.0b10.** On 2026-11-01 the owner confirmed the complete supervised twelve-setting run passed on both zones and the appliance was off afterward. Full temperature ranges and Proof still require an adapter change.
+
+**[Local acceptance: six programs passed on both zones](docs/reports/ISSUE_7_LOCAL_ACCEPTANCE.md).** Evidence covers the documented nominal settings, not general approval of all limits.
 
 **New test beta 0.1.0b5:** Separate supervised appliance test with selected recipe/manual values for CAF-DC111S-AEU and exactly Airfryer Control 1.0.2-beta.1. A single transmission requires explicit confirmation; normal device control remains blocked. [Installation and test](docs/releases/0.1.0b5.md).
 

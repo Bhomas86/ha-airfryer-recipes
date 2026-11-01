@@ -2,6 +2,8 @@
 
 [Deutsch](ROADMAP.de.md) | [English](ROADMAP.md)
 
+**Lokale Abnahme 01.11.2026: Alle zwölf Schritte BESTANDEN.** Der Eigentümer bestätigt die vollständige geführte Folge mit sechs Programmen auf Fach 1 und 2 sowie das anschließend ausgeschaltete Gerät. [Exakte Werte und Nachweisgrenzen](reports/ISSUE_7_LOCAL_ACCEPTANCE.de.md). Nächster offener Gerätepunkt: modellabhängige Adaptergrenzen und Gären; anschließend gezielte Grenzwert-/Fehlerabnahme. Kein neues App-Update und keine GitHub Actions für diesen Dokumentationsnachtrag.
+
 **Status (29.10.2026):** Alle 31 Anforderungen sind beschlossen. Rezeptspeicher, authentifizierte API und lokal abgenommene Admin-Verwaltung sind gemergt. PR #19 mit Geräte-Testvorschau und Programmauswahl ist seit 25.10.2026 gemergt; HACS-Vorabversion `0.1.0b2` wurde auf dem Handy erfolgreich abgenommen. PR #20 korrigiert die HACS-Versionsanzeige. Issue #7 bleibt für die sichere echte Übertragung offen: Beta-Vertrag und modellspezifische Fähigkeiten müssen lokal verifiziert werden. Danach folgt das Dashboard (#8). Siehe [Abnahmebericht](reports/ISSUE_7_DRY_RUN_UI.de.md) und [Architektur](ARCHITECTURE.de.md).
 
 **Prüfung vom 30.10.2026:** Der unveränderte Beta-Vertrag reicht weiterhin nicht zur Live-Freigabe. Modellspezifische Nachweise und frische Gerätebestätigung fehlen; siehe [erneute Vertragsprüfung](reports/ISSUE_7_BETA_REVIEW.de.md).

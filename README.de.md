@@ -4,7 +4,9 @@
 
 Benutzerdefinierte Home-Assistant-Integration zur Verwaltung wiederverwendbarer Heißluftfritteusen-Rezepte. Die gespeicherten Einstellungen sollen über bestehende Home-Assistant-Integrationen an unterstützte Geräte übertragen werden.
 
-> **Projektstatus: Test-Beta 0.1.0b10.** Turbo-Tower-Modellprofil mit sieben Eigentümer-Temperaturbereichen. Oberfläche zeigt Geräte- und Adaptergrenzen; Senden bleibt auf deren geprüfte Schnittmenge beschränkt. Gären fehlt noch im Adapter. Die geführte Liste nutzt weiter sechs Programme und Dörren mit 55 °C / 360 Minuten.
+> **Projektstatus: Test-Beta 0.1.0b10.** Der Eigentümer hat am 01.11.2026 den vollständigen beaufsichtigten Lauf mit zwölf Einstellungen auf beiden Fächern als bestanden und das Gerät anschließend als ausgeschaltet bestätigt. Vollständige Temperaturbereiche und Gären benötigen weiter eine Adapteranpassung.
+
+**[Lokale Abnahme: sechs Programme, beide Fächer bestanden](docs/reports/ISSUE_7_LOCAL_ACCEPTANCE.de.md).** Nachweis für die dokumentierten Beispielwerte; keine allgemeine Freigabe aller Grenzen.
 
 **Neue Test-Beta 0.1.0b5:** Separater beaufsichtigter Gerätetest mit gewählten Rezept-/manuellen Werten für CAF-DC111S-AEU und exakt Airfryer Control 1.0.2-beta.1. Nur nach ausdrücklicher Bestätigung wird einmalig übertragen; normale Gerätesteuerung bleibt gesperrt. [Installation und Test](docs/releases/0.1.0b5.de.md).
 
