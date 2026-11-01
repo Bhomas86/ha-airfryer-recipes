@@ -1,6 +1,11 @@
 // Local Home Assistant custom panel. All mutations go through the authenticated API.
 const WORDS = {
   en: {
+    chooseProgram: "Choose a program…", customProgram: "Enter a custom program", reportedPrograms: "Use reported programs",
+    recipeProgramsFrom: "Program choices from", recipeProgramsInfo: "Only the program identifier is saved. The recipe remains independent of any appliance. Limits and availability are checked again before sending.",
+    recipeProgramMissing: "This saved identifier is not reported by the selected appliance. Choose a reported program and save to correct it; no automatic replacement is made.",
+    recipeProgramsUnavailable: "No programs were reported. You can enter an identifier manually and keep editing recipes without an adapter.",
+    fixRecipeProgram: "Edit recipe program",
     betaConnection: "Connection or page changed. Old confirmations were discarded. Prepare a new test; no command will be replayed. A request already submitted cannot be recalled.",
     betaSelectionChanged: "Selection changed. Prepare the selected settings again.",
     modelTemperatures: "Appliance temperature ranges", modelOwner: "Appliance (owner report)", modelAdapter: "Adapter report",
@@ -82,6 +87,11 @@ const WORDS = {
     statusDrawerOpen: "Drawer open", statusHolding: "Holding", statusKeepingWarm: "Keeping warm", statusPreheated: "Preheated",
   },
   de: {
+    chooseProgram: "Programm auswählen…", customProgram: "Eigenes Programm eingeben", reportedPrograms: "Gemeldete Programme auswählen",
+    recipeProgramsFrom: "Programmauswahl von", recipeProgramsInfo: "Gespeichert wird nur die Programmkennung. Das Rezept bleibt geräteunabhängig. Grenzen und Verfügbarkeit werden vor dem Senden erneut geprüft.",
+    recipeProgramMissing: "Diese gespeicherte Kennung wird vom gewählten Gerät nicht gemeldet. Zum Korrigieren ein gemeldetes Programm wählen und speichern; es wird nichts automatisch ersetzt.",
+    recipeProgramsUnavailable: "Es wurden keine Programme gemeldet. Du kannst eine Kennung frei eingeben und Rezepte auch ohne Adapter weiter bearbeiten.",
+    fixRecipeProgram: "Rezeptprogramm bearbeiten",
     betaConnection: "Verbindung oder Seite gewechselt. Alte Bestätigungen wurden verworfen. Einen neuen Test vorbereiten; kein Befehl wird nachgeholt. Eine bereits übermittelte Anfrage kann nicht zurückgeholt werden.",
     betaSelectionChanged: "Auswahl geändert. Die gewählten Werte erneut vorbereiten.",
     modelTemperatures: "Temperaturbereiche des Geräts", modelOwner: "Gerät (Eigentümerangabe)", modelAdapter: "Adaptermeldung",
@@ -178,6 +188,13 @@ class AirfryerRecipesPanel extends HTMLElement {
     this.favoriteFilter = "";
     this.favorites = new Set();
     this.editor = null;
+    this.renderedEditor = null;
+    this.editorCustomProgram = false;
+    this.editorCategoryNew = "";
+    this.editorNewCategory = false;
+    this.editorTagsText = null;
+    this.editorRenderedUnit = "°C";
+    this.renderedCategories = [];
     this.preview = null;
     this.deviceState = { status: "adapter_missing", devices: [], live_send_enabled: false };
     this.selectedDeviceId = "";
@@ -462,8 +479,38 @@ class AirfryerRecipesPanel extends HTMLElement {
       .sort((left, right) => left.localeCompare(right));
   }
 
+  captureEditorDraft() {
+    if (!this.editor || this.editor !== this.renderedEditor || this.editor.phases?.length > 1) return;
+    const element = this.shadowRoot.getElementById("editor");
+    if (element?.id !== "editor") return;
+    const form = new FormData(element);
+    this.editor.name = String(form.get("name") || "");
+    this.editor.description = String(form.get("description") || "");
+    this.editor.favorite = form.has("favorite");
+    this.editorTagsText = String(form.get("tags") || "");
+    const category = String(form.get("category_choice") || "");
+    this.editorNewCategory = category === "new";
+    this.editorCategoryNew = String(form.get("category_new") || "");
+    if (category.startsWith("existing-")) this.editor.category = this.renderedCategories[Number(category.slice(9))] || "";
+    else if (!this.editorNewCategory) this.editor.category = "";
+    const temperature = form.get("temperature_c");
+    const minutes = form.get("duration_minutes");
+    this.editor.phases = [{ program: String(form.get("program") || ""),
+      temperature_c: temperature === null || temperature === "" ? undefined : this.editorRenderedUnit === "°F"
+        ? Math.round((Number(temperature) - 32) * 5 / 9) : Number(temperature),
+      duration_minutes: minutes === null || minutes === "" ? undefined : Number(minutes),
+    }];
+  }
+
   render() {
     if (!this.shadowRoot) return;
+    this.captureEditorDraft();
+    if (this.editor !== this.renderedEditor) {
+      this.editorCustomProgram = false;
+      this.editorCategoryNew = "";
+      this.editorNewCategory = false;
+      this.editorTagsText = null;
+    }
     const t = this.words;
     const categories = this.categories();
     const selected = this.editor;
@@ -476,6 +523,10 @@ class AirfryerRecipesPanel extends HTMLElement {
       program: this.manualPreviewProgram, temperature_c: this.manualPreviewTemperatureC, duration_minutes: this.manualPreviewDurationMinutes,
     };
     const programs = device?.programs || [];
+    const editorProgramReported = programs.some((program) => program.id === phase.program);
+    const editorProgramOptions = [
+      ...(!editorProgramReported && phase.program ? [{ id: phase.program, missing: true }] : []), ...programs,
+    ];
     const programReported = programs.some((program) => program.id === previewPhase.program);
     const programOptions = programs.length ? [
       ...(!programReported && previewPhase.program ? [{ id: previewPhase.program, missing: true }] : []),
@@ -520,16 +571,20 @@ class AirfryerRecipesPanel extends HTMLElement {
           ${this.admin ? `<button class="primary" data-action="new">${t.new}</button>${!this.recipes.length ? `<button data-action="sample">${t.sample}</button>` : ""}<button data-action="choose-import">${t.import}</button><button data-action="export">${t.export}</button>` : ""}
           <input class="visually-hidden" id="import-file" type="file" accept=".json,application/json">
         </div>
-        ${selected ? `<form id="editor" class="editor"><h2>${selected.id ? t.edit : t.new}</h2>
+        ${this.admin && selected ? `<form id="editor" class="editor"><h2>${selected.id ? t.edit : t.new}</h2>
           ${multiple ? `<p class="message error">${t.multiPhase}</p>` : ""}
           <div class="grid"><div><label for="recipe-name">${t.name}</label><input id="recipe-name" name="name" maxlength="100" required value="${escapeHtml(selected.name)}"></div>
-          <div><label for="recipe-category">${t.category}</label><select id="recipe-category" name="category_choice"><option value="" ${!selected.category ? "selected" : ""}>${t.noCategory}</option>${categories.map((name, index) => `<option value="existing-${index}" ${selected.category === name ? "selected" : ""}>${escapeHtml(name)}</option>`).join("")}<option value="new">${t.addCategory}</option></select>
-          <div id="new-category-field" hidden><label for="recipe-category-new">${t.newCategory}</label><input id="recipe-category-new" name="category_new" maxlength="64"></div></div></div>
+          <div><label for="recipe-category">${t.category}</label><select id="recipe-category" name="category_choice"><option value="" ${!this.editorNewCategory && !selected.category ? "selected" : ""}>${t.noCategory}</option>${categories.map((name, index) => `<option value="existing-${index}" ${!this.editorNewCategory && selected.category === name ? "selected" : ""}>${escapeHtml(name)}</option>`).join("")}<option value="new"${this.editorNewCategory ? " selected" : ""}>${t.addCategory}</option></select>
+          <div id="new-category-field" ${this.editorNewCategory ? "" : "hidden"}><label for="recipe-category-new">${t.newCategory}</label><input id="recipe-category-new" name="category_new" maxlength="64" ${this.editorNewCategory ? "required" : ""} value="${escapeHtml(this.editorCategoryNew)}"></div></div></div>
           <label for="recipe-description">${t.description}</label><textarea id="recipe-description" name="description" maxlength="500">${escapeHtml(selected.description)}</textarea>
-          <label for="recipe-tags">${t.tags}</label><input id="recipe-tags" name="tags" value="${escapeHtml((selected.tags || []).join(", "))}">
+          <label for="recipe-tags">${t.tags}</label><input id="recipe-tags" name="tags" value="${escapeHtml(this.editorTagsText ?? (selected.tags || []).join(", "))}">
           <label><input type="checkbox" name="favorite" ${selected.favorite ? "checked" : ""} style="width:auto;min-height:auto"> ${t.sharedFavorite}</label>
           <h3>${t.phases}</h3><div class="grid">
-          <div><label for="recipe-program">${t.program}</label><input id="recipe-program" name="program" maxlength="64" required value="${escapeHtml(phase.program)}"></div>
+          <div><label for="recipe-program">${t.program}</label>${programs.length && !this.editorCustomProgram
+            ? `<select id="recipe-program" name="program" required><option value="" disabled ${!phase.program ? "selected" : ""}>${t.chooseProgram}</option>${editorProgramOptions.map((program) => `<option value="${escapeHtml(program.id)}" ${program.id === phase.program ? "selected" : ""}>${escapeHtml(program.missing ? `${program.id} · ${t.unknownProgram}` : this.programOption(program))}</option>`).join("")}</select>`
+            : `<input id="recipe-program" name="program" maxlength="64" required value="${escapeHtml(phase.program)}">`}
+          ${programs.length ? `<p class="muted">${t.recipeProgramsFrom}: ${escapeHtml(device.name)}. ${t.recipeProgramsInfo}</p><button type="button" data-action="editor-program-mode">${this.editorCustomProgram ? t.reportedPrograms : t.customProgram}</button>` : `<p class="muted">${t.recipeProgramsUnavailable}</p>`}
+          ${phase.program && programs.length && !editorProgramReported ? `<p class="message">${t.recipeProgramMissing}</p>` : ""}</div>
           <div><label for="recipe-temperature">${t.temperature} (${this.unit})</label><input id="recipe-temperature" name="temperature_c" type="number" min="${this.unit === "°F" ? 32 : 0}" max="${this.unit === "°F" ? 752 : 400}" step="1" required value="${phase.temperature_c === undefined ? "" : escapeHtml(this.toDisplay(phase.temperature_c))}"></div>
           <div><label for="recipe-duration">${t.duration}</label><input id="recipe-duration" name="duration_minutes" type="number" min="1" max="1440" step="1" required value="${escapeHtml(phase.duration_minutes)}"></div></div>
           <div class="actions"><button class="primary" type="submit" ${this.busy || multiple ? "disabled" : ""}>${t.save}</button><button type="button" data-action="cancel">${t.cancel}</button></div></form>` : ""}
@@ -564,6 +619,7 @@ class AirfryerRecipesPanel extends HTMLElement {
             <button type="submit" data-beta-selection="true" ${this.busy || this.devicesBusy || !zones.length ? "disabled" : ""}>${t.betaSelection}</button></div>
             <p class="muted">${t.betaSelectionInfo}</p>
           </form>` : ""}
+          ${previewRecipe && programs.length && !programReported ? `<p class="message">${t.recipeProgramMissing}</p><button type="button" data-action="edit" data-id="${escapeHtml(previewRecipe.id)}">${t.fixRecipeProgram}</button>` : ""}
           ${this.renderModelTemperatures(device)}
           ${this.sendPreview ? `<section class="message" role="status"><h3>${t.dryRunResult}</h3><p><strong>${t.noTransmission}</strong></p>
             <p>${t.desiredSettings}: ${escapeHtml(this.sendPreview.settings.program)} · ${escapeHtml(this.toDisplay(this.sendPreview.settings.temperature_c))} ${this.unit} · ${escapeHtml(this.sendPreview.settings.duration_minutes)} min</p>
@@ -590,6 +646,9 @@ class AirfryerRecipesPanel extends HTMLElement {
         ${!this.busy && !this.filtered().length ? `<p>${t.empty}</p>` : ""}
         <p class="muted">${t.devicesNote}</p>
       </main>`;
+    this.renderedEditor = this.editor;
+    this.editorRenderedUnit = this.unit;
+    this.renderedCategories = categories;
   }
 
   connectedCallback() {
@@ -624,6 +683,10 @@ class AirfryerRecipesPanel extends HTMLElement {
 
   onChange(event) {
     if (this.batchRunning) { this.render(); return; }
+    if (event.target.id === "recipe-program") {
+      this.render();
+      return;
+    }
     if (event.target.id === "batch-device") {
       this.selectedDeviceId = event.target.value;
       this.selectedZoneId = String(this.selectedDevice()?.zones?.[0]?.zone_id || "");
@@ -709,6 +772,12 @@ class AirfryerRecipesPanel extends HTMLElement {
     const t = this.words;
     if (type === "refresh") return this.load();
     if (!this.admin) return;
+    if (type === "editor-program-mode" && this.editor) {
+      this.captureEditorDraft();
+      this.editorCustomProgram = !this.editorCustomProgram;
+      this.render();
+      return;
+    }
     if (type === "beta-prepare") return this.prepareSelectedBeta(this.shadowRoot.getElementById("device-preview-form"));
     if (type === "beta-confirm") return this.confirmBetaTest();
     if (type === "beta-cancel") { this.forgetBeta(); this.render(); return; }
@@ -763,6 +832,7 @@ class AirfryerRecipesPanel extends HTMLElement {
       );
     }
     this.render();
+    if (["new", "edit"].includes(type)) this.shadowRoot.getElementById("editor")?.scrollIntoView?.({ block: "start", behavior: "smooth" });
   }
 
   onSubmit(event) {
@@ -796,6 +866,8 @@ class AirfryerRecipesPanel extends HTMLElement {
     };
     if (this.editor.id) recipe.id = this.editor.id;
     const command = this.editor.id ? "update" : "create";
+    this.forgetBeta();
+    this.sendPreview = null;
     return this.action(() => this.request(command, { recipe }), this.words.saved);
   }
 

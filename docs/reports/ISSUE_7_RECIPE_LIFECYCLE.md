@@ -26,6 +26,8 @@ Additional checks cover cross-connection rejection, disconnect during preparatio
 
 ## Focused owner acceptance
 
+Follow-up: the owner was blocked at recipe authoring because the editor required program text, and the screenshot showed the unreported identifier `Airfry`. Beta 0.1.0b12 adds a reported-program dropdown and an explicit correction path. [Editor correction and repeat procedure](ISSUE_7_EDITOR_PROGRAM_PICKER.md). R1/R2 remain pending until the corrected saved recipe is tested.
+
 Back up, install v0.1.0b11, restart HA and fully reopen the app. Retain exactly Airfryer Control 1.0.2-beta.1 for this package. Cancel old appliance preparations, wait for both zones idle/off and re-arm if required. Remain beside the appliance; do not press Start. Create a separate single-phase test recipe using the previously accepted Air Fry / 180 °C / 7 minutes; do not overwrite a personal recipe.
 
 | ID | Check | Expected result | Status |

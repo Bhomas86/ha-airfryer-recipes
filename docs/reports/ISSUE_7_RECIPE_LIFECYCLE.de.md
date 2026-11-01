@@ -26,6 +26,8 @@ Weitere Prüfungen betreffen fremde Verbindungen, Abbruch während Vorbereitung/
 
 ## Gezielte Eigentümerabnahme
 
+Nachtrag: Der Eigentümer war bei der Rezepterstellung blockiert, weil der Editor Programmtext verlangte; der Screenshot zeigte die nicht gemeldete Kennung `Airfry`. Beta 0.1.0b12 ergänzt eine Liste gemeldeter Programme und einen ausdrücklichen Korrekturweg. [Editor-Korrektur und erneutes Vorgehen](ISSUE_7_EDITOR_PROGRAM_PICKER.de.md). R1/R2 bleiben bis zum Test des korrigierten gespeicherten Rezepts offen.
+
 Backup erstellen, v0.1.0b11 installieren, HA neu starten und die App vollständig neu öffnen. Für dieses Paket exakt Airfryer Control 1.0.2-beta.1 beibehalten. Alte Vorbereitungen am Gerät abbrechen, auf beide Fächer bereit/aus warten und bei Bedarf wieder freigeben. Am Gerät bleiben; nicht Start drücken. Ein separates einphasiges Testrezept mit dem bereits abgenommenen Airfry / 180 °C / 7 Minuten erstellen; kein persönliches Rezept überschreiben.
 
 | ID | Prüfung | Erwartetes Ergebnis | Status |

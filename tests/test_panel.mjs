@@ -640,6 +640,159 @@ test("recipe editor lists saved categories before the new-category choice withou
   assert.equal(input.required, false);
 });
 
+function recipeEditorPanel(api = async () => ({ recipes: [] })) {
+  const panel = betaPanel(api);
+  panel.selectedDevice().programs = ["airfry", "roast", "bake", "grill", "reheat", "dry"].map(id =>
+    ({ id, limits_status: "estimated", send_status: "unverified" }));
+  panel.editor = { name: "", description: "", category: "", tags: [], phases: [{}] };
+  panel.render();
+  return panel;
+}
+
+test("new recipe uses reported program IDs in a localized dropdown without picking one automatically", () => {
+  const calls = [];
+  const panel = recipeEditorPanel(async r => { calls.push(r); });
+  panel.selectedDevice().model_profile = { programs: [{ id: "proof" }] };
+  panel.render();
+  const form = panel.shadowRoot.innerHTML.match(/<form id="editor"[\s\S]*?<\/form>/)[0];
+  assert.match(form, /<select id="recipe-program" name="program" required>/);
+  assert.match(form, /<option value="" disabled selected>Programm auswählen/);
+  assert.match(form, /value="airfry" >Heißluft-Frittieren · geschätzt · Senden ungeprüft/);
+  assert.match(form, /value="roast" >Braten/);
+  assert.match(form, /value="dry" >Dörren/);
+  assert.doesNotMatch(form, /value="proof"|<input id="recipe-program"/);
+  assert.equal(panel.editor.phases[0].program, undefined);
+  assert.equal(calls.length, 0);
+  panel._hass.language = "en";
+  panel.render();
+  assert.match(panel.shadowRoot.innerHTML, /Choose a program…/);
+  assert.match(panel.shadowRoot.innerHTML, /Only the program identifier is saved/);
+});
+
+test("legacy Airfry spelling remains selected and can be opened for explicit correction", async () => {
+  const calls = [];
+  const panel = recipeEditorPanel(async r => { calls.push(r); });
+  const recipe = { id: "legacy", name: "Piccolinies", category: "", phases: [{
+    program: "Airfry", temperature_c: 180, duration_minutes: 7 }] };
+  panel.recipes = [recipe];
+  panel.editor = null;
+  panel.previewRecipeId = recipe.id;
+  panel.render();
+  assert.match(panel.shadowRoot.innerHTML, /Rezeptprogramm bearbeiten/);
+  await panel.onClick({ target: { closest: () => ({ dataset: { action: "edit", id: recipe.id } }) } });
+  const form = panel.shadowRoot.innerHTML.match(/<form id="editor"[\s\S]*?<\/form>/)[0];
+  assert.match(form, /value="Airfry" selected>Airfry · von diesem Gerät nicht gemeldet/);
+  assert.match(form, /value="airfry" >Heißluft-Frittieren/);
+  assert.equal(panel.editor.phases[0].program, "Airfry");
+  assert.equal(recipe.phases[0].program, "Airfry");
+  assert.equal(calls.length, 0);
+});
+
+test("explicitly saving a reported program corrects the same recipe without storing a device or zone", async () => {
+  const calls = [];
+  const panel = recipeEditorPanel(async r => {
+    calls.push(r);
+    return r.type.endsWith("/list") ? { recipes: [] } : { recipe: r.recipe };
+  });
+  panel.editor = { id: "legacy", name: "Piccolinies", phases: [{ program: "Airfry", temperature_c: 180, duration_minutes: 7 }] };
+  await panel.onSubmit({ preventDefault() {}, target: { id: "editor", values: {
+    name: "Piccolinies", program: "airfry", temperature_c: "180", duration_minutes: "7",
+  } } });
+  assert.equal(calls[0].type, "airfryer_recipes/update");
+  assert.equal(calls[0].recipe.id, "legacy");
+  assert.equal(calls[0].recipe.phases[0].program, "airfry");
+  assert.equal(calls[0].recipe.phases[0].temperature_c, 180);
+  assert.equal(calls[0].recipe.phases[0].duration_minutes, 7);
+  assert.equal(Object.hasOwn(calls[0].recipe, "device_id"), false);
+  assert.equal(Object.hasOwn(calls[0].recipe, "zone_id"), false);
+  assert.equal(calls.some(r => r.type.includes("beta_") || r.type.endsWith("prepare_send")), false);
+});
+
+test("switching to custom input and back preserves all unsaved editor fields", async () => {
+  const calls = [];
+  const panel = recipeEditorPanel(async r => { calls.push(r); });
+  const form = { id: "editor", values: { name: "Unsaved <name>", description: "Keep description", tags: "one, two, ",
+    category_choice: "new", category_new: "New category", favorite: "on", program: "airfry", temperature_c: "190", duration_minutes: "9" } };
+  panel.shadowRoot.getElementById = id => id === "editor" ? form : undefined;
+  await panel.onClick({ target: { closest: () => ({ dataset: { action: "editor-program-mode" } }) } });
+  assert.match(panel.shadowRoot.innerHTML, /<input id="recipe-program" name="program"[^>]*value="airfry"/);
+  assert.match(panel.shadowRoot.innerHTML, /value="Unsaved &lt;name&gt;"/);
+  assert.match(panel.shadowRoot.innerHTML, /<option value="new" selected>/);
+  assert.match(panel.shadowRoot.innerHTML, /id="recipe-category-new"[^>]*required[^>]*value="New category"/);
+  assert.match(panel.shadowRoot.innerHTML, /value="one, two, "/);
+  assert.match(panel.shadowRoot.innerHTML, /name="favorite" checked/);
+  await panel.onClick({ target: { closest: () => ({ dataset: { action: "editor-program-mode" } }) } });
+  assert.match(panel.shadowRoot.innerHTML, /<select id="recipe-program" name="program" required>/);
+  assert.match(panel.shadowRoot.innerHTML, /value="airfry" selected/);
+  assert.equal(panel.editor.phases[0].temperature_c, 190);
+  assert.equal(panel.editor.phases[0].duration_minutes, 9);
+  assert.equal(calls.length, 0);
+});
+
+test("program selection rerender retains the native form draft and does not mutate a stored recipe", () => {
+  const panel = recipeEditorPanel();
+  const stored = { id: "one", name: "Original", phases: [{ program: "airfry", temperature_c: 180, duration_minutes: 7 }] };
+  panel.recipes = [stored];
+  panel.editor = structuredClone(stored);
+  panel.render();
+  const form = { id: "editor", values: { name: "Changed name", program: "roast", temperature_c: "190", duration_minutes: "10" } };
+  panel.shadowRoot.getElementById = id => id === "editor" ? form : undefined;
+  panel.onChange({ target: { id: "recipe-program", value: "roast" } });
+  assert.match(panel.shadowRoot.innerHTML, /value="roast" selected/);
+  assert.equal(panel.editor.name, "Changed name");
+  assert.equal(panel.editor.phases[0].program, "roast");
+  assert.equal(stored.name, "Original");
+  assert.equal(stored.phases[0].program, "airfry");
+});
+
+test("recipes remain freely editable without reported adapter programs", () => {
+  const panel = recipeEditorPanel();
+  panel.deviceState = { devices: [], status: "adapter_missing" };
+  panel.editor = { name: "Portable", phases: [{ program: "my-program", temperature_c: 150, duration_minutes: 4 }] };
+  panel.render();
+  assert.match(panel.shadowRoot.innerHTML, /<input id="recipe-program" name="program"[^>]*value="my-program"/);
+  assert.match(panel.shadowRoot.innerHTML, /Rezepte auch ohne Adapter weiter bearbeiten/);
+  assert.doesNotMatch(panel.shadowRoot.innerHTML, /<select id="recipe-program"/);
+});
+
+test("device refresh preserves an unsaved program even when the new report no longer includes it", async () => {
+  const calls = [];
+  const panel = recipeEditorPanel(async r => {
+    calls.push(r);
+    return { status: "adapter_beta", devices: [{ device_id: "ha-device", name: "Kitchen", zones: [{zone_id:1,status:"idle"}],
+      programs: [{id:"airfry", limits_status:"estimated", send_status:"unverified"}] }] };
+  });
+  const form = { id: "editor", values: { name: "Keep draft", program: "roast", temperature_c: "190", duration_minutes: "10" } };
+  panel.shadowRoot.getElementById = id => id === "editor" ? form : undefined;
+  await panel.onClick({ target: { closest: () => ({ dataset: { action: "refresh-devices" } }) } });
+  assert.equal(panel.editor.name, "Keep draft");
+  assert.equal(panel.editor.phases[0].program, "roast");
+  assert.match(panel.shadowRoot.innerHTML, /value="roast" selected>roast · von diesem Gerät nicht gemeldet/);
+  assert.deepEqual(calls.map(r => r.type), ["airfryer_recipes/devices"]);
+});
+
+test("unsaved editor temperature keeps its meaning across a Fahrenheit-to-Celsius rerender", () => {
+  const panel = recipeEditorPanel();
+  panel._hass.config = { unit_system: { temperature: "°F" } };
+  panel.render();
+  const form = { id: "editor", values: { name: "Draft", program: "airfry", temperature_c: "356", duration_minutes: "7" } };
+  panel.shadowRoot.getElementById = id => id === "editor" ? form : undefined;
+  panel.started = true;
+  panel.hass = { ...panel._hass, config: { unit_system: { temperature: "°C" } } };
+  assert.match(panel.shadowRoot.innerHTML, /id="recipe-temperature"[^>]*value="180"/);
+  assert.equal(panel.editor.phases[0].temperature_c, 180);
+});
+
+test("an editor left open when permissions change is hidden and cannot save", async () => {
+  const calls = [];
+  const panel = recipeEditorPanel(async r => { calls.push(r); });
+  panel.started = true;
+  panel.hass = { ...panel._hass, user: { id: "u1", is_admin: false } };
+  assert.doesNotMatch(panel.shadowRoot.innerHTML, /<form id="editor"/);
+  await panel.onSubmit({ preventDefault() {}, target: { id: "editor", values: { program: "airfry" } } });
+  assert.equal(calls.length, 0);
+});
+
 test("non-admin panel cannot invoke a mutation", async () => {
   const calls = [];
   const panel = panelWith(async (request) => { calls.push(request.type); return { recipes: [] }; }, false);

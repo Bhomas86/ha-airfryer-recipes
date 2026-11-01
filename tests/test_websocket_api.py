@@ -443,6 +443,27 @@ class WebsocketTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual((await self.repo.async_get(recipe.id)).phases[0].temperature_c, 190)
         self.assertFalse(self.admin.subscriptions)
 
+    async def test_legacy_program_spelling_requires_explicit_recipe_update_before_send(self):
+        sender = self.real_beta_sender()
+        recipe = await self.repo.async_create(create_recipe("Piccolinies", program="Airfry", temperature_c=180, duration_minutes=7))
+        result = await self.call("beta_prepare", self.admin, device_id="device", zone_id=1,
+                                 acknowledge_unverified=True, source={"recipe_id": recipe.id})
+        self.assertEqual(result[2:], ("beta_test_blocked", "program_unsupported"))
+        self.assertEqual((await self.repo.async_get(recipe.id)).phases[0].program, "Airfry")
+        sender._read.assert_not_awaited()
+        self.hass.services.async_call.assert_not_awaited()
+        from dataclasses import replace
+        corrected = replace(recipe, phases=(replace(recipe.phases[0], program="airfry"),))
+        await self.call("update", self.admin, recipe=recipe_to_dict(corrected))
+        for zone in (1, 2):
+            prepared = await self.call("beta_prepare", self.admin, device_id="device", zone_id=zone,
+                acknowledge_unverified=True, source={"recipe_id": recipe.id})
+            self.assertEqual(prepared[2]["settings"], {"program": "airfry", "temperature_c": 180, "duration_minutes": 7})
+            result = await self.call("beta_confirm", self.admin, token=prepared[2]["token"], acknowledge_supervised_test=True)
+            self.assertEqual(result[2]["outcome"], "accepted")
+        self.assertEqual(await self.repo.async_get(recipe.id), corrected)
+        self.assertEqual(self.hass.services.async_call.await_count, 2)
+
     async def test_disconnect_cleanup_revokes_confirmation_and_failed_prepare_removes_subscription(self):
         sender = self.real_beta_sender()
         prepared = await self.call("beta_prepare", self.admin, device_id="device", zone_id=1,
