@@ -4,7 +4,7 @@
 
 A Home Assistant custom integration for managing reusable air fryer recipes and sending their settings to supported air fryers through existing Home Assistant integrations.
 
-> **Project status: Test beta 0.1.0b9.** Both individual-test buttons use the selected settings. The sequence now uses Dry at 55 °C / 360 minutes following successful owner single tests on both zones. Dry temperature limited to 35–95 °C; complete updated sequence acceptance remains pending.
+> **Project status: Test beta 0.1.0b10.** Turbo Tower model profile with seven owner-reported temperature ranges. UI compares appliance and adapter limits; sending stays within their reviewed intersection. Proof is still missing from the adapter. The guided list retains six programs and Dry at 55 °C / 360 minutes.
 
 **New test beta 0.1.0b5:** Separate supervised appliance test with selected recipe/manual values for CAF-DC111S-AEU and exactly Airfryer Control 1.0.2-beta.1. A single transmission requires explicit confirmation; normal device control remains blocked. [Installation and test](docs/releases/0.1.0b5.md).
 
@@ -19,6 +19,8 @@ New: supervised selected recipe/manual settings for all six reported programs. [
 **[New: End zone settings before program changes](docs/releases/0.1.0b8.md).** 145 Python/32 frontend tests passed locally; no GitHub Actions.
 
 **[New: Transfer selected single-test settings and correct Dry sample](docs/releases/0.1.0b9.md).** 147 Python/36 frontend tests passed locally; no GitHub Actions.
+
+**[New: Turbo Tower temperature profile and adapter comparison](docs/releases/0.1.0b10.md).** 150 Python/38 frontend tests passed locally; no GitHub Actions.
 
 ## Goals
 
@@ -63,7 +65,7 @@ Current beta: 132 Python tests and 29 frontend tests passed locally. No GitHub A
 
 ## Installation
 
-**Prerelease, not a stable release.** Create a Home Assistant backup first. Add this repository as a custom HACS integration repository, show prereleases and select `v0.1.0b9` using “Redownload”. Restart Home Assistant and fully reopen the Companion app.
+**Prerelease, not a stable release.** Create a Home Assistant backup first. Add this repository as a custom HACS integration repository, show prereleases and select `v0.1.0b10` using “Redownload”. Restart Home Assistant and fully reopen the Companion app.
 
 Recipe management works without Airfryer Control and requires no cloud credentials. Install Airfryer Control `1.0.2-beta.1` or newer for the extended device preview. It executes no control commands. For CAF-DC111S-AEU, the six reported programs and limits remain estimated/unverified; `proof` is missing from the upstream contract. Normal transmission remains blocked; the separate supervised beta test requires exactly Airfryer Control 1.0.2-beta.1.
 

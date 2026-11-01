@@ -255,6 +255,37 @@ test("unsupported program rejection remains visible and enables no confirmation"
   assert.match(panel.betaMessage, /Programm wurde nicht ersetzt/);
 });
 
+test("model temperatures show owner ranges apart from adapter ranges without adding Proof to selection", () => {
+  const panel = betaPanel(async () => ({}));
+  const device = panel.selectedDevice();
+  device.programs = [{ id: "airfry", temperature_c: { min: 120, max: 205 }, limits_status: "estimated" }];
+  device.model_profile = { source: "owner_reported", programs: [
+    { id: "airfry", temperature_c: { min: 120, max: 230 }, temperature_step_c: null },
+    { id: "proof", temperature_c: { min: 30, max: 45 }, temperature_step_c: 1 },
+  ] };
+  panel.render();
+  assert.match(panel.shadowRoot.innerHTML, /120–230 °C/);
+  assert.match(panel.shadowRoot.innerHTML, /120–205 °C/);
+  assert.match(panel.shadowRoot.innerHTML, /Gären<\/td><td>30–45 °C · 1 °C Schritt<\/td><td>Nicht gemeldet/);
+  assert.doesNotMatch(panel.shadowRoot.innerHTML, /<option value="proof"/);
+  assert.match(panel.shadowRoot.innerHTML, /Schnittmenge aus Gerätebereich/);
+  panel._hass.language = "en";
+  panel._hass.config = { unit_system: { temperature: "°F" } };
+  panel.render();
+  assert.match(panel.shadowRoot.innerHTML, /Proof<\/td><td>86–113 °F · 1.8 °F step<\/td><td>Not reported/);
+  assert.match(panel.shadowRoot.innerHTML, /Appliance \(owner report\)/);
+  assert.match(panel.shadowRoot.innerHTML, /248–446 °F/);
+});
+
+test("absent or unsupported profile provenance shows no owner range table", () => {
+  const panel = betaPanel(async () => ({}));
+  panel.render();
+  assert.doesNotMatch(panel.shadowRoot.innerHTML, /<details>/);
+  panel.selectedDevice().model_profile = { source: "unknown", programs: [{ id: "proof" }] };
+  panel.render();
+  assert.doesNotMatch(panel.shadowRoot.innerHTML, /<details>/);
+});
+
 const batchPlan = { token: "batch", device_name: "Fixture", skipped: [],
   steps: [{ zone_id: 1, settings: { program: "airfry", temperature_c: 180, duration_minutes: 7 } },
           { zone_id: 2, settings: { program: "bake", temperature_c: 180, duration_minutes: 6 } }] };

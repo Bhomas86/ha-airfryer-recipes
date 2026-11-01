@@ -15,11 +15,12 @@ from typing import Any, Callable
 
 from .const import DOMAIN
 from .device_discovery import normalize_capabilities
+from .model_profiles import TURBO_TOWER_MODEL, TURBO_TOWER_TEMPERATURES
 from .recipe_model import CookingPhase, Recipe
 from .recipe_repository import RecipeNotFoundError
 
 UPSTREAM = "airfryer_control"
-MODEL = "CAF-DC111S-AEU"
+MODEL = TURBO_TOWER_MODEL
 VERSION = "1.0.2-beta.1"
 TTL_SECONDS = 15
 MAX_REPORT_AGE = 15
@@ -33,9 +34,9 @@ REVIEWED_PROGRAM_LIMITS = {
     "bake": (80, 205, 240), "grill": (205, 240, 30),
     "reheat": (40, 205, 60), "dry": (34, 95, 1440),
 }
-# Owner-reported CAF-DC111S-AEU range, narrower than upstream's estimate.
+# Owner-reported model bounds apply in addition to the upstream contract.
 # This does not mark sending or duration bounds as model-confirmed.
-MODEL_TEMPERATURE_LIMITS = {"dry": (35, 95)}
+MODEL_TEMPERATURE_LIMITS = TURBO_TOWER_TEMPERATURES
 
 
 def validate_settings(phase: CookingPhase) -> None:

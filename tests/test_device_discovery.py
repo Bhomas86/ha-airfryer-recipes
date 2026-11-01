@@ -56,8 +56,22 @@ class DiscoveryTests(unittest.IsolatedAsyncioTestCase):
 
     def test_unknown_model_has_no_guessed_programs_or_control_capabilities(self):
         self.device.model = "unknown-model"
+        self.assertIsNone(self.describe()[0]["model_profile"])
         self.assertEqual(self.describe()[0]["programs"], [])
         self.assertFalse(any(self.describe()[0]["capabilities"].values()))
+
+    def test_owner_model_profile_does_not_synthesize_adapter_programs_or_enable_send(self):
+        device = self.describe()[0]
+        profile = device["model_profile"]
+        self.assertEqual(profile["source"], "owner_reported")
+        by_id = {program["id"]: program for program in profile["programs"]}
+        self.assertEqual(by_id["proof"], {"id": "proof", "temperature_c": {"min": 30, "max": 45},
+                                           "temperature_step_c": 1})
+        self.assertEqual(by_id["roast"]["temperature_c"], {"min": 175, "max": 230})
+        self.assertIsNone(by_id["roast"]["temperature_step_c"])
+        self.assertEqual(device["programs"], [])
+        self.assertFalse(any(device["capabilities"].values()))
+        self.assertEqual(self.runtime.api.mock_calls, [])
 
     def test_credentials_raw_data_and_error_messages_are_not_exposed(self):
         self.fryer.raw_multi = {"token": "private-token"}
@@ -128,6 +142,8 @@ class DiscoveryTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(result["status"], "adapter_beta")
         self.assertFalse(result["live_send_enabled"])
         device = result["devices"][0]
+        self.assertIn("proof", [p["id"] for p in device["model_profile"]["programs"]])
+        self.assertNotIn("proof", [p["id"] for p in device["programs"]])
         self.assertEqual(device["programs"], [{
             "id": "airfry", "temperature_c": {"min": 120, "max": 205},
             "duration_minutes": {"min": 1, "max": 60},

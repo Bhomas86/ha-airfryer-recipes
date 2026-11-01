@@ -302,6 +302,33 @@ class SenderTests(unittest.IsolatedAsyncioTestCase):
                                                        "duration_minutes": 360})
         self.hass.services.async_call.assert_not_awaited()
 
+    async def test_model_and_upstream_temperature_intersection_blocks_before_device_read(self):
+        for program, temperatures in (("airfry", (119, 206, 230)), ("roast", (120, 174, 206, 230)),
+                                      ("bake", (79, 206)), ("grill", (160, 204, 231, 240)),
+                                      ("reheat", (39, 206))):
+            for temperature in temperatures:
+                with self.subTest(program=program, temperature=temperature):
+                    with self.assertRaisesRegex(BetaTestBlocked, "test_range"):
+                        await self.selected({"settings": {"program": program, "temperature_c": temperature,
+                                                           "duration_minutes": 1}})
+        for temperature in (30, 35, 45):
+            with self.assertRaisesRegex(BetaTestBlocked, "program_unsupported"):
+                await self.selected({"settings": {"program": "proof", "temperature_c": temperature,
+                                                   "duration_minutes": 1}})
+        self.read.assert_not_awaited()
+        self.hass.services.async_call.assert_not_awaited()
+
+    async def test_model_and_upstream_common_temperature_endpoints_allow_preparation_only(self):
+        for program, temperatures in (("airfry", (120, 205)), ("roast", (175, 205)),
+                                      ("bake", (80, 205)), ("grill", (205, 230)), ("reheat", (40, 205))):
+            for temperature in temperatures:
+                with self.subTest(program=program, temperature=temperature):
+                    prepared = await self.selected({"settings": {"program": program, "temperature_c": temperature,
+                                                                "duration_minutes": 1}})
+                    self.assertEqual(prepared["settings"]["temperature_c"], temperature)
+                    self.assertEqual(prepared["settings"]["program"], program)
+        self.hass.services.async_call.assert_not_awaited()
+
     async def test_missing_and_multiphase_recipes_cannot_be_sent(self):
         repo = await self.library()
         with self.assertRaisesRegex(BetaTestBlocked, "recipe_changed"):
@@ -576,17 +603,19 @@ class AdapterTests(unittest.IsolatedAsyncioTestCase):
             await read_target(self.hass, "ha-device", 1, settings=CookingPhase("airfry", 180, 7))
 
     async def test_all_program_bounds_require_actual_report_and_known_provenance(self):
-        from custom_components.airfryer_recipes.beta_send import REVIEWED_PROGRAM_LIMITS
+        from custom_components.airfryer_recipes.beta_send import REVIEWED_PROGRAM_LIMITS, MODEL_TEMPERATURE_LIMITS
         for program, (low, high, minutes) in REVIEWED_PROGRAM_LIMITS.items():
             self.payload["programme"] = {program: {"temperatur": [low, high], "minuten": [1, minutes],
                 "grenzen": "geschaetzt", "senden": "ungeprueft"}}
+            model_low, model_high = MODEL_TEMPERATURE_LIMITS[program]
+            allowed_low, allowed_high = max(low, model_low), min(high, model_high)
             for zone in (1, 2):
-                for temp, duration in ((35 if program == "dry" else low, 1), (high, minutes)):
+                for temp, duration in ((allowed_low, 1), (allowed_high, minutes)):
                     await read_target(self.hass, "ha-device", zone,
                                       settings=CookingPhase(program, temp, duration))
             self.payload["programme"][program]["grenzen"] = "unknown-source"
             with self.assertRaisesRegex(BetaTestBlocked, "capabilities"):
-                await read_target(self.hass, "ha-device", 1, settings=CookingPhase(program, 35 if program == "dry" else low, 1))
+                await read_target(self.hass, "ha-device", 1, settings=CookingPhase(program, allowed_low, 1))
         self.assertTrue(all(call.args[1] == "faehigkeiten" for call in self.hass.services.async_call.await_args_list))
 
     async def test_batch_can_only_replace_prepared_values_owned_and_verified_by_that_run(self):

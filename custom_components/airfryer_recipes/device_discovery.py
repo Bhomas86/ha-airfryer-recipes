@@ -10,6 +10,8 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any
 
+from .model_profiles import describe_model_profile
+
 UPSTREAM_DOMAIN = "airfryer_control"
 CAPABILITIES_SERVICE = "faehigkeiten"
 STATUS_MAP = {
@@ -149,6 +151,7 @@ def describe_devices(devices: Any, entries: Any) -> list[dict[str, Any]]:
             "device_id": device.id,
             "name": device.name_by_user or device.name or "Airfryer",
             "model": device.model,
+            "model_profile": describe_model_profile(device.model),
             "adapter": UPSTREAM_DOMAIN,
             "connectivity": "offline" if online is False else (
                 "unknown" if online is not True or last_error else "reported_online"

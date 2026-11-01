@@ -68,3 +68,5 @@ Eigentümervorgabe: Nach beaufsichtigtem Abbruch muss ein neuer Test ohne HA-Neu
 Beta 0.1.0b8: Vom Eigentümer benannte Fach-Schalter zum gezielten Beenden eigener vorbereiteter Einstellungen vor Programmwechsel integrieren. Je Fach frische Kontrolle, nur turn_off, kein globales Beenden. [Verhalten und Abnahme](reports/ISSUE_7_ZONE_RESET.de.md). Keine GitHub Actions.
 
 Beta 0.1.0b9: Beide Einzeltest-Buttons übernehmen dieselbe Formularauswahl; Bestätigung/Fehler werden ins Bild gescrollt. Dörren auf 35–95 °C begrenzen (Eigentümerangabe); Testfolge 55 °C / 360 Minuten nach erfolgreichem Einzeltest beider Fächer. Keine Mindestdauer daraus ableiten. [Korrektur und Abnahme](reports/ISSUE_7_SELECTED_TEST_SETTINGS.de.md). Keine GitHub Actions.
+
+Beta 0.1.0b10: Sieben vom Eigentümer gemeldete Turbo-Tower-Temperaturbereiche getrennt von Adapterfähigkeiten hinterlegen und anzeigen. Beaufsichtigtes Senden erzwingt zusätzlich Modellgrenzen, behält aber die geprüften Adaptergrenzen bei; vollständige Bereiche und Gären benötigen eine Upstream-Anpassung. [Profil und Schnittmenge](reports/ISSUE_7_MODEL_TEMPERATURES.de.md). Keine GitHub Actions.
