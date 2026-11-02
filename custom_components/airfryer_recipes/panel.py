@@ -31,7 +31,7 @@ async def async_register_panel(hass: Any) -> None:
         await hass.http.async_register_static_paths([
             StaticPathConfig(f"/api/{DOMAIN}/card.js", str(Path(__file__).parent / "frontend" / "card.js"), cache_headers=False),
         ])
-        add_extra_js_url(hass, f"/api/{DOMAIN}/card.js?v=0.1.0b13")
+        add_extra_js_url(hass, f"/api/{DOMAIN}/card.js?v=0.1.0b14")
         state["card_registered"] = True
     await panel_custom.async_register_panel(
         hass,
@@ -39,7 +39,7 @@ async def async_register_panel(hass: Any) -> None:
         webcomponent_name="airfryer-recipes-panel",
         sidebar_title="Airfryer Recipes",
         sidebar_icon="mdi:chef-hat",
-        module_url=f"{MODULE_URL}?v=0.1.0b13",
+        module_url=f"{MODULE_URL}?v=0.1.0b14",
         require_admin=True,
         config_panel_domain=DOMAIN,
     )

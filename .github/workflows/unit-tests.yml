@@ -45,3 +45,4 @@ jobs:
         run: |
           node tests/test_panel.mjs
           node tests/test_card.mjs
+          node tests/test_frontend_loading.mjs

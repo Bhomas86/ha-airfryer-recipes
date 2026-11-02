@@ -1,5 +1,5 @@
 // Bundled locally; share the panel's transport, localization and token lifecycle.
-import "./panel.js?v=0.1.0b13";
+import { AirfryerRecipesPanel } from "./panel.js?v=0.1.0b14";
 
 const CARD_TEXT = {
   en: {
@@ -43,7 +43,7 @@ const html = (value) => String(value ?? "").replace(/[&<>"']/g, (c) => ({
 const textFor = (hass) => CARD_TEXT[hass?.language?.toLowerCase().startsWith("de") ? "de" : "en"];
 const samePhase = (a, b) => a && b && ["program", "temperature_c", "duration_minutes"].every((key) => a[key] === b[key]);
 
-class AirfryerRecipesCard extends customElements.get("airfryer-recipes-panel") {
+class AirfryerRecipesCard extends AirfryerRecipesPanel {
   constructor() {
     super();
     this.config = { dry_run: true };

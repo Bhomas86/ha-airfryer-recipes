@@ -69,6 +69,8 @@ Letzte Zusammenfassung: 24.10.2026. Projektstandard: Englisch als Fallback; Proj
 
 ## Validierung und Abnahme
 
+- Beta 0.1.0b14 korrigiert einen reproduzierten Modulfehler durch doppelte Elementregistrierung nach der Eigentümermeldung einer fehlenden Card unter b13. Die Card importiert nun die aktuelle exportierte Basisklasse; vorhandene Panel-Registrierungen bleiben erhalten. Keine Sende-/Rechte-/Speicheränderungen. Native Prüfung bleibt offen. [Nachweis und alternative Modulressource](reports/ISSUE_8_CARD_LOADING.de.md).
+
 - Der freigegebene neutrale Card-Entwurf 1A ist in Beta 0.1.0b13 umgesetzt: eigene Grafik mit gestapelten Schubladen, antippbare Fächer, Rezept-/Manuell-Werte und dauerhaft getrennte angenommene Einstellungen je Gerät/Fach. Fachwechsel senden nichts. Neue Cards beginnen mit serverseitiger Testvorschau; echter Modus verwendet die beaufsichtigte Beta ausschließlich für Administratoren. Backend-Geräterechte für normale Benutzer und native Card-Abnahme bleiben offen. [Umfang, Installation und Prüfungen](reports/ISSUE_8_DASHBOARD_CARD.de.md).
 
 - Vom Eigentümer lokal bestätigt am **Cosori Turbo Tower Pro Smart CAF-DC111S-AEU**: vollständige beaufsichtigte Folge mit zwölf Einstellungen auf beiden Fächern am 01.11.2026 bestanden; Gerät anschließend aus. Siehe [exakte Werte und Nachweisumfang](reports/ISSUE_7_LOCAL_ACCEPTANCE.de.md).

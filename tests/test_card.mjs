@@ -31,7 +31,7 @@ function makeCard(api = async () => ({}), dialog = () => true) {
     setTimeout, URL, Blob, structuredClone,
     document: { createElement: (name) => new (elements.get(name))() },
   };
-  vm.runInNewContext(panelSource, context);
+  vm.runInNewContext(panelSource.replace(/^export /m, ""), context);
   vm.runInNewContext(cardSource.replace(/^import .*;$/m, ""), context);
   const card = new (elements.get("airfryer-recipes-card"))();
   const listeners = new Set();
@@ -327,7 +327,7 @@ test("card/editor registration, English fallback and escaping use no copied imag
   assert.equal(context.window.customCards[0].type, "airfryer-recipes-card");
   assert.equal(card.constructor.getStubConfig().dry_run, true);
   assert.equal(card.constructor.getConfigElement() instanceof elements.get("airfryer-recipes-card-editor"), true);
-  assert.match(cardSource, /\.\/panel\.js\?v=0\.1\.0b13/);
+  assert.match(cardSource, /\.\/panel\.js\?v=0\.1\.0b14/);
 });
 
 test("visual editor uses safe defaults and emits dashboard configuration only", () => {

@@ -178,7 +178,7 @@ const escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => 
   "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
 }[char]));
 
-class AirfryerRecipesPanel extends HTMLElement {
+export class AirfryerRecipesPanel extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: "open" });
@@ -1077,4 +1077,6 @@ class AirfryerRecipesPanel extends HTMLElement {
   }
 }
 
-customElements.define("airfryer-recipes-panel", AirfryerRecipesPanel);
+// An older query-versioned module may already own the panel's element name.
+// Still export this module's current base class for the dashboard card.
+if (!customElements.get("airfryer-recipes-panel")) customElements.define("airfryer-recipes-panel", AirfryerRecipesPanel);

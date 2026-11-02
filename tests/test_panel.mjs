@@ -27,7 +27,7 @@ function panelWith(api, admin = true, confirmDialog = () => true) {
       dispatchEvent(event) { events.push(event); }
     },
     Event,
-    customElements: { define(name, type) { assert.equal(name, "airfryer-recipes-panel"); Panel = type; } },
+    customElements: { get(name) { return name === "airfryer-recipes-panel" ? Panel : undefined; }, define(name, type) { assert.equal(name, "airfryer-recipes-panel"); Panel = type; } },
     confirm: confirmDialog,
     prompt: () => "Copy",
     setTimeout,
@@ -45,7 +45,7 @@ function panelWith(api, admin = true, confirmDialog = () => true) {
       has(name) { return Object.hasOwn(this.values, name); }
     },
   };
-  vm.runInNewContext(source, context);
+  vm.runInNewContext(source.replace(/^export /m, ""), context);
   const panel = new Panel();
   panel._hass = { language: "de", user: { id: "u1", is_admin: admin }, connection: fakeConnection(), callWS: api };
   panel.watchConnection(panel._hass.connection);
