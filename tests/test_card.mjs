@@ -327,7 +327,7 @@ test("card/editor registration, English fallback and escaping use no copied imag
   assert.equal(context.window.customCards[0].type, "airfryer-recipes-card");
   assert.equal(card.constructor.getStubConfig().dry_run, true);
   assert.equal(card.constructor.getConfigElement() instanceof elements.get("airfryer-recipes-card-editor"), true);
-  assert.match(cardSource, /\.\/panel\.js\?v=0\.1\.0b15/);
+  assert.match(cardSource, /\.\/panel\.js\?v=0\.1\.0b16/);
 });
 
 test("visual editor uses safe defaults and emits dashboard configuration only", () => {
@@ -380,4 +380,102 @@ test("Enter and ordinary recipe/manual selection never transmit", () => {
   card.onChange({ target: { id: "card-temperature", value: "190" } });
   assert.equal(card.shadowRoot.innerHTML, mounted); // Blur must not replace Send before its click.
   assert.equal(card.manualPreviewTemperatureC, 190);
+});
+
+test("ordinary card loads permitted devices and history through scoped control API", async () => {
+  const calls = [];
+  const { card } = makeCard(async (r) => {
+    calls.push(r);
+    if (r.type.endsWith("/list")) return { recipes: [] };
+    if (r.action === "devices") return { devices: [device()] };
+    if (r.action === "sent_settings") return { available: true, zones: { "2": record(other) } };
+    throw Error("Unexpected route");
+  });
+  card._hass.user = { id: "ordinary", is_admin: false };
+  card.selectedDeviceId = "";
+  card.selectedZoneId = "";
+  await card.load();
+  assert.equal(card.hasDeviceAccess, true);
+  await card.selectTarget("appliance", "2");
+  assert.deepEqual(plain(card.phase()), other);
+  assert.match(card.shadowRoot.innerHTML, /Zuletzt gesendet · Fach 2/);
+  assert.equal(calls.some((r) => /beta_|create|update|access_/.test(r.type)), false);
+  assert.deepEqual(calls.filter((r) => r.type.endsWith("/control")).map((r) => r.action), ["devices", "sent_settings"]);
+});
+
+test("ordinary granted user can send either zone with one exact confirmation", async () => {
+  const calls = [], dialogs = [];
+  const { card } = makeCard(async (r) => {
+    calls.push(r);
+    if (r.action === "beta_prepare") return { ...prepared, zone_id: r.parameters.zone_id };
+    if (r.action === "beta_confirm") return { outcome: "accepted", history_saved: true };
+    if (r.action === "sent_settings") return { available: true, zones: {} };
+  }, (message) => { dialogs.push(message); return true; });
+  card.setConfig({ dry_run: false });
+  card._hass.user = { id: "ordinary", is_admin: false };
+  card.accessUserId = "ordinary";
+  for (const zone of ["1", "2"]) {
+    await card.selectTarget("appliance", zone);
+    await card.sendSettings(validForm);
+  }
+  assert.equal(dialogs.length, 2);
+  assert.match(dialogs[1], /Fach 2/);
+  assert.deepEqual(calls.filter((r) => r.action === "beta_prepare").map((r) => r.parameters.zone_id), [1, 2]);
+  assert.equal(calls.filter((r) => r.action === "beta_confirm").length, 2);
+  assert.ok(calls.every((r) => r.type === "airfryer_recipes/control"));
+  assert.ok(calls.every((r) => !Object.hasOwn(r.parameters, "user_id")));
+});
+
+test("ordinary test mode never requests a live preparation", async () => {
+  const calls = [];
+  const { card } = makeCard(async (r) => { calls.push(r); return { settings: r.parameters.settings, blocking_reasons: [], transmitted: false }; });
+  card._hass.user = { id: "ordinary", is_admin: false };
+  card.accessUserId = "ordinary";
+  await card.sendSettings(validForm);
+  assert.deepEqual(calls.map((r) => r.action), ["prepare_send"]);
+  assert.match(card.shadowRoot.innerHTML, /kein Gerätebefehl/);
+});
+
+test("ungranted user can refresh after an administrator grants access", async () => {
+  let granted = false;
+  const { card } = makeCard(async (r) => r.action === "devices" ? { devices: granted ? [device()] : [] }
+    : r.action === "sent_settings" ? { available: true, zones: {} } : { recipes: [] });
+  card._hass.user = { id: "ordinary", is_admin: false };
+  await card.load();
+  assert.equal(Boolean(card.canSend()), false);
+  assert.match(card.shadowRoot.innerHTML, /Kein freigegebenes Gerät/);
+  assert.doesNotMatch(card.shadowRoot.innerHTML, /data-action="refresh"[^>]*disabled/);
+  granted = true;
+  await card.load();
+  assert.equal(Boolean(card.canSend()), true);
+});
+
+test("normal-user disconnect cancels a late token without a confirm or replay", async () => {
+  const calls = [];
+  let resolve;
+  const { card } = makeCard(async (r) => {
+    calls.push(r);
+    if (r.action === "beta_prepare") return new Promise((done) => { resolve = done; });
+    return {};
+  });
+  card.setConfig({ dry_run: false });
+  card._hass.user = { id: "ordinary", is_admin: false };
+  card.accessUserId = "ordinary";
+  const task = card.sendSettings(validForm);
+  card.disconnectedCallback();
+  resolve(prepared);
+  await task;
+  assert.deepEqual(calls.map((r) => r.action), ["beta_prepare", "beta_cancel"]);
+  assert.equal(card.betaTest, null);
+});
+
+test("ordinary user recovery retains explicit read-only acknowledgement", async () => {
+  const calls = [];
+  const { card } = makeCard(async (r) => { calls.push(r); return { rearmed: true, transmitted: false }; });
+  card._hass.user = { id: "ordinary", is_admin: false };
+  card.accessUserId = "ordinary";
+  await card.recoverBeta();
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].action, "beta_recover");
+  assert.equal(calls[0].parameters.acknowledge_physical_reset, true);
 });

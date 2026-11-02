@@ -167,7 +167,7 @@ def describe_devices(devices: Any, entries: Any) -> list[dict[str, Any]]:
     return sorted(result, key=lambda device: device["device_id"])
 
 
-async def discover_devices(hass: Any) -> dict[str, Any]:
+async def discover_devices(hass: Any, *, allowed_device_ids: set[str] | None = None) -> dict[str, Any]:
     """Read reported zones and enrich them through the public read-only service."""
     from homeassistant.helpers import device_registry as dr
 
@@ -175,6 +175,8 @@ async def discover_devices(hass: Any) -> dict[str, Any]:
         entries = list(hass.config_entries.async_loaded_entries(UPSTREAM_DOMAIN))
         registry = dr.async_get(hass)
         devices = describe_devices(registry.devices.values(), entries)
+        if allowed_device_ids is not None:
+            devices = [device for device in devices if device["device_id"] in allowed_device_ids]
     except (AttributeError, KeyError, TypeError, ValueError):
         # An incompatible optional adapter must not break recipe management.
         return {"status": "adapter_incompatible", "devices": [], "live_send_enabled": False}

@@ -1,5 +1,5 @@
 // Bundled locally; share the panel's transport, localization and token lifecycle.
-import { AirfryerRecipesPanel } from "./panel.js?v=0.1.0b15";
+import { AirfryerRecipesPanel } from "./panel.js?v=0.1.0b16";
 
 const CARD_TEXT = {
   en: {
@@ -8,7 +8,7 @@ const CARD_TEXT = {
     temperature: "Temperature", duration: "Duration", send: "Send settings", start: "Start at appliance",
     online: "Online", offline: "Offline", unknown: "Unknown", refresh: "Refresh status and recipes",
     reported: "Reported connection and zone status; refresh to update. Sending checks fresh state again.",
-    admin: "This supervised beta card requires a Home Assistant administrator.",
+    admin: "No permitted device available. Ask an administrator to share the device, then refresh.",
     test: "Test mode · no transmission", preview: "Check test preview", previewDone: "Test preview checked. No device command was sent.",
     beta: "Supervised beta · settings only", historyError: "Last sent settings are unavailable.",
     saveError: "Transmission accepted, but last settings could not be saved. Do not resend just to save them.",
@@ -16,7 +16,7 @@ const CARD_TEXT = {
     historyInfo: "Last accepted transmission, not the current appliance settings.",
     confirm: "Send these exact settings once as a supervised beta test? Check both zones are idle. Cooking starts at the appliance only.",
     configTitle: "Title", configDevice: "Home Assistant device ID (optional)", configTest: "Test mode (no device commands)",
-    configHelp: "Leave the device ID empty to initially select a discovered appliance. Live transmission remains an administrator-only supervised beta test.",
+    configHelp: "Leave the device ID empty to initially select an available appliance. Administrators grant ordinary users an entire device in the recipe library. Live transmission remains a supervised beta test.",
     invalidConfig: "Invalid Airfryer Recipes card configuration",
   },
   de: {
@@ -25,7 +25,7 @@ const CARD_TEXT = {
     temperature: "Temperatur", duration: "Dauer", send: "Einstellungen senden", start: "Start am Gerät",
     online: "Online", offline: "Offline", unknown: "Unbekannt", refresh: "Status und Rezepte aktualisieren",
     reported: "Gemeldete Verbindung und Fachzustände; zum Aktualisieren neu laden. Senden prüft den Zustand erneut frisch.",
-    admin: "Diese beaufsichtigte Beta-Card benötigt einen Home-Assistant-Administrator.",
+    admin: "Kein freigegebenes Gerät verfügbar. Ein Administrator muss das Gerät freigeben; anschließend aktualisieren.",
     test: "Testmodus · keine Übertragung", preview: "Testvorschau prüfen", previewDone: "Testvorschau geprüft. Es wurde kein Gerätebefehl gesendet.",
     beta: "Beaufsichtigte Beta · nur Einstellungen", historyError: "Zuletzt gesendete Einstellungen sind nicht verfügbar.",
     saveError: "Übertragung angenommen, letzte Einstellungen konnten aber nicht gespeichert werden. Dafür nicht erneut senden.",
@@ -33,7 +33,7 @@ const CARD_TEXT = {
     historyInfo: "Letzte angenommene Übertragung, nicht die aktuellen Geräteeinstellungen.",
     confirm: "Diese Einstellungen einmalig als beaufsichtigten Beta-Test senden? Beide Fächer müssen ruhen. Garstart nur am Gerät.",
     configTitle: "Titel", configDevice: "Home-Assistant-Geräte-ID (optional)", configTest: "Testmodus (keine Gerätebefehle)",
-    configHelp: "Ohne Geräte-ID wird anfangs ein erkanntes Gerät ausgewählt. Echtes Senden bleibt ein beaufsichtigter Beta-Test für Administratoren.",
+    configHelp: "Ohne Geräte-ID wird anfangs ein verfügbares Gerät ausgewählt. Administratoren geben normalen Benutzern in der Rezeptbibliothek ein ganzes Gerät frei. Echtes Senden bleibt ein beaufsichtigter Beta-Test.",
     invalidConfig: "Ungültige Konfiguration der Airfryer-Recipes-Card",
   },
 };
@@ -57,6 +57,7 @@ class AirfryerRecipesCard extends AirfryerRecipesPanel {
     this.needsRecovery = false;
     this.previewMessage = "";
     this.reloadRequested = false;
+    this.accessUserId = "";
   }
 
   setConfig(config) {
@@ -85,6 +86,7 @@ class AirfryerRecipesCard extends AirfryerRecipesPanel {
   set hass(value) {
     if (this._hass && (this._hass.user?.id !== value?.user?.id || this._hass.user?.is_admin !== value?.user?.is_admin)) {
       this.drafts.clear();
+      this.accessUserId = "";
       this.history = {};
       this.historyAvailable = null;
       this.historyDevice = "";
@@ -104,6 +106,30 @@ class AirfryerRecipesCard extends AirfryerRecipesPanel {
   }
 
   get cardWords() { return textFor(this._hass); }
+  get hasDeviceAccess() { return this.admin || Boolean(this.accessUserId && this.accessUserId === this._hass?.user?.id && this.selectedDevice()); }
+
+  async request(name, fields = {}) {
+    const controlled = ["devices", "sent_settings", "prepare_send", "beta_prepare", "beta_confirm", "beta_cancel", "beta_recover"];
+    if (!this.admin && controlled.includes(name)) {
+      if (this._hass?.connection?.connected === false || (!this.panelActive && name !== "beta_cancel")) throw { code: "beta_test_blocked", message: "connection_changed" };
+      return super.request("control", { action: name, parameters: fields });
+    }
+    return super.request(name, fields);
+  }
+
+  async recoverBeta() {
+    if (this.admin) return super.recoverBeta();
+    if (!this.hasDeviceAccess || this.busy || !this.controlCurrent(this.controlRevision) || !confirm(this.words.betaRecoverConfirm)) return;
+    const revision = this.controlRevision;
+    this.forgetBeta();
+    this.busy = true;
+    this.render();
+    try {
+      await this.request("beta_recover", { device_id: this.selectedDeviceId, acknowledge_physical_reset: true });
+      if (this.controlCurrent(revision)) { this.needsRecovery = false; this.betaMessage = this.words.betaRecovered; }
+    } catch (error) { if (this.controlCurrent(revision)) this.betaMessage = this.betaError(error); }
+    finally { this.finishWork(); }
+  }
   getCardSize() { return 14; }
   static getStubConfig() { return { dry_run: true }; }
   static getConfigElement() { return document.createElement("airfryer-recipes-card-editor"); }
@@ -139,7 +165,7 @@ class AirfryerRecipesCard extends AirfryerRecipesPanel {
 
   async load() {
     if (!this._hass || !this.panelActive || this.busy) return;
-    if (!this.admin) { this.render(); return; }
+    if (!this._hass.user) { this.render(); return; }
     this.saveDraft();
     this.forgetBeta();
     const revision = this.controlRevision;
@@ -151,6 +177,7 @@ class AirfryerRecipesCard extends AirfryerRecipesPanel {
       if (!this.controlCurrent(revision) || loading !== this.loadRevision) return;
       this.recipes = list.recipes;
       this.deviceState = { status: devices.status, devices: devices.devices || [] };
+      this.accessUserId = this._hass.user.id;
       // An explicit or previously selected missing target must never fall back to another appliance.
       this.selectedDeviceId = this.config.device_id || this.selectedDeviceId || this.deviceState.devices[0]?.device_id || "";
       if (!this.selectedZone()) this.selectedZoneId = String(this.selectedDevice()?.zones?.[0]?.zone_id || "");
@@ -170,7 +197,7 @@ class AirfryerRecipesCard extends AirfryerRecipesPanel {
     this.history = {};
     this.historyDevice = device_id;
     this.historyAvailable = null;
-    if (!this.admin || !device_id) return;
+    if (!device_id || !this.hasDeviceAccess) return;
     try {
       const result = await this.request("sent_settings", { device_id });
       if (!this.controlCurrent(revision) || device_id !== this.selectedDeviceId || loading !== this.historyRevision) return;
@@ -200,7 +227,7 @@ class AirfryerRecipesCard extends AirfryerRecipesPanel {
 
   canSend() {
     const device = this.selectedDevice();
-    return this.admin && !this.error && !this.busy && !this.devicesBusy && this.controlCurrent(this.controlRevision) &&
+    return this.hasDeviceAccess && !this.error && !this.busy && !this.devicesBusy && this.controlCurrent(this.controlRevision) &&
       device?.connectivity === "reported_online" && this.selectedZone() &&
       ["idle", "off", "ready", "finished"].includes(this.selectedZone().status) &&
       (this.sourceMode !== "recipe" || this.selectedPreviewRecipe());
@@ -317,7 +344,7 @@ class AirfryerRecipesCard extends AirfryerRecipesPanel {
     const connection = this._hass?.connection?.connected === false ? "offline" : ({ reported_online: "online", offline: "offline" }[device?.connectivity] || "unknown");
     const phase = this.phase();
     const record = this.historyDevice === this.selectedDeviceId ? this.history[this.selectedZoneId] : null;
-    const disabled = this.busy || !this.admin;
+    const disabled = this.busy || !this.hasDeviceAccess;
     const recipes = this.recipes.filter((r) => r.phases?.length === 1);
     const programs = [...(device?.programs || [])];
     if (!programs.some((p) => p.id === phase.program)) programs.unshift({ id: phase.program, missing: true });
@@ -333,9 +360,9 @@ class AirfryerRecipesCard extends AirfryerRecipesPanel {
       .zone{width:100%;display:flex;align-items:center;gap:10px;text-align:start;background:none;border:0;padding:10px 4px}.radio{display:block;width:23px;height:23px;border:2px solid #84919e;border-radius:50%;flex-shrink:0}.selected .radio:after{content:"";display:block;border-radius:50%;margin:4px;width:11px;height:11px;background:#b7c8d5}.zone small{display:block;color:var(--secondary-text-color,#aebac5);margin-top:4px}.last{margin-top:9px;padding-top:12px;border-top:1px solid var(--divider-color,#34404e);font-size:.78rem;line-height:1.5;overflow-wrap:anywhere}.last strong{display:block;font-weight:500;color:var(--secondary-text-color,#aebac5)}.last p{margin:4px 0 0}
       label{display:block;font-size:.82rem;margin:10px 0 5px;color:var(--secondary-text-color,#b8c2cc)}input,select{width:100%;min-height:44px;padding:9px 11px;min-width:0}input:disabled,select:disabled{opacity:.7}.tabs{display:flex;border:1px solid var(--divider-color,#3c4957);border-radius:24px;margin:12px 0;overflow:hidden}.tabs button{border:0;border-radius:23px;flex:1;min-height:42px;background:none}.tabs button.active,.send{background:#a6b7c5;color:#15212b;font-weight:600}.values{display:grid;grid-template-columns:1fr 1fr;gap:12px}.send{width:100%;min-height:46px;margin-top:14px;border:0}.foot{border-top:1px solid var(--divider-color,#34404e);text-align:center;padding-top:13px;margin:14px 0 0;font-size:.8rem;color:var(--secondary-text-color,#aebac5)}.mode-note{font-size:.75rem;margin:8px 0 0;text-align:center;color:var(--secondary-text-color,#aebac5)}.message{font-size:.85rem;line-height:1.45;margin:12px 0 0;overflow-wrap:anywhere}.error{color:var(--error-color,#e49c95)}.preview{font-size:.8rem;margin-top:10px;overflow-wrap:anywhere}.preview p{margin:6px 0}.recover{min-height:44px;padding:9px;margin-top:10px}
       @media(max-width:340px){ha-card{padding:14px}.overview{gap:12px;grid-template-columns:minmax(90px,38%) minmax(0,1fr)}.drawer{min-height:78px}.connection{font-size:.75rem}h2{font-size:1.1rem}.last{font-size:.72rem}}
-    </style><ha-card class="${html(connection)}"><header><h2>${html(this.config.title || t.title)}</h2><span class="connection" title="${t.reported}"><i class="dot"></i>${html(t[connection] || t.unknown)}</span><button class="refresh" type="button" data-action="refresh" aria-label="${t.refresh}" title="${t.refresh}" ${disabled ? "disabled" : ""}>↻</button></header>
-      ${!this.admin ? `<p class="message">${t.admin}</p>` : `
-      ${!this.config.device_id && this.deviceState.devices.length > 1 ? `<label for="card-device">${this.words.device}</label><select id="card-device" ${disabled ? "disabled" : ""}>${this.deviceState.devices.map((d) => `<option value="${html(d.device_id)}" ${d.device_id === this.selectedDeviceId ? "selected" : ""}>${html(d.name)}</option>`).join("")}</select>` : ""}
+    </style><ha-card class="${html(connection)}"><header><h2>${html(this.config.title || t.title)}</h2><span class="connection" title="${t.reported}"><i class="dot"></i>${html(t[connection] || t.unknown)}</span><button class="refresh" type="button" data-action="refresh" aria-label="${t.refresh}" title="${t.refresh}" ${this.busy ? "disabled" : ""}>↻</button></header>
+      ${!this.admin && (!this.accessUserId || !this.deviceState.devices.length) ? `<p class="message">${t.admin}</p>` : `
+      ${!this.config.device_id && (this.deviceState.devices.length > 1 || (!device && this.deviceState.devices.length)) ? `<label for="card-device">${this.words.device}</label><select id="card-device" ${this.busy ? "disabled" : ""}>${!device ? `<option value="" selected disabled>${this.words.device}</option>` : ""}${this.deviceState.devices.map((d) => `<option value="${html(d.device_id)}" ${d.device_id === this.selectedDeviceId ? "selected" : ""}>${html(d.name)}</option>`).join("")}</select>` : ""}
       <div class="overview"><div class="appliance" role="group" aria-label="${html(device?.name || t.title)}">${zones.map((z) => zoneButton(z, true)).join("") || `<div class="drawer">—</div>`}</div>
       <div>${zones.map((z) => zoneButton(z)).join("")}<div class="last" title="${t.historyInfo}"><strong>${t.last} · ${t.zone} ${html(this.selectedZoneId || "—")}</strong>${this.historyAvailable === false ? `<p>${t.historyError}</p>` : record ? `<p>${html(this.programName(record.settings.program))}<br>${this.toDisplay(record.settings.temperature_c)} ${this.unit} · ${record.settings.duration_minutes} min</p>` : `<p>${this.historyAvailable === null ? this.words.loading : t.empty}</p>`}</div></div></div>
       ${!device ? `<p class="message">${this.words.targetMissing}</p>` : ""}

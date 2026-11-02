@@ -530,13 +530,13 @@ class WebsocketTests(unittest.IsolatedAsyncioTestCase):
         ws.registered.clear()
         self.api.register_commands(self.hass)
         commands = {handler._ws_command for handler in ws.registered}
-        self.assertEqual(len(commands), 22)
+        self.assertEqual(len(commands), 25)
         self.assertEqual(
             commands,
             {f"{DOMAIN}/{name}" for name in (
                 "list", "get", "create", "update", "duplicate", "delete",
                 "import_preview", "import_confirm", "export", "favorites", "set_favorite",
-                "devices", "sent_settings",
+                "devices", "sent_settings", "control", "access_list", "access_set",
                 "prepare_send", "beta_prepare", "beta_confirm", "beta_cancel",
                 "batch_prepare", "batch_start", "batch_next", "batch_stop", "beta_recover",
             )},
@@ -555,6 +555,164 @@ class WebsocketTests(unittest.IsolatedAsyncioTestCase):
             result = await self.call("sent_settings", self.admin, **({"device_id": "device"} | params))
             self.assertEqual(result[2], "invalid_format")
         self.assertEqual(history.get.call_count, 1)
+
+    async def access_setup(self):
+        from custom_components.airfryer_recipes.device_access import DeviceAccess
+        self.admin.user.id = "admin"
+        self.user.user.id = "user"
+        users = {uid: SimpleNamespace(id=uid, name=uid.title(), is_admin=uid == "admin", is_active=True, system_generated=False) for uid in ("admin", "user", "other")}
+        self.hass.auth = SimpleNamespace(async_get_user=AsyncMock(side_effect=lambda uid: users.get(uid)), async_get_users=AsyncMock(side_effect=lambda: list(users.values())))
+        access = DeviceAccess(SimpleNamespace(async_load=AsyncMock(return_value=None), async_save=AsyncMock()))
+        await access.async_load()
+        self.hass.data[DOMAIN]["device_access"] = access
+        return access, users
+
+    async def control(self, action, **params):
+        return await self.call("control", self.user, action=action, parameters=params)
+
+    async def test_device_permissions_list_and_change_require_current_admin(self):
+        access, users = await self.access_setup()
+        users["system"] = SimpleNamespace(id="system", name="System", is_active=True, is_admin=False, system_generated=True)
+        discovery = {"devices": [{"device_id": "device", "name": "Kitchen"}]}
+        with patch("custom_components.airfryer_recipes.device_discovery.discover_devices", new=AsyncMock(return_value=discovery)):
+            self.assertEqual((await self.call("access_list", self.user))[2], "unauthorized")
+            self.assertEqual((await self.call("access_set", self.user, user_id="user", device_id="device", allowed=True))[2], "unauthorized")
+            listed = (await self.call("access_list", self.admin))[2]
+            self.assertEqual({u["id"] for u in listed["users"]}, {"user", "other"})
+            result = await self.call("access_set", self.admin, user_id="user", device_id="device", allowed=True)
+            self.assertEqual(result[2], {"saved": True})
+            self.assertEqual(access.devices_for("user"), {"device"})
+            users["admin"].is_admin = False
+            self.assertEqual((await self.call("access_set", self.admin, user_id="user", device_id="device", allowed=False))[2], "unauthorized")
+
+    async def test_grant_rejects_forged_zone_program_flags_and_unknown_targets(self):
+        access, users = await self.access_setup()
+        with patch("custom_components.airfryer_recipes.device_discovery.discover_devices", new=AsyncMock(return_value={"devices": [{"device_id": "device", "name": "Kitchen"}]})):
+            for extra in ({"zone_id": 1}, {"program": "airfry"}, {"is_admin": True}, {"allowed": 1}):
+                params = {"user_id": "user", "device_id": "device", "allowed": True} | extra
+                self.assertEqual((await self.call("access_set", self.admin, **params))[2], "invalid_format")
+            self.assertEqual((await self.call("access_set", self.admin, user_id="user", device_id="missing", allowed=True))[2], "target_not_found")
+            self.assertEqual((await self.call("access_set", self.admin, user_id="admin", device_id="device", allowed=True))[2], "invalid_format")
+            users["user"].is_active = False
+            self.assertEqual((await self.call("access_set", self.admin, user_id="user", device_id="device", allowed=True))[2], "unauthorized")
+        self.assertEqual(access.devices_for("user"), set())
+
+    async def test_revocation_does_not_require_deleted_device_or_user_to_exist(self):
+        access, users = await self.access_setup()
+        await access.set("deleted", "unavailable", True)
+        with patch("custom_components.airfryer_recipes.device_discovery.discover_devices", new=AsyncMock()) as discover:
+            self.assertEqual((await self.call("access_set", self.admin, user_id="deleted", device_id="unavailable", allowed=False))[2], {"saved": True})
+            discover.assert_not_awaited()
+        self.assertEqual(access.devices_for("deleted"), set())
+
+    async def test_control_discovery_only_reads_and_returns_permitted_devices(self):
+        access, _ = await self.access_setup()
+        result = {"status": "adapter_beta", "devices": [{"device_id": "device", "zones": [{"zone_id": 1}, {"zone_id": 2}]}, {"device_id": "private", "zones": []}]}
+        with patch("custom_components.airfryer_recipes.device_discovery.discover_devices", new=AsyncMock(return_value=result)) as discover:
+            denied = (await self.control("devices"))[2]
+            self.assertEqual(denied["devices"], [])
+            discover.assert_not_awaited()
+            await access.set("user", "device", True)
+            visible = (await self.control("devices"))[2]
+            discover.assert_awaited_once_with(self.hass, allowed_device_ids={"device"})
+            self.assertEqual([d["device_id"] for d in visible["devices"]], ["device"])
+            self.assertEqual(len(visible["devices"][0]["zones"]), 2)
+
+    async def test_control_discovery_rechecks_revocation_before_returning_data(self):
+        access, _ = await self.access_setup()
+        await access.set("user", "device", True)
+        async def revoke(*args, **kwargs):
+            await access.set("user", "device", False)
+            return {"devices": [{"device_id": "device"}]}
+        with patch("custom_components.airfryer_recipes.device_discovery.discover_devices", new=revoke):
+            self.assertEqual((await self.control("devices"))[2], "unauthorized")
+
+    async def test_control_history_all_zones_of_granted_device_only(self):
+        access, _ = await self.access_setup()
+        history = SimpleNamespace(get=Mock(return_value={"available": True, "zones": {"1": {}, "2": {}}}))
+        self.hass.data[DOMAIN]["sent_settings"] = history
+        self.assertEqual((await self.control("sent_settings", device_id="device"))[2], "unauthorized")
+        history.get.assert_not_called()
+        await access.set("user", "device", True)
+        self.assertEqual(set((await self.control("sent_settings", device_id="device"))[2]["zones"]), {"1", "2"})
+        self.assertEqual((await self.control("sent_settings", device_id="private"))[2], "unauthorized")
+        history.get.assert_called_once_with("device")
+
+    async def test_control_dry_run_requires_grant_and_uses_target_scope(self):
+        access, _ = await self.access_setup()
+        params = {"device_id": "device", "zone_id": 2, "settings": {"program": "airfry", "temperature_c": 180, "duration_minutes": 7}}
+        with patch("custom_components.airfryer_recipes.command_preview.discover_devices", new=AsyncMock(return_value={"devices": [{"device_id": "device", "connectivity": "reported_online", "zones": [{"zone_id": 2, "status": "idle"}]}]})) as discover:
+            self.assertEqual((await self.control("prepare_send", **params))[2], "unauthorized")
+            discover.assert_not_awaited()
+            await access.set("user", "device", True)
+            result = (await self.control("prepare_send", **params))[2]
+            self.assertFalse(result["transmitted"])
+            self.assertEqual(result["mode"], "dry_run")
+            discover.assert_awaited_once_with(self.hass, allowed_device_ids={"device"})
+
+    async def test_control_envelope_cannot_invoke_admin_actions_or_override_actor(self):
+        await self.access_setup()
+        for action in ("create", "batch_start", "access_set", "raw_send"):
+            self.assertEqual((await self.control(action))[2], "invalid_format")
+        self.assertEqual((await self.control("devices", user_id="admin"))[2], "invalid_format")
+        self.assertEqual((await self.control("beta_prepare", device_id="device", zone_id=1, acknowledge_unverified=True, source=None))[2], "invalid_format")
+        self.assertEqual((await self.call("control", self.user, action="devices", parameters={}, is_admin=True))[2], "invalid_format")
+        self.assertEqual((await self.call("control", FakeConnection(authenticated=False), action="devices", parameters={}))[2], "unauthorized")
+
+    async def test_control_real_sender_sends_recipe_to_both_zones_and_preserves_library(self):
+        from custom_components.airfryer_recipes.sent_settings import SentSettings
+        access, _ = await self.access_setup()
+        await access.set("user", "device", True)
+        recipe = await self.repo.async_create(make_recipe())
+        history = SentSettings(SimpleNamespace(async_load=AsyncMock(return_value=None), async_save=AsyncMock()))
+        await history.async_load()
+        self.hass.data[DOMAIN]["sent_settings"] = history
+        self.hass.services = SimpleNamespace(async_call=AsyncMock())
+        sender = BetaSender(self.hass)
+        self.hass.data[DOMAIN]["beta_sender"] = sender
+        with patch("custom_components.airfryer_recipes.beta_send.read_target", new=AsyncMock(return_value=Target("Kitchen", ("same",)))):
+            for zone in (1, 2):
+                result = await self.control("beta_prepare", device_id="device", zone_id=zone, source={"recipe_id": recipe.id}, acknowledge_unverified=True)
+                self.assertEqual(result[0], "result")
+                self.assertTrue(self.user.subscriptions)
+                self.hass.services.async_call.return_value = {"ok": True, "ergebnis": "angenommen", "versuche": 1, "variante": "multi_app", "gesendet": {"programm": "airfry", "temperatur": 170, "minuten": 8, "zone": zone}}
+                result = await self.control("beta_confirm", token=result[2]["token"], acknowledge_supervised_test=True)
+                self.assertEqual(result[2]["outcome"], "accepted")
+                self.assertFalse(self.user.subscriptions)
+        self.assertEqual(self.hass.services.async_call.await_count, 2)
+        self.assertEqual(self.hass.services.async_call.await_args.kwargs["context"].user_id, "user")
+        self.assertEqual(set(history.get("device")["zones"]), {"1", "2"})
+        self.assertEqual(await self.repo.async_get(recipe.id), recipe)
+        self.assertEqual((await self.call("delete", self.user, recipe_id=recipe.id))[2], "unauthorized")
+
+    async def test_control_revoked_token_is_not_reusable_but_can_be_discarded(self):
+        access, _ = await self.access_setup()
+        await access.set("user", "device", True)
+        self.hass.services = SimpleNamespace(async_call=AsyncMock())
+        sender = BetaSender(self.hass)
+        self.hass.data[DOMAIN]["beta_sender"] = sender
+        with patch("custom_components.airfryer_recipes.beta_send.read_target", new=AsyncMock(return_value=Target("Kitchen", ("same",)))):
+            result = await self.control("beta_prepare", device_id="device", zone_id=1, source={"settings": {"program": "airfry", "temperature_c": 170, "duration_minutes": 1}}, acknowledge_unverified=True)
+            token = result[2]["token"]
+            await self.call("access_set", self.admin, user_id="user", device_id="device", allowed=False)
+            result = await self.control("beta_confirm", token=token, acknowledge_supervised_test=True)
+            self.assertEqual(result[2], "beta_test_blocked")
+            self.assertEqual((await self.control("beta_cancel", token=token))[2]["discarded"], False)
+            self.assertFalse(self.user.subscriptions)
+        self.hass.services.async_call.assert_not_awaited()
+
+    async def test_control_recovery_is_explicit_read_only_and_requires_grant(self):
+        access, _ = await self.access_setup()
+        self.hass.services = SimpleNamespace(async_call=AsyncMock())
+        sender = BetaSender(self.hass)
+        self.hass.data[DOMAIN]["beta_sender"] = sender
+        with patch("custom_components.airfryer_recipes.beta_send.read_target", new=AsyncMock(return_value=Target("Kitchen", ("same",)))) as read:
+            self.assertEqual((await self.control("beta_recover", device_id="device", acknowledge_physical_reset=True))[2], "beta_test_blocked")
+            read.assert_not_awaited()
+            await access.set("user", "device", True)
+            result = await self.control("beta_recover", device_id="device", acknowledge_physical_reset=True)
+            self.assertEqual(result[2], {"rearmed": True, "transmitted": False})
+        self.hass.services.async_call.assert_not_awaited()
 
 
 if __name__ == "__main__":

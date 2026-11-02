@@ -160,6 +160,17 @@ class DiscoveryTests(unittest.IsolatedAsyncioTestCase):
             blocking=True, return_response=True,
         )
 
+    async def test_device_scope_filters_before_any_capability_service_call(self):
+        helpers = types.ModuleType("homeassistant.helpers")
+        dr = types.ModuleType("homeassistant.helpers.device_registry")
+        helpers.device_registry = dr
+        dr.async_get = Mock(return_value=NS(devices={self.device.id: self.device}))
+        services = NS(has_service=Mock(return_value=True), async_call=AsyncMock(return_value={}))
+        hass = NS(config_entries=NS(async_loaded_entries=Mock(return_value=[self.entry])), services=services)
+        with patch.dict(sys.modules, {"homeassistant.helpers": helpers, "homeassistant.helpers.device_registry": dr}):
+            self.assertEqual((await discover_devices(hass, allowed_device_ids={"another-device"}))["devices"], [])
+        services.async_call.assert_not_awaited()
+
     def test_malformed_capability_fields_fail_closed(self):
         payload = {
             "modell_bekannt": "yes", "verbindung": "private-state",

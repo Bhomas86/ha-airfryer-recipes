@@ -56,7 +56,7 @@ const WORDS = {
     imported: "Recipes imported", saved: "Recipe saved", deleted: "Recipe deleted",
     noAdmin: "Only administrators can manage recipes.", multiPhase: "Editing multiple phases is not supported yet.",
     invalidFile: "Choose a JSON file up to 1 MB.", genericError: "The request failed. Please try again.",
-    unauthorized: "Administrator permission is required.", conflict: "A recipe with that ID or name already exists.",
+    unauthorized: "Permission is missing or has been revoked.", conflict: "A recipe with that ID or name already exists.",
     invalid: "Check the recipe values and try again.", expired: "The preview expired. Select the file again.",
     storage: "Saving failed. Check the Home Assistant logs.", notConfigured: "The integration is not configured.",
     phases: "Cooking phase", refresh: "Refresh", devicesNote: "Normal device control is not available. The separate supervised beta test requires explicit confirmation.",
@@ -142,7 +142,7 @@ const WORDS = {
     imported: "Rezepte importiert", saved: "Rezept gespeichert", deleted: "Rezept gelöscht",
     noAdmin: "Nur Administratoren dürfen Rezepte verwalten.", multiPhase: "Mehrere Garphasen können noch nicht bearbeitet werden.",
     invalidFile: "Bitte eine JSON-Datei mit höchstens 1 MB wählen.", genericError: "Die Anfrage ist fehlgeschlagen. Bitte erneut versuchen.",
-    unauthorized: "Administratorrechte sind erforderlich.", conflict: "Ein Rezept mit dieser ID oder diesem Namen existiert bereits.",
+    unauthorized: "Die Berechtigung fehlt oder wurde entzogen.", conflict: "Ein Rezept mit dieser ID oder diesem Namen existiert bereits.",
     invalid: "Bitte die Rezeptwerte prüfen.", expired: "Die Vorschau ist abgelaufen. Datei erneut auswählen.",
     storage: "Speichern fehlgeschlagen. Bitte die Home-Assistant-Protokolle prüfen.", notConfigured: "Die Integration ist nicht eingerichtet.",
     phases: "Garphase", refresh: "Aktualisieren", devicesNote: "Normale Gerätesteuerung ist nicht verfügbar. Der separate beaufsichtigte Beta-Test erfordert eine ausdrückliche Bestätigung.",
@@ -177,6 +177,11 @@ const WORDS = {
 const escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({
   "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
 }[char]));
+
+const ACCESS_TEXT = {
+  en: { title: "Device permissions", info: "Administrators can use all devices. Grant ordinary users an entire device, including all zones and available programs. Existing device safety checks still apply.", load: "Manage device access", user: "User", device: "Device", grant: "Grant device access", revoke: "Revoke", empty: "No devices shared with ordinary users.", unavailable: "Permissions storage unavailable; ordinary users remain blocked.", confirm: "Revoke access to this entire device? Pending confirmations will become invalid.", saved: "Device permissions saved.", choose: "Choose…" },
+  de: { title: "Geräteberechtigungen", info: "Administratoren dürfen alle Geräte verwenden. Normale Benutzer erhalten ein ganzes Gerät einschließlich aller Fächer und verfügbaren Programme. Die bestehenden Geräteprüfungen gelten weiter.", load: "Gerätefreigaben verwalten", user: "Benutzer", device: "Gerät", grant: "Gerät freigeben", revoke: "Entziehen", empty: "Keine Geräte für normale Benutzer freigegeben.", unavailable: "Berechtigungsspeicher nicht verfügbar; normale Benutzer bleiben gesperrt.", confirm: "Die Freigabe für dieses ganze Gerät entziehen? Vorbereitete Bestätigungen werden ungültig.", saved: "Geräteberechtigungen gespeichert.", choose: "Auswählen…" },
+};
 
 export class AirfryerRecipesPanel extends HTMLElement {
   constructor() {
@@ -229,6 +234,8 @@ export class AirfryerRecipesPanel extends HTMLElement {
     this.notice = "";
     this.error = "";
     this.started = false;
+    this.accessData = null;
+    this.accessMessage = "";
     this.shadowRoot.addEventListener("click", (event) => this.onClick(event));
     this.shadowRoot.addEventListener("submit", (event) => this.onSubmit(event));
     this.shadowRoot.addEventListener("input", (event) => this.onInput(event));
@@ -240,6 +247,10 @@ export class AirfryerRecipesPanel extends HTMLElement {
     const oldAdmin = this._hass?.user?.is_admin;
     const oldUnit = this._hass?.config?.unit_system?.temperature;
     const oldConnection = this._hass?.connection;
+    if (this._hass && (this._hass.user?.id !== value?.user?.id || oldAdmin !== value?.user?.is_admin)) {
+      this.accessData = null;
+      this.accessMessage = "";
+    }
     const controlsChanged = this._hass && (oldConnection !== value?.connection ||
       this._hass.user?.id !== value?.user?.id || oldAdmin !== value?.user?.is_admin ||
       oldUnit !== value?.config?.unit_system?.temperature);
@@ -502,6 +513,35 @@ export class AirfryerRecipesPanel extends HTMLElement {
     }];
   }
 
+  get accessWords() { return ACCESS_TEXT[this._hass?.language?.toLowerCase().startsWith("de") ? "de" : "en"]; }
+
+  renderAccess() {
+    if (!this.admin) return "";
+    const t = this.accessWords, data = this.accessData;
+    return `<section class="preview" id="device-access"><h2>${t.title}</h2><p>${t.info}</p>
+      <button type="button" data-action="access-load" ${this.busy ? "disabled" : ""}>${t.load}</button>
+      ${this.accessMessage ? `<p role="status">${escapeHtml(this.accessMessage)}</p>` : ""}
+      ${data ? data.available ? `<form id="device-access-form"><div class="grid"><label>${t.user}<select name="user_id" required><option value="">${t.choose}</option>${data.users.map((u) => `<option value="${escapeHtml(u.id)}">${escapeHtml(u.name)}</option>`).join("")}</select></label>
+        <label>${t.device}<select name="device_id" required><option value="">${t.choose}</option>${data.devices.map((d) => `<option value="${escapeHtml(d.id)}">${escapeHtml(d.name)}</option>`).join("")}</select></label></div><button type="button" data-action="access-grant" ${this.busy ? "disabled" : ""}>${t.grant}</button></form>
+        ${data.grants.length ? `<ul>${data.grants.map((g) => `<li>${escapeHtml(data.users.find((u) => u.id === g.user_id)?.name || g.user_id)} · ${escapeHtml(data.devices.find((d) => d.id === g.device_id)?.name || g.device_id)} <button type="button" data-action="access-revoke" data-user="${escapeHtml(g.user_id)}" data-device="${escapeHtml(g.device_id)}" ${this.busy ? "disabled" : ""}>${t.revoke}</button></li>`).join("")}</ul>` : `<p>${t.empty}</p>`}` : `<p class="error">${t.unavailable}</p>` : ""}</section>`;
+  }
+
+  async manageAccess(change = null) {
+    if (!this.admin || this.busy) return;
+    const revision = this.controlRevision;
+    this.busy = true;
+    this.render();
+    try {
+      if (change) await this.request("access_set", change);
+      const data = await this.request("access_list");
+      if (this.controlCurrent(revision) && this.admin) {
+        this.accessData = data;
+        this.accessMessage = change ? this.accessWords.saved : "";
+      }
+    } catch (error) { if (this.controlCurrent(revision)) this.showError(error); }
+    finally { this.busy = false; this.render(); }
+  }
+
   render() {
     if (!this.shadowRoot) return;
     this.captureEditorDraft();
@@ -563,6 +603,7 @@ export class AirfryerRecipesPanel extends HTMLElement {
         ${!this.admin ? `<p class="message error">${t.noAdmin}</p>` : ""}
         ${this.error ? `<p class="message error" role="alert">${this.error}</p>` : ""}
         ${this.notice ? `<p class="message" role="status">${escapeHtml(this.notice)}</p>` : ""}
+        ${this.renderAccess()}
         <div class="toolbar">
           <input id="search" type="search" aria-label="${t.search}" placeholder="${t.search}" value="${escapeHtml(this.query)}">
           <select id="category" aria-label="${t.category}"><option value="">${t.all}</option>${categories.map((name) => `<option value="${escapeHtml(name)}" ${this.category === name ? "selected" : ""}>${escapeHtml(name)}</option>`).join("")}</select>
@@ -772,6 +813,14 @@ export class AirfryerRecipesPanel extends HTMLElement {
     const t = this.words;
     if (type === "refresh") return this.load();
     if (!this.admin) return;
+    if (type === "access-load") return this.manageAccess();
+    if (type === "access-grant") {
+      const element = this.shadowRoot.getElementById("device-access-form");
+      if (!element?.reportValidity?.()) return;
+      const form = new FormData(element);
+      return this.manageAccess({ user_id: String(form.get("user_id") || ""), device_id: String(form.get("device_id") || ""), allowed: true });
+    }
+    if (type === "access-revoke" && confirm(this.accessWords.confirm)) return this.manageAccess({ user_id: button.dataset.user, device_id: button.dataset.device, allowed: false });
     if (type === "editor-program-mode" && this.editor) {
       this.captureEditorDraft();
       this.editorCustomProgram = !this.editorCustomProgram;
@@ -836,6 +885,7 @@ export class AirfryerRecipesPanel extends HTMLElement {
   }
 
   onSubmit(event) {
+    if (event.target.id === "device-access-form") { event.preventDefault(); return; }
     if (this.batchRunning) { event.preventDefault(); return; }
     if (event.target.id === "device-preview-form") {
       event.preventDefault();

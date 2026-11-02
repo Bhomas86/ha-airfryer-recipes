@@ -20,6 +20,7 @@ from homeassistant.components import websocket_api
 
 from .const import DOMAIN, EXPORT_FILENAME, EXPORT_URL
 from .command_preview import PreviewTargetNotFound
+from .device_access import AccessDenied, active_user, valid_id
 from .beta_send import BetaTestBlocked, SendPermit
 from .recipe_model import (
     MAX_IMPORT_BYTES,
@@ -64,6 +65,8 @@ async def _respond(
         return
     try:
         result = await action(repository)
+    except AccessDenied:
+        connection.send_error(msg["id"], websocket_api.ERR_UNAUTHORIZED, "Device access denied")
     except BetaTestBlocked as err:
         connection.send_error(msg["id"], "beta_test_blocked", str(err))
     except PreviewTargetNotFound:
@@ -467,6 +470,70 @@ async def ws_beta_recover(hass: Any, connection: Any, msg: dict[str, Any]) -> No
     await _respond(hass, connection, msg, run)
 
 
+@websocket_api.websocket_command({voluptuous.Required("type"): f"{DOMAIN}/control",
+                                   voluptuous.Required("action"): str,
+                                   voluptuous.Required("parameters"): dict})
+@websocket_api.async_response
+async def ws_control(hass: Any, connection: Any, msg: dict[str, Any]) -> None:
+    async def run(repo: RecipeRepository) -> dict:
+        from .control_api import execute
+        if set(msg) != {"id", "type", "action", "parameters"}:
+            raise RecipeValidationError("Unexpected control envelope")
+        return await execute(hass, connection, msg["id"], msg["action"], msg["parameters"])
+    await _respond(hass, connection, msg, run)
+
+
+async def _access_admin(hass: Any, connection: Any) -> None:
+    user = await active_user(hass, connection.user.id)
+    if not user.is_admin:
+        raise AccessDenied
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command({voluptuous.Required("type"): f"{DOMAIN}/access_list"})
+@websocket_api.async_response
+async def ws_access_list(hass: Any, connection: Any, msg: dict[str, Any]) -> None:
+    async def run(repo: RecipeRepository) -> dict:
+        from .device_discovery import discover_devices
+        if set(msg) != {"id", "type"}:
+            raise RecipeValidationError("Unexpected access parameter")
+        await _access_admin(hass, connection)
+        users = await hass.auth.async_get_users()
+        devices = await discover_devices(hass)
+        await _access_admin(hass, connection)
+        access = hass.data[DOMAIN]["device_access"]
+        return {**access.snapshot(),
+                "users": [{"id": user.id, "name": user.name or user.id} for user in users
+                          if user.is_active and not user.is_admin and not user.system_generated],
+                "devices": [{"id": device["device_id"], "name": device["name"]} for device in devices["devices"]]}
+    await _respond(hass, connection, msg, run)
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command({voluptuous.Required("type"): f"{DOMAIN}/access_set",
+                                   voluptuous.Required("user_id"): str,
+                                   voluptuous.Required("device_id"): str,
+                                   voluptuous.Required("allowed"): bool})
+@websocket_api.async_response
+async def ws_access_set(hass: Any, connection: Any, msg: dict[str, Any]) -> None:
+    async def run(repo: RecipeRepository) -> dict:
+        from .device_discovery import discover_devices
+        if set(msg) != {"id", "type", "user_id", "device_id", "allowed"} or not valid_id(msg["user_id"]) or not valid_id(msg["device_id"]) or type(msg["allowed"]) is not bool:
+            raise RecipeValidationError("Invalid device permission")
+        await _access_admin(hass, connection)
+        if msg["allowed"]:
+            user = await active_user(hass, msg["user_id"])
+            if user.is_admin or user.system_generated:
+                raise RecipeValidationError("Choose an ordinary user")
+            devices = await discover_devices(hass)
+            if not any(device["device_id"] == msg["device_id"] for device in devices["devices"]):
+                raise PreviewTargetNotFound
+        await _access_admin(hass, connection)
+        await hass.data[DOMAIN]["device_access"].set(msg["user_id"], msg["device_id"], msg["allowed"])
+        return {"saved": True}
+    await _respond(hass, connection, msg, run)
+
+
 COMMANDS = (
     ws_list,
     ws_get,
@@ -486,6 +553,7 @@ COMMANDS = (
     ws_beta_confirm,
     ws_beta_cancel,
     ws_batch_prepare, ws_batch_start, ws_batch_next, ws_batch_stop, ws_beta_recover,
+    ws_control, ws_access_list, ws_access_set,
 )
 
 

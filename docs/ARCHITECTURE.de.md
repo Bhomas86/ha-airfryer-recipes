@@ -26,6 +26,8 @@ Die Integrationsdomain lautet `airfryer_recipes`. Home Assistant OS auf Proxmox 
 
 ## Schnittstelle zwischen Frontend und Backend
 
+Beta b16 ergänzt den authentifizierten, auf feste Operationen beschränkten Endpunkt `control` für normale Benutzer und adminpflichtige `access_list`/`access_set`. Ganze Geräte je Benutzer autorisieren, niemals einzelne Fächer/Programme/Menüs. Aktive HA-Konten, bei Fehlern sperrenden versionierten Freigabespeicher und aktuelle Rechte-/Revisionsprüfungen während Vorbereitung/abschließender Validierung verwenden; verbindungsgebundene einmalige Bestätigungen und sämtliche Geräteprüfungen erhalten. Bisherige Admin-/Test-Endpunkte bleiben adminpflichtig. [Umsetzung und Grenzen](reports/ISSUE_8_DEVICE_ACCESS.de.md).
+
 Für Rezeptlisten, Änderungen, Gerätefähigkeiten, Status, Testmodus-Vorschauen und Sendebefehle verwenden wir **authentifizierte Home-Assistant-WebSocket-Befehle** unter `airfryer_recipes/*`. Die folgenden Namen beschreiben das Zielprotokoll. Rezeptoperationen, adminpflichtiges `devices` und `prepare_send` als Testvorschau sind implementiert. `device_state`, `confirm_send`, Gerätepräferenzen und Diagnose bleiben geplant:
 
 - `airfryer_recipes/list`, `get`, `create`, `update`, `duplicate`, `delete`

@@ -1034,3 +1034,49 @@ test("regular users see neither device preview nor device discovery requests", a
   assert.deepEqual(calls.sort(), ["airfryer_recipes/favorites", "airfryer_recipes/list"]);
   assert.doesNotMatch(panel.shadowRoot.innerHTML, /id="device-preview"/);
 });
+
+test("admin device-access view contains whole-device grants and escapes names", async () => {
+  const calls = [];
+  const panel = panelWith(async (r) => { calls.push(r); return { available: true, users: [{ id: "u", name: "User <x>" }], devices: [{ id: "d", name: "Kitchen" }], grants: [{ user_id: "u", device_id: "d" }] }; });
+  await panel.manageAccess();
+  assert.equal(calls[0].type, "airfryer_recipes/access_list");
+  assert.match(panel.shadowRoot.innerHTML, /Geräteberechtigungen/);
+  assert.match(panel.shadowRoot.innerHTML, /User &lt;x&gt;/);
+  assert.match(panel.shadowRoot.innerHTML, /einschließlich aller Fächer/);
+  assert.match(panel.shadowRoot.innerHTML, /data-action="access-revoke"/);
+  panel._hass.language = "en";
+  panel.render();
+  assert.match(panel.shadowRoot.innerHTML, /Device permissions/);
+});
+
+test("admin grants and revokes only a user/device pair after explicit clicks", async () => {
+  const calls = [];
+  const panel = panelWith(async (r) => { calls.push(r); return r.type.endsWith("access_list") ? { available: true, users: [], devices: [], grants: [] } : { saved: true }; });
+  const form = { reportValidity: () => true, values: { user_id: "u", device_id: "d" } };
+  panel.shadowRoot.getElementById = (id) => id === "device-access-form" ? form : undefined;
+  await panel.onClick({ target: { closest: () => ({ dataset: { action: "access-grant" } }) } });
+  assert.deepEqual(JSON.parse(JSON.stringify(calls[0])), { type: "airfryer_recipes/access_set", user_id: "u", device_id: "d", allowed: true });
+  await panel.onClick({ target: { closest: () => ({ dataset: { action: "access-revoke", user: "u", device: "d" } }) } });
+  assert.equal(calls[2].allowed, false);
+  let prevented = false;
+  panel.onSubmit({ target: { id: "device-access-form" }, preventDefault() { prevented = true; } });
+  assert.equal(prevented, true);
+});
+
+test("ordinary panel cannot manage permissions and stale admin replies stay hidden", async () => {
+  let calls = 0;
+  const userPanel = panelWith(async () => { calls++; }, false);
+  await userPanel.manageAccess();
+  userPanel.render();
+  assert.doesNotMatch(userPanel.shadowRoot.innerHTML, /id="device-access"/);
+  assert.equal(calls, 0);
+  let resolve;
+  const adminPanel = panelWith(() => new Promise((done) => { resolve = done; }));
+  const task = adminPanel.manageAccess();
+  adminPanel.invalidateControls();
+  adminPanel._hass.user.is_admin = false;
+  resolve({ available: true, users: [{ id: "secret" }], devices: [], grants: [] });
+  await task;
+  assert.equal(adminPanel.accessData, null);
+  assert.doesNotMatch(adminPanel.shadowRoot.innerHTML, /secret/);
+});

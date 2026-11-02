@@ -1,7 +1,7 @@
 """Supervised, single-shot commissioning; never used by the dry-run API.
 
 Only the reviewed public Airfryer Control service is called. This beta test is
-not a compatibility approval: the administrator must observe the appliance.
+not a compatibility approval: the authorized user must observe the appliance.
 """
 
 from __future__ import annotations
@@ -237,6 +237,7 @@ class Confirmation:
     repository: Any
     variable: bool
     permit: SendPermit
+    access_snapshot: Any = None
 
 
 class BetaSender:
@@ -270,11 +271,20 @@ class BetaSender:
                 self.pending.pop(token)
                 prepared.permit.close()
 
-    async def _authorized(self, user_id: str) -> None:
-        user = await self.hass.auth.async_get_user(user_id)
-        require(user is not None and user.is_admin and user.is_active, "unauthorized")
+    async def _authorized(self, user_id: str, device_id: str | None = None) -> Any:
+        from .device_access import AccessDenied, active_user, authorize_device
+        try:
+            if device_id is None:
+                user = await active_user(self.hass, user_id)
+                require(user.is_admin, "unauthorized")
+                snapshot = None
+            else:
+                snapshot = await authorize_device(self.hass, user_id, device_id)
+        except AccessDenied:
+            raise BetaTestBlocked("unauthorized") from None
         require(not self.closed and self.hass.data.get(DOMAIN, {}).get("beta_sender") is self,
                 "not_configured")
+        return snapshot
 
     async def _read(self, device_id: str, zone_id: int, **kwargs: Any) -> Target:
         try:
@@ -289,7 +299,7 @@ class BetaSender:
         *, source: dict | None = None, permit: SendPermit | None = None,
     ) -> dict:
         require(acknowledge is True, "acknowledgement")
-        await self._authorized(user_id)
+        access_snapshot = await self._authorized(user_id, device_id)
         require(device_id not in self.busy and device_id not in self.batch_devices, "busy")
         require(device_id not in self.uncertain, "outcome_unknown")
         self.busy.add(device_id)
@@ -320,11 +330,11 @@ class BetaSender:
                     phase = CookingPhase(**raw)
                     require(phase.program == raw["program"], "source")
                 validate_settings(phase)
-            await self._authorized(user_id)
+            require(await self._authorized(user_id, device_id) == access_snapshot, "unauthorized")
             require(permit.active, "connection_changed")
             extra = {"settings": phase} if source is not None else {}
             target = await self._read(device_id, zone_id, refresh=True, context=context, **extra)
-            await self._authorized(user_id)
+            require(await self._authorized(user_id, device_id) == access_snapshot, "unauthorized")
             require(permit.active, "connection_changed")
             if recipe is not None:
                 require(repository.matches_snapshot(recipe), "recipe_changed")
@@ -333,7 +343,7 @@ class BetaSender:
             require(len(self.pending) < 32, "busy")
             token = secrets.token_urlsafe(32)
             self.pending[token] = Confirmation(user_id, device_id, zone_id, target, now + TTL_SECONDS,
-                                               phase, recipe, repository, source is not None, permit)
+                                               phase, recipe, repository, source is not None, permit, access_snapshot)
             return {"mode": "supervised_beta_test", "token": token, "expires_seconds": TTL_SECONDS,
                     "device_id": device_id, "device_name": target.name, "zone_id": zone_id,
                     "settings": asdict(phase), "recipe_name": recipe.name if recipe else None,
@@ -348,7 +358,6 @@ class BetaSender:
     async def confirm(self, user_id: str, token: str, acknowledge: bool, context: Any,
                       *, owner: Any = None) -> dict:
         require(acknowledge is True, "acknowledgement")
-        await self._authorized(user_id)
         require(isinstance(token, str) and 0 < len(token) <= 128, "confirmation")
         prepared = self.pending.get(token)
         require(prepared is not None and prepared.user_id == user_id, "confirmation")
@@ -358,6 +367,7 @@ class BetaSender:
         locked = False
         self.confirming[token] = prepared
         try:
+            require(await self._authorized(user_id, device_id) == prepared.access_snapshot, "unauthorized")
             require(time.monotonic() < prepared.expires, "confirmation")
             require(device_id not in self.busy and device_id not in self.batch_devices, "busy")
             require(device_id not in self.uncertain, "outcome_unknown")
@@ -366,7 +376,7 @@ class BetaSender:
             extra = {"settings": prepared.phase} if prepared.variable else {}
             target = await self._read(device_id, prepared.zone_id, **extra)
             require(target.fingerprint == prepared.target.fingerprint, "state_changed")
-            await self._authorized(user_id)
+            require(await self._authorized(user_id, device_id) == prepared.access_snapshot, "unauthorized")
             require(prepared.permit.active, "connection_changed")
             require(time.monotonic() < prepared.expires, "confirmation")
             if prepared.recipe is not None:
@@ -389,7 +399,12 @@ class BetaSender:
 
     async def cancel(self, user_id: str, token: str, *, owner: Any = None) -> dict:
         """Discard pending work, including validation; never send a stop command."""
-        await self._authorized(user_id)
+        from .device_access import AccessDenied, active_user
+        try:
+            await active_user(self.hass, user_id)
+        except AccessDenied:
+            raise BetaTestBlocked("unauthorized") from None
+        require(not self.closed and self.hass.data.get(DOMAIN, {}).get("beta_sender") is self, "not_configured")
         require(isinstance(token, str) and 0 < len(token) <= 128, "confirmation")
         prepared = self.pending.get(token) or self.confirming.get(token)
         if prepared is None:
@@ -401,12 +416,12 @@ class BetaSender:
     async def recover(self, user_id: str, device_id: str, ack: bool, context: Any) -> dict:
         """Explicit local re-arm after physical reset; read-only, never a retry."""
         require(ack is True, "acknowledgement")
-        await self._authorized(user_id)
+        access_snapshot = await self._authorized(user_id, device_id)
         require(device_id not in self.busy and device_id not in self.batch_devices, "busy")
         self.busy.add(device_id)
         try:
             target = await self._read(device_id, 1, refresh=True, wait_for_report=True, context=context)
-            await self._authorized(user_id)
+            require(await self._authorized(user_id, device_id) == access_snapshot, "unauthorized")
             require(target.unchanged(), "state_changed")
             self._discard_pending(lambda prepared: prepared.device_id == device_id)
             self.uncertain.discard(device_id)

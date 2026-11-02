@@ -25,7 +25,7 @@ Last consolidated: 2026-10-24. Project language policy: English default UI langu
 | 14 | Automatic discovery + profile fallback (B) | Detect model, zones and supported capabilities from adapters where possible; verified profiles fill gaps. Once the adapter exists, offer verified cooking programs as choices in the recipe editor while keeping recipes device-independent. Unknown controls remain off. |
 | 15 | Manual retry, offline UI (B+) | Show sending/error details; preserve selected settings; never auto-retry. Offline graphic grayed out and sending disabled; show distinct unknown state. |
 | 16 | Independent recipe library (B) | Missing or broken Airfryer Control must not prevent editing/importing/exporting recipes. |
-| 17 | Two permission levels (B) | Administrators edit/delete recipes and configure safety; normal HA users may select recipes and manually control permitted zones. Enforce in backend. |
+| 17 | Two permission levels (B) | Administrators edit/delete recipes and configure safety; normal HA users may select recipes and manually control explicitly shared whole devices, including every zone and available program. No per-zone/program/menu grants (owner correction 2026-11-02). Enforce in backend. |
 | 18 | Localization and units | English and German as for Battery Flow Card; **English default/fallback**. Use HA user language; temperature displayed according to HA °C/°F setting, stored in Celsius. User recipe names are not auto-translated. |
 | 19 | Versioned data with migrations (B) | Persist locally; migrate on updates only after backup; preserve originals on failure; HACS updates do not replace storage. |
 | 20 | Device compatibility adaptation (B) | Offer only verified cooking programs of the selected air fryer in device controls. If program/time/temp is unsupported, warn and propose available substitutions; require explicit user approval; original recipe unchanged. |
@@ -72,6 +72,8 @@ Last consolidated: 2026-10-24. Project language policy: English default UI langu
 - Additional device adapters beyond Airfryer Control.
 
 ## Validation and acceptance
+
+- Owner accepted the basic card flow: sends to both zones, reuse after physical reset, separate last-sent settings and persistence across HA restart. b16 adds explicit whole-device grants for ordinary users with backend enforcement and an admin management section. New native permission acceptance remains pending; ordinary users have no grants by default. [Evidence, scope and checklist](reports/ISSUE_8_DEVICE_ACCESS.md).
 
 - 2026-11-02: Owner confirms b14 card display after manually adding the dashboard module resource. Beta b15 implements automatic resource creation/update, preserving that entry; automatic native acceptance and card transmission/history tests remain pending. Only the current beta stays published; older betas become drafts after new-release verification, with tags/code/assets preserved. [Evidence, implementation and release policy](reports/ISSUE_8_CARD_RESOURCES.md).
 

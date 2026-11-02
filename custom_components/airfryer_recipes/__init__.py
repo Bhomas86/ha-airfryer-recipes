@@ -39,6 +39,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await favorites.async_load()
 
     state = hass.data.setdefault(DOMAIN, {})
+    if "device_access" not in state or not state["device_access"].available:
+        from .device_access import create_device_access
+        access = create_device_access(hass)
+        await access.async_load()
+        state["device_access"] = access
     if "sent_settings" not in state or not state["sent_settings"].available:
         from .sent_settings import create_sent_settings
         history = create_sent_settings(hass)

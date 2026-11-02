@@ -2,6 +2,8 @@
 
 [English](ROADMAP.md) | [Deutsch](ROADMAP.de.md)
 
+**b16 whole-device access (2026-11-02):** After basic card/history/restart acceptance, implement admin-managed user/device grants only, per the owner's correction: every zone and available program belongs to the device grant. Add scoped discovery/history/dry-run/supervised sending and revocation checks; keep recipe/security management and batch tools admin-only. 203 Python/93 frontend tests passed locally; new native two-account acceptance pending. [Implementation and procedure](reports/ISSUE_8_DEVICE_ACCESS.md). No GitHub Actions.
+
 **b15 resource registration (2026-11-02):** Owner confirms b14 display after manual module registration. Register/update that same dashboard resource automatically in storage mode, preserve manual entry/other resources and retain YAML fallback. Keep only the current beta published; preserve older releases as drafts with tags/code/assets. 178 Python/84 frontend tests passed locally; automatic native acceptance pending. [Evidence and procedure](reports/ISSUE_8_CARD_RESOURCES.md). No GitHub Actions.
 
 **Card loading correction 0.1.0b14 (2026-11-02):** Reproduced duplicate registration when a recipe panel already existed; guard its definition and import the current base class directly. Four full ES-module loading tests added; 170 Python/84 frontend tests passed locally. Owner confirmed b13 installed; native b14 visibility remains pending. [Evidence and fallback](reports/ISSUE_8_CARD_LOADING.md). No GitHub Actions.

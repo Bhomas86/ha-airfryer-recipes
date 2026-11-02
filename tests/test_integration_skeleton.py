@@ -18,6 +18,7 @@ from custom_components.airfryer_recipes import (
 from custom_components.airfryer_recipes.const import DOMAIN
 from custom_components.airfryer_recipes.recipe_repository import RecipeRepository
 from custom_components.airfryer_recipes.sent_settings import SentSettings
+from custom_components.airfryer_recipes.device_access import DeviceAccess
 
 ROOT = Path(__file__).resolve().parents[1]
 INTEGRATION = ROOT / "custom_components" / DOMAIN
@@ -73,15 +74,21 @@ class TestIntegrationLifecycle(unittest.TestCase):
                     with patch("custom_components.airfryer_recipes.favorites.create_favorites", return_value=Favorites()), patch(
                         "custom_components.airfryer_recipes.sent_settings.create_sent_settings",
                         return_value=SentSettings(SimpleNamespace(async_load=AsyncMock(return_value=None), async_save=AsyncMock())),
-                    ) as history_factory:
+                    ) as history_factory, patch(
+                        "custom_components.airfryer_recipes.device_access.create_device_access",
+                        return_value=DeviceAccess(SimpleNamespace(async_load=AsyncMock(return_value=None), async_save=AsyncMock())),
+                    ) as access_factory:
                         self.assertTrue(await async_setup_entry(hass, entry))
                         history = hass.data[DOMAIN]["sent_settings"]
+                        access = hass.data[DOMAIN]["device_access"]
                         self.assertEqual(calls, ["favorites_loaded", "registered", "http_registered", "panel_registered"])
                         self.assertTrue(await async_unload_entry(hass, entry))
                         self.assertNotIn("repository", hass.data[DOMAIN])
                         self.assertTrue(await async_setup_entry(hass, entry))
                         self.assertIs(hass.data[DOMAIN]["sent_settings"], history)
                         history_factory.assert_called_once()
+                        self.assertIs(hass.data[DOMAIN]["device_access"], access)
+                        access_factory.assert_called_once()
                         self.assertEqual(calls, ["favorites_loaded", "registered", "http_registered", "panel_registered", "panel_removed", "favorites_loaded", "panel_registered"])
             self.assertIsInstance(entry.runtime_data, AirfryerRecipesRuntime)
             self.assertEqual(await entry.runtime_data.recipes.async_list(), ())

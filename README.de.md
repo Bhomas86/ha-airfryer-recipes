@@ -2,11 +2,11 @@
 
 [English](README.md) | [Deutsch](README.de.md)
 
-**[b15: Automatische Dashboard-Ressource](docs/reports/ISSUE_8_CARD_RESOURCES.de.md).** Der Eigentümer bestätigt die b14-Anzeige nach manueller Modulregistrierung. Dieses Update legt dieselbe Ressource automatisch an beziehungsweise aktualisiert den erhaltenen manuellen Eintrag. Nur die aktuelle Beta bleibt veröffentlicht; ältere bleiben als Entwürfe erhalten.
+**[b16: Ganze Geräte freigeben](docs/reports/ISSUE_8_DEVICE_ACCESS.de.md).** Admins geben einem normalen HA-Benutzer ausdrücklich ein ganzes Gerät mit allen Fächern und verfügbaren Programmen frei. Standardmäßig keine Freigaben; Rezept-/Sicherheitsverwaltung bleibt adminpflichtig. Nur die aktuelle Beta bleibt veröffentlicht.
 
 Benutzerdefinierte Home-Assistant-Integration zur Verwaltung wiederverwendbarer Heißluftfritteusen-Rezepte. Die gespeicherten Einstellungen sollen über bestehende Home-Assistant-Integrationen an unterstützte Geräte übertragen werden.
 
-> **Projektstatus: Test-Beta 0.1.0b15.** Die freigegebene neutrale Dashboard-Card mit Rezept-/Manuell-Bedienung und getrennt dauerhaft gespeicherten zuletzt gesendeten Einstellungen je Fach ist umgesetzt. Neue Cards beginnen im Testmodus; echtes Senden bleibt eine beaufsichtigte Beta ausschließlich für Administratoren. Native HA-/Companion-Abnahme der Card steht aus. Gären und erweiterte Temperaturen bleiben zurückgestellt.
+> **Projektstatus: Test-Beta 0.1.0b16.** Grundlegendes Card-Senden beider Fächer, Wiederverwendung nach physischem Zurücksetzen, Fachhistorie und Erhalt über Neustart sind vom Eigentümer bestätigt. Ganzgerätefreigaben für Benutzer sind samt Backend-Prüfung umgesetzt; neue native Zwei-Konten-Abnahme steht aus. Neue Cards beginnen im Testmodus; echtes Senden bleibt beaufsichtigte Beta. Gären und erweiterte Temperaturen bleiben zurückgestellt.
 
 **[Dashboard-Card hinzufügen](docs/reports/ISSUE_8_DASHBOARD_CARD.de.md):** Nach dem Update HA neu starten, App vollständig neu öffnen, dann Dashboard → Bearbeiten → Karte hinzufügen → Airfryer Recipes. Kein Dashboard wird automatisch geändert. Zuerst den Testmodus aktiviert lassen.
 
@@ -68,18 +68,18 @@ Als erstes Zielgerät dient die **Cosori Turbo Tower Pro Smart (CAF-DC111S-AEU)*
 - [x] Deutsche und englische Oberfläche
 - [x] HACS-Vorabversion 0.1.0b2 und dokumentierte Handy-Abnahme
 - [ ] Verifizierte Modellgrenzen und sichere echte Übertragung
-- [x] Erste Lovelace-Dashboard-Card mit grafischem Editor (beaufsichtigte Beta ausschließlich für Administratoren)
+- [x] Erste Lovelace-Dashboard-Card mit grafischem Editor (beaufsichtigte Beta; normale Benutzer benötigen Ganzgerätefreigaben)
 - [ ] SYNC/MATCH und stabile Veröffentlichung
 
-Aktuelle Beta: 178 Python-Tests und 84 Frontend-Tests lokal bestanden. Keine GitHub Actions, HACS-/Hassfest- oder Python-3.14-Läufe für dieses Update. Frühere Rezept-/manuelle Nominalübertragungen auf beiden Fächern bestanden; neue Dashboard-/native HA-Abnahme offen. [Dashboard-Verhalten und Prüfungen](docs/reports/ISSUE_8_DASHBOARD_CARD.de.md). Geräteberechtigungen für normale Benutzer und Personalisierung bleiben geplant.
+Aktuelle Beta: 203 Python-Tests und 93 Frontend-Tests lokal bestanden. Keine GitHub Actions, HACS-/Hassfest- oder Python-3.14-Läufe für dieses Update. Grundlegendes Card-Senden/Historie/Neustart lokal abgenommen; neue native Rechteabnahme offen. [Dashboard-Verhalten und Prüfungen](docs/reports/ISSUE_8_DASHBOARD_CARD.de.md). Ganzgerätefreigaben sind umgesetzt; Personalisierung bleibt geplant.
 
 ## Installation
 
-**Vorabversion, kein stabiler Release.** Vorher ein Home-Assistant-Backup erstellen. Dieses Repository als benutzerdefiniertes HACS-Integrationsrepository hinzufügen, Vorabversionen anzeigen und über „Neu herunterladen“ `v0.1.0b15` auswählen. Home Assistant neu starten und die Companion-App vollständig neu öffnen.
+**Vorabversion, kein stabiler Release.** Vorher ein Home-Assistant-Backup erstellen. Dieses Repository als benutzerdefiniertes HACS-Integrationsrepository hinzufügen, Vorabversionen anzeigen und über „Neu herunterladen“ `v0.1.0b16` auswählen. Home Assistant neu starten und die Companion-App vollständig neu öffnen.
 
 Die Rezeptverwaltung funktioniert ohne Airfryer Control und benötigt keine Cloud-Zugangsdaten. Für die erweiterte Geräte-Testvorschau Airfryer Control `1.0.2-beta.1` oder neuer installieren. Sie führt keine Steuerbefehle aus. Für CAF-DC111S-AEU sind die sechs gemeldeten Programme und Grenzen noch geschätzt/ungeprüft; `proof` fehlt im Upstream-Vertrag. Normale Übertragung bleibt gesperrt; der separate beaufsichtigte Beta-Test benötigt exakt Airfryer Control 1.0.2-beta.1.
 
-Details: [Release Notes](docs/releases/0.1.0b15.de.md), [Dashboard-Einrichtung/-Prüfungen](docs/reports/ISSUE_8_DASHBOARD_CARD.de.md), [lokale Testcheckliste](docs/LOCAL_TEST_CHECKLIST.de.md) und [Roadmap](docs/ROADMAP.de.md).
+Details: [Release Notes](docs/releases/0.1.0b16.de.md), [Dashboard-Einrichtung/-Prüfungen](docs/reports/ISSUE_8_DASHBOARD_CARD.de.md), [lokale Testcheckliste](docs/LOCAL_TEST_CHECKLIST.de.md) und [Roadmap](docs/ROADMAP.de.md).
 
 ## Sicherheit und Datenschutz
 

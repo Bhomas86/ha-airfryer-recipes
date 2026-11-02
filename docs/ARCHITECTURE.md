@@ -26,6 +26,8 @@ The domain is `airfryer_recipes`. Home Assistant OS on Proxmox is a target deplo
 
 ## Frontend/backend contract
 
+Beta b16 adds an authenticated, strictly allowlisted `control` endpoint for ordinary users and admin-only `access_list`/`access_set`. Authorize whole devices per user, never individual zones/programs/menus. Use active HA accounts, fail-closed versioned grant storage and current permissions/revision checks during preparation/final validation; preserve connection-bound single-use confirmations and all device safety gates. Admin legacy/test endpoints stay admin-only. [Implementation and limitations](reports/ISSUE_8_DEVICE_ACCESS.md).
+
 Use **authenticated Home Assistant WebSocket commands** under `airfryer_recipes/*` for recipe lists, mutations, device capabilities, status, dry-run previews and send requests. The names below describe the target protocol. Recipe operations, administrator-only `devices`, and `prepare_send` as a dry-run preview are implemented. `device_state`, `confirm_send`, device preferences and diagnostics remain planned:
 
 - `airfryer_recipes/list`, `get`, `create`, `update`, `duplicate`, `delete`

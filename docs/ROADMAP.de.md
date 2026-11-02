@@ -2,6 +2,8 @@
 
 [Deutsch](ROADMAP.de.md) | [English](ROADMAP.md)
 
+**b16-Ganzgerätefreigabe (02.11.2026):** Nach Card-/Historien-/Neustart-Grundabnahme adminverwaltete Benutzer-/Gerätefreigaben umsetzen, gemäß Eigentümerkorrektur: Alle Fächer und verfügbaren Programme gehören zur Gerätefreigabe. Begrenzte Erkennung/Historie/Testvorschau/beaufsichtigtes Senden und Entzugsprüfungen ergänzen; Rezept-/Sicherheitsverwaltung und Testfolgen bleiben adminpflichtig. 203 Python-/93 Frontend-Tests lokal bestanden; neue native Zwei-Konten-Abnahme offen. [Umsetzung und Ablauf](reports/ISSUE_8_DEVICE_ACCESS.de.md). Keine GitHub Actions.
+
 **b15-Ressourcenregistrierung (02.11.2026):** Eigentümer bestätigt b14-Anzeige nach manueller Modulregistrierung. Dieselbe Dashboard-Ressource im Storage-Modus automatisch registrieren/aktualisieren, manuellen Eintrag/andere Ressourcen erhalten und YAML-Alternative beibehalten. Nur die aktuelle Beta veröffentlicht lassen; ältere als Entwürfe samt Tags/Code/Assets erhalten. 178 Python-/84 Frontend-Tests lokal bestanden; automatische native Abnahme offen. [Nachweis und Ablauf](reports/ISSUE_8_CARD_RESOURCES.de.md). Keine GitHub Actions.
 
 **Card-Ladekorrektur 0.1.0b14 (02.11.2026):** Doppelte Registrierung bei bereits vorhandener Rezeptansicht reproduziert; Elementdefinition schützen und aktuelle Basisklasse direkt importieren. Vier vollständige ES-Modulladetests ergänzt; 170 Python-/84 Frontend-Tests lokal bestanden. Eigentümer bestätigt installierte b13; native Sichtbarkeit unter b14 noch offen. [Nachweis und Alternative](reports/ISSUE_8_CARD_LOADING.de.md). Keine GitHub Actions.

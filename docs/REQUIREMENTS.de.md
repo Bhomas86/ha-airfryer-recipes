@@ -25,7 +25,7 @@ Letzte Zusammenfassung: 24.10.2026. Projektstandard: Englisch als Fallback; Proj
 | 14 | Automatische Erkennung und Profil-Fallback (B) | Modell, Fächer und Fähigkeiten nach Möglichkeit automatisch lesen; nur bestätigte Profile ergänzen. Nach der Adapteranbindung im Rezepteditor verifizierte Programmfunktionen als Auswahl anbieten; das Rezept bleibt geräteunabhängig. Unbekannte Fähigkeiten bleiben deaktiviert. |
 | 15 | Manueller Neuversuch und Offline-Darstellung (B+) | Sende-/Fehlerstatus zeigen; Auswahl erhalten, keine automatische Wiederholung. Offline-Grafik ausgrauen, Senden sperren; unbekannten Status gesondert anzeigen. |
 | 16 | Unabhängige Rezeptbibliothek (B) | Rezeptverwaltung/Import/Export bleiben auch bei fehlendem oder defektem Airfryer Control verfügbar. |
-| 17 | Zwei Berechtigungsstufen (B) | Administratoren verwalten Rezepte und Sicherheitseinstellungen; normale HA-Benutzer dürfen zulässige Fächer bedienen. Backend prüft Rechte. |
+| 17 | Zwei Berechtigungsstufen (B) | Administratoren verwalten Rezepte und Sicherheitseinstellungen; normale HA-Benutzer dürfen Rezepte wählen und ausdrücklich freigegebene ganze Geräte mit sämtlichen Fächern und verfügbaren Programmen bedienen. Keine einzelnen Fach-/Programm-/Menüfreigaben (Eigentümerkorrektur 02.11.2026). Backend prüft Rechte. |
 | 18 | Übersetzung und Einheiten | Englisch und Deutsch wie bei Battery Flow Card; **Englisch ist Standard/Fallback**. HA-Benutzersprache und °C/°F-Einstellung übernehmen; intern Celsius. Eigene Rezeptnamen nicht automatisch übersetzen. |
 | 19 | Versionierte Speicherung/Migration (B) | Lokal speichern; vor Migration sichern; ursprüngliche Daten bei Fehler erhalten; HACS-Updates überschreiben keine Rezeptdaten. |
 | 20 | Kompatibilitätsanpassung (B) | Bei der Gerätebedienung nur bestätigte Programmfunktionen des gewählten Airfryers anbieten. Bei inkompatiblem Programm/Temperatur/Zeit warnen und unterstützte Alternativen anbieten; ausdrückliche Bestätigung; Originalrezept bleibt unverändert. |
@@ -68,6 +68,8 @@ Letzte Zusammenfassung: 24.10.2026. Projektstandard: Englisch als Fallback; Proj
 - Weitere Adapter außer Airfryer Control.
 
 ## Validierung und Abnahme
+
+- Eigentümer nimmt die Card-Grundfunktion ab: beide Fächer senden, erneute Verwendung nach physischem Zurücksetzen, getrennte zuletzt gesendete Werte und Erhalt nach HA-Neustart. b16 ergänzt ausdrückliche Ganzgerätefreigaben für normale Benutzer samt Backend-Prüfung und Admin-Verwaltung. Neue native Rechteabnahme steht aus; normale Benutzer haben standardmäßig keine Freigaben. [Nachweis, Umfang und Checkliste](reports/ISSUE_8_DEVICE_ACCESS.de.md).
 
 - 02.11.2026: Eigentümer bestätigt die b14-Card-Anzeige nach manuellem Eintragen der Dashboard-Modulressource. Beta b15 setzt deren automatisches Anlegen/Aktualisieren unter Erhalt dieses Eintrags um; automatische native Abnahme und Card-Sende-/Historientests bleiben offen. Nur die aktuelle Beta bleibt veröffentlicht; ältere werden nach Prüfung des neuen Releases zu Entwürfen, unter Erhalt von Tags/Code/Assets. [Nachweis, Umsetzung und Release-Vorgabe](reports/ISSUE_8_CARD_RESOURCES.de.md).
 
