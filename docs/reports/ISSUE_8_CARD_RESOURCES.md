@@ -1,0 +1,15 @@
+# Dashboard resource registration and beta lifecycle
+
+[Deutsch](ISSUE_8_CARD_RESOURCES.de.md) | [English](ISSUE_8_CARD_RESOURCES.md)
+
+The owner confirmed on 2026-11-02 that b14 became visible after manually adding its URL as a JavaScript module in dashboard Resources. The card files and static URL work; the previous extra-frontend-module loading did not make the card available in that Companion session. The exact reason the extra module did not load is not established. The screenshot accepts display in test mode only; it does not establish transmission or persistence acceptance.
+
+Beta 0.1.0b15 registers the same module in Home Assistant's dashboard resource collection. Lovelace is now an explicit dependency so the collection exists before integration setup. In storage mode, the integration loads the collection through its public API, creates its resource if missing or updates its existing relative URL to the current version and `module` type. The owner's manually added entry retains its ID. Repeat/concurrent setup creates no further entry; existing duplicate own entries are updated without deleting user rows. Other resources, external URLs and dashboard cards remain untouched.
+
+YAML resources are not edited. YAML mode, missing storage or resource API failure retain the supported extra-module fallback; failures do not block recipe management or leak exception details in the warning. No settings are sent by resource registration. UI, recipes, history, permissions and supervised transmission gates are unchanged. Module URLs, manifest and frontend dependency use b15 consistently.
+
+Install b15 through HACS, restart HA and fully reload the app. The working manually added b14 resource can remain: storage-mode registration upgrades that same entry to b15. Check Resources contains `/api/airfryer_recipes/card.js?v=0.1.0b15` as a JavaScript module and that the card reopens without adding a second entry. A fresh HA instance should receive that entry automatically. Automatic native acceptance remains pending; no appliance transmission is needed for this check.
+
+**Owner's release policy:** after publishing and verifying a new beta's tag/commit, keep that beta published and convert older published betas to drafts. Preserve tags, commits and assets; stable releases are unaffected. If publishing or verification fails, keep the previous beta active. The preference is binding in both AGENTS files. Earlier b1–b13 were withdrawn as drafts while b14 remained published; on publication of b15, b14 is withdrawn after verification as well. This is manual release maintenance, not a GitHub Actions workflow.
+
+Passed locally: **178 Python and 84 frontend tests**, compilation, documentation links/language pairs and diff formatting. New tests cover lazy loading, creation, manual-entry upgrade, preservation of foreign resources, existing duplicates, idempotence/concurrency, YAML/missing collections, load/create/update failure fallback and version consistency. No new HA/Companion automatic-resource or appliance test, HACS/Hassfest or Python 3.14 run; no GitHub Actions.

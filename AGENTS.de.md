@@ -88,6 +88,8 @@ Aktion: Modell vor der Implementierung bestätigen lassen.
 
 ## GitHub-Actions-Budget (ab 30.10.2026)
 
+**Eigentümervorgabe (02.11.2026): Nur die aktuelle Beta veröffentlicht lassen. Nach Veröffentlichung einer neuen Beta prüfen, dass Release/Tag auf den getesteten Commit zeigen, dann ältere veröffentlichte Beta-Releases als Entwurf setzen (`draft: true`). Tags, Commits und Assets erhalten; nichts löschen und stabile Releases nicht ändern. Scheitern Veröffentlichung/Prüfung, die vorherige Beta aktiv lassen. Abschließende Release-Liste prüfen. Gilt für dieses Repository und benötigt keine erneute Erlaubnisfrage.**
+
 - GitHub Actions sparsam nutzen; das verfügbare Kontingent ist begrenzt.
 - Während der Entwicklung zuerst gezielte lokale Prüfungen ausführen, Änderungen bündeln und nur kleine, relevante automatische Jobs nutzen.
 - Reine Dokumentationsänderungen starten keine Code-, HACS- oder Hassfest-Läufe. Überholte Läufe desselben Branches abbrechen.

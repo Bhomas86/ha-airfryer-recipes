@@ -2,6 +2,8 @@
 
 [English](ROADMAP.md) | [Deutsch](ROADMAP.de.md)
 
+**b15 resource registration (2026-11-02):** Owner confirms b14 display after manual module registration. Register/update that same dashboard resource automatically in storage mode, preserve manual entry/other resources and retain YAML fallback. Keep only the current beta published; preserve older releases as drafts with tags/code/assets. 178 Python/84 frontend tests passed locally; automatic native acceptance pending. [Evidence and procedure](reports/ISSUE_8_CARD_RESOURCES.md). No GitHub Actions.
+
 **Card loading correction 0.1.0b14 (2026-11-02):** Reproduced duplicate registration when a recipe panel already existed; guard its definition and import the current base class directly. Four full ES-module loading tests added; 170 Python/84 frontend tests passed locally. Owner confirmed b13 installed; native b14 visibility remains pending. [Evidence and fallback](reports/ISSUE_8_CARD_LOADING.md). No GitHub Actions.
 
 **Dashboard beta 0.1.0b13 (2026-11-02):** Approved neutral design 1A implemented with separate persistent last-sent settings per zone, recipe/manual controls and visual editor. Default dry run; live controls reuse the existing administrator-only supervised beta. Ordinary-user backend device ACLs, personalization and native HA/Companion acceptance remain pending. [Implementation and local procedure](reports/ISSUE_8_DASHBOARD_CARD.md). 170 Python/80 frontend tests passed locally. No GitHub Actions.

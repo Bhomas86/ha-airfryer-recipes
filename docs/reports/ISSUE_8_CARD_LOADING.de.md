@@ -4,6 +4,8 @@
 
 Der Eigentümer meldete die fehlende Airfryer-Recipes-Card im Dashboard-Kartenkatalog und bestätigte die installierte b13. Der Screenshot zeigt die Karten von Airfryer Control, die zur anderen Integration gehören. Ein Ladeabbruch durch doppelte Elementregistrierung wurde offline reproduziert; der genaue Browserfehler der Eigentümerinstanz wurde nicht erfasst, ein HA-Neustart nach dem Update nicht bestätigt.
 
+**Nachtrag, 02.11.2026:** Der Eigentümer meldete die Card anschließend auch unter b14 noch als fehlend. Der Eintrag von `/api/airfryer_recipes/card.js?v=0.1.0b14` unter Dashboard-Ressourcen als JavaScript-Modul brachte sie zur Anzeige. Der Companion-Screenshot bestätigt die Darstellung mit Gerätegrafik, Fächern, Online-Zustand, Piccolinies bei 180 °C / 7 Minuten und Testmodus. Abgenommen sind ausschließlich manuelles Ressourcenladen/Darstellung, nicht automatische Registrierung, Fachwechsel, Historienerhalt oder eine Übertragung aus der Card. Kein separates Dateipaket nötig. [Korrektur der automatischen Dashboard-Ressource](ISSUE_8_CARD_RESOURCES.de.md).
+
 ## Reproduzierter Fehler und Korrektur
 
 Existiert das Element der Rezeptansicht bereits, wirft der Import einer weiteren über den URL-Parameter versionierten Kopie von `panel.js` bei deren unbedingtem `customElements.define` einen Fehler. Das abhängige Card-Modul bricht ab, bevor es sein Element oder den Eintrag in `window.customCards` registriert. Die bisherigen Bedienungstests entfernten den Import und verwendeten eine Registry-Attrappe, die doppelte Definitionen erlaubte; diesen Ladefehler deckten sie daher nicht ab.

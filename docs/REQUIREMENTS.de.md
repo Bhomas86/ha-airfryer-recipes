@@ -69,6 +69,8 @@ Letzte Zusammenfassung: 24.10.2026. Projektstandard: Englisch als Fallback; Proj
 
 ## Validierung und Abnahme
 
+- 02.11.2026: Eigentümer bestätigt die b14-Card-Anzeige nach manuellem Eintragen der Dashboard-Modulressource. Beta b15 setzt deren automatisches Anlegen/Aktualisieren unter Erhalt dieses Eintrags um; automatische native Abnahme und Card-Sende-/Historientests bleiben offen. Nur die aktuelle Beta bleibt veröffentlicht; ältere werden nach Prüfung des neuen Releases zu Entwürfen, unter Erhalt von Tags/Code/Assets. [Nachweis, Umsetzung und Release-Vorgabe](reports/ISSUE_8_CARD_RESOURCES.de.md).
+
 - Beta 0.1.0b14 korrigiert einen reproduzierten Modulfehler durch doppelte Elementregistrierung nach der Eigentümermeldung einer fehlenden Card unter b13. Die Card importiert nun die aktuelle exportierte Basisklasse; vorhandene Panel-Registrierungen bleiben erhalten. Keine Sende-/Rechte-/Speicheränderungen. Native Prüfung bleibt offen. [Nachweis und alternative Modulressource](reports/ISSUE_8_CARD_LOADING.de.md).
 
 - Der freigegebene neutrale Card-Entwurf 1A ist in Beta 0.1.0b13 umgesetzt: eigene Grafik mit gestapelten Schubladen, antippbare Fächer, Rezept-/Manuell-Werte und dauerhaft getrennte angenommene Einstellungen je Gerät/Fach. Fachwechsel senden nichts. Neue Cards beginnen mit serverseitiger Testvorschau; echter Modus verwendet die beaufsichtigte Beta ausschließlich für Administratoren. Backend-Geräterechte für normale Benutzer und native Card-Abnahme bleiben offen. [Umfang, Installation und Prüfungen](reports/ISSUE_8_DASHBOARD_CARD.de.md).

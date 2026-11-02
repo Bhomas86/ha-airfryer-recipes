@@ -152,7 +152,7 @@ class TestPackagedMetadata(unittest.TestCase):
         self.assertEqual(manifest["requirements"], [])
         self.assertEqual(
             manifest["dependencies"],
-            ["frontend", "http", "panel_custom", "websocket_api"],
+            ["frontend", "http", "lovelace", "panel_custom", "websocket_api"],
         )
         self.assertTrue(manifest["version"])
 

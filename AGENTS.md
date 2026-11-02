@@ -132,6 +132,8 @@ Action: Confirm current model before implementation; do not claim to switch it.
 
 ## GitHub Actions budget (effective 2026-10-30)
 
+**Owner instruction (2026-11-02): Keep only the current beta published. After publishing a new beta, verify its release/tag point to the tested commit, then set older published beta releases to draft (`draft: true`). Preserve their tags, commits and assets; do not delete them or change stable releases. If publishing/verification fails, leave the previous beta active. Verify the final release list. This applies to this repository and requires no repeated permission request.**
+
 - Use GitHub Actions sparingly; the available allowance is limited.
 - During development, run targeted local checks first, batch changes and use only small, relevant automatic jobs.
 - Documentation-only changes must not trigger code, HACS or Hassfest runs. Cancel superseded runs on the same branch.

@@ -1,5 +1,5 @@
 // Bundled locally; share the panel's transport, localization and token lifecycle.
-import { AirfryerRecipesPanel } from "./panel.js?v=0.1.0b14";
+import { AirfryerRecipesPanel } from "./panel.js?v=0.1.0b15";
 
 const CARD_TEXT = {
   en: {

@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from .const import DOMAIN
+from .const import DOMAIN, FRONTEND_VERSION
 
 PANEL_PATH = "airfryer-recipes"
 MODULE_URL = f"/api/{DOMAIN}/panel.js"
@@ -14,7 +14,6 @@ MODULE_URL = f"/api/{DOMAIN}/panel.js"
 async def async_register_panel(hass: Any) -> None:
     """Serve a bundled module and expose it through HA's custom panel API."""
     from homeassistant.components import panel_custom
-    from homeassistant.components.frontend import add_extra_js_url
     from homeassistant.components.http import StaticPathConfig
 
     state = hass.data[DOMAIN]
@@ -31,15 +30,16 @@ async def async_register_panel(hass: Any) -> None:
         await hass.http.async_register_static_paths([
             StaticPathConfig(f"/api/{DOMAIN}/card.js", str(Path(__file__).parent / "frontend" / "card.js"), cache_headers=False),
         ])
-        add_extra_js_url(hass, f"/api/{DOMAIN}/card.js?v=0.1.0b14")
         state["card_registered"] = True
+    from .card_resource import async_register_card_resource
+    await async_register_card_resource(hass)
     await panel_custom.async_register_panel(
         hass,
         frontend_url_path=PANEL_PATH,
         webcomponent_name="airfryer-recipes-panel",
         sidebar_title="Airfryer Recipes",
         sidebar_icon="mdi:chef-hat",
-        module_url=f"{MODULE_URL}?v=0.1.0b14",
+        module_url=f"{MODULE_URL}?v={FRONTEND_VERSION}",
         require_admin=True,
         config_panel_domain=DOMAIN,
     )

@@ -73,6 +73,8 @@ Last consolidated: 2026-10-24. Project language policy: English default UI langu
 
 ## Validation and acceptance
 
+- 2026-11-02: Owner confirms b14 card display after manually adding the dashboard module resource. Beta b15 implements automatic resource creation/update, preserving that entry; automatic native acceptance and card transmission/history tests remain pending. Only the current beta stays published; older betas become drafts after new-release verification, with tags/code/assets preserved. [Evidence, implementation and release policy](reports/ISSUE_8_CARD_RESOURCES.md).
+
 - Beta 0.1.0b14 corrects a reproduced duplicate-element module failure after the owner reported the card missing on b13. The card now imports the current exported base class; existing panel registrations are preserved. No send/permission/storage changes. Native verification remains pending. [Evidence and module-resource fallback](reports/ISSUE_8_CARD_LOADING.md).
 
 - Owner-approved neutral card design 1A is implemented in beta 0.1.0b13: original stacked-drawer illustration, tappable zones, recipe/manual values and persistent accepted settings separately per device/zone. Switching zones sends nothing. New cards default to server-enforced dry run; live mode reuses administrator-only supervised beta. Normal-user device ACLs and native card acceptance remain pending. [Scope, installation and checks](reports/ISSUE_8_DASHBOARD_CARD.md).

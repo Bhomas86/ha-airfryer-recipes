@@ -4,6 +4,8 @@
 
 The owner reported that Airfryer Recipes was missing from the dashboard card picker and confirmed b13 was installed. The screenshot shows Airfryer Control's cards, which belong to the other integration. A duplicate-element loading failure was reproduced offline; the exact browser error on the owner's instance was not collected, and a post-update HA restart was not confirmed.
 
+**Follow-up, 2026-11-02:** The owner subsequently reported the card was still absent on b14. Adding `/api/airfryer_recipes/card.js?v=0.1.0b14` under dashboard Resources as a JavaScript module made it work. The Companion screenshot confirms the card renders with the device graphic, zones, Online status, Piccolinies at 180 °C / 7 minutes and test mode. This accepts manual resource loading/display only, not automatic registration, zone switching, history persistence or a card-originated appliance send. No separate file package is needed. [Automatic dashboard resource correction](ISSUE_8_CARD_RESOURCES.md).
+
 ## Reproduced failure and correction
 
 When the recipe panel element already exists, importing another query-versioned copy of `panel.js` throws on its unconditional `customElements.define`. The dependent card module then fails before registering its element or `window.customCards` entry. Earlier interaction tests removed the import and used a registry stub that allowed duplicate definitions, so they did not cover this module-loading failure.

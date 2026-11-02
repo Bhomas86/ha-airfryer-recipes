@@ -2,6 +2,8 @@
 
 [Deutsch](ROADMAP.de.md) | [English](ROADMAP.md)
 
+**b15-Ressourcenregistrierung (02.11.2026):** Eigentümer bestätigt b14-Anzeige nach manueller Modulregistrierung. Dieselbe Dashboard-Ressource im Storage-Modus automatisch registrieren/aktualisieren, manuellen Eintrag/andere Ressourcen erhalten und YAML-Alternative beibehalten. Nur die aktuelle Beta veröffentlicht lassen; ältere als Entwürfe samt Tags/Code/Assets erhalten. 178 Python-/84 Frontend-Tests lokal bestanden; automatische native Abnahme offen. [Nachweis und Ablauf](reports/ISSUE_8_CARD_RESOURCES.de.md). Keine GitHub Actions.
+
 **Card-Ladekorrektur 0.1.0b14 (02.11.2026):** Doppelte Registrierung bei bereits vorhandener Rezeptansicht reproduziert; Elementdefinition schützen und aktuelle Basisklasse direkt importieren. Vier vollständige ES-Modulladetests ergänzt; 170 Python-/84 Frontend-Tests lokal bestanden. Eigentümer bestätigt installierte b13; native Sichtbarkeit unter b14 noch offen. [Nachweis und Alternative](reports/ISSUE_8_CARD_LOADING.de.md). Keine GitHub Actions.
 
 **Dashboard-Beta 0.1.0b13 (2026-11-02):** Freigegebenen neutralen Entwurf 1A mit getrennt dauerhaft gespeicherten zuletzt gesendeten Einstellungen je Fach, Rezept-/Manuell-Bedienung und grafischem Editor umgesetzt. Testvorschau voreingestellt; echte Übertragung verwendet die vorhandene beaufsichtigte Beta ausschließlich für Administratoren. Backend-Geräterechte für normale Benutzer, Personalisierung und native HA-/Companion-Abnahme bleiben offen. [Umsetzung und lokale Prüfung](reports/ISSUE_8_DASHBOARD_CARD.de.md). 170 Python-/80 Frontend-Tests lokal bestanden. Keine GitHub Actions.
