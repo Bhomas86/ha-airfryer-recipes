@@ -40,6 +40,8 @@ jobs:
         run: python -m compileall -q custom_components tests
       - name: Unit tests (offline; no device access)
         run: python -m unittest discover -s tests -v
-      - name: Recipe panel tests (offline)
+      - name: Recipe panel and dashboard card tests (offline)
         if: matrix.python-version == '3.12'
-        run: node tests/test_panel.mjs
+        run: |
+          node tests/test_panel.mjs
+          node tests/test_card.mjs

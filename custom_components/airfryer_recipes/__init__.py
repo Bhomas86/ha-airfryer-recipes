@@ -39,6 +39,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await favorites.async_load()
 
     state = hass.data.setdefault(DOMAIN, {})
+    if "sent_settings" not in state or not state["sent_settings"].available:
+        from .sent_settings import create_sent_settings
+        history = create_sent_settings(hass)
+        await history.async_load()
+        state["sent_settings"] = history
     state["repository"] = recipes
     state["favorites"] = favorites
     from .beta_send import BetaSender

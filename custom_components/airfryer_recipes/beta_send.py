@@ -379,7 +379,8 @@ class BetaSender:
             except Exception:
                 unchanged = False
             require(unchanged, "state_changed")
-            return await self.send_once(device_id, prepared.zone_id, phase, context)
+            return await self.send_once(device_id, prepared.zone_id, phase, context,
+                                        recipe_id=prepared.recipe.id if prepared.recipe else None)
         finally:
             self.confirming.pop(token, None)
             prepared.permit.close()
@@ -413,7 +414,8 @@ class BetaSender:
         finally:
             self.busy.discard(device_id)
 
-    async def send_once(self, device_id: str, zone_id: int, phase: CookingPhase, context: Any) -> dict:
+    async def send_once(self, device_id: str, zone_id: int, phase: CookingPhase, context: Any,
+                        *, recipe_id: str | None = None) -> dict:
         """One public transport attempt; caller owns validation and per-device lock."""
         # This is the only control call. Never invoke raw, SYNC/MATCH or a
         # start-capable service, and never trust upstream cached confirmation.
@@ -445,7 +447,17 @@ class BetaSender:
                 and result.get("variante") == "multi_app" and result.get("gesendet") == exact
                 and all(type(result["gesendet"][k]) is type(v) for k, v in exact.items())):
             self.uncertain.discard(device_id)
-            return self._result("accepted")
+            accepted = self._result("accepted")
+            history = self.hass.data.get(DOMAIN, {}).get("sent_settings")
+            if history is not None:
+                try:
+                    await history.record(device_id, zone_id, phase, recipe_id)
+                    accepted["history_saved"] = True
+                except Exception:
+                    # The command already succeeded; never turn a storage
+                    # failure into a resend or a false transmission failure.
+                    accepted["history_saved"] = False
+            return accepted
         return self._result("unknown")
 
     @staticmethod

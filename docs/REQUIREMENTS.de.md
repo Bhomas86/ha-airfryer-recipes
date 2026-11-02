@@ -69,6 +69,8 @@ Letzte Zusammenfassung: 24.10.2026. Projektstandard: Englisch als Fallback; Proj
 
 ## Validierung und Abnahme
 
+- Der freigegebene neutrale Card-Entwurf 1A ist in Beta 0.1.0b13 umgesetzt: eigene Grafik mit gestapelten Schubladen, antippbare Fächer, Rezept-/Manuell-Werte und dauerhaft getrennte angenommene Einstellungen je Gerät/Fach. Fachwechsel senden nichts. Neue Cards beginnen mit serverseitiger Testvorschau; echter Modus verwendet die beaufsichtigte Beta ausschließlich für Administratoren. Backend-Geräterechte für normale Benutzer und native Card-Abnahme bleiben offen. [Umfang, Installation und Prüfungen](reports/ISSUE_8_DASHBOARD_CARD.de.md).
+
 - Vom Eigentümer lokal bestätigt am **Cosori Turbo Tower Pro Smart CAF-DC111S-AEU**: vollständige beaufsichtigte Folge mit zwölf Einstellungen auf beiden Fächern am 01.11.2026 bestanden; Gerät anschließend aus. Siehe [exakte Werte und Nachweisumfang](reports/ISSUE_7_LOCAL_ACCEPTANCE.de.md).
 - Anschließend bestätigte der Eigentümer die gespeicherte Rezeptübertragung auf Fach 1 und 2 (R1/R2); R3–R7 bleiben für die reale Abnahme offen. [Nachtrag](reports/ISSUE_7_LOCAL_ACCEPTANCE.de.md).
 - Das bestimmt nicht sämtliche Temperatur-/Zeitgrenzen, Gären, Änderungen aktiver Fächer, SYNC/MATCH oder allgemeine Kompatibilität.

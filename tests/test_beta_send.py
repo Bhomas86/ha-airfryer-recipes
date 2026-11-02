@@ -374,6 +374,8 @@ class SenderTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(self.read.await_args.kwargs["settings"], CookingPhase("airfry", 180, 7))
 
     async def test_recipe_resolves_server_side_and_is_not_modified(self):
+        history = NS(record=AsyncMock())
+        self.hass.data[DOMAIN]["sent_settings"] = history
         repo = await self.library()
         recipe = await repo.async_create(create_recipe("Rolls", program="airfry", temperature_c=180, duration_minutes=7))
         prepared = await self.selected({"recipe_id": recipe.id})
@@ -381,6 +383,7 @@ class SenderTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(prepared["settings"], {"program": "airfry", "temperature_c": 180, "duration_minutes": 7})
         self.hass.services.async_call.return_value["gesendet"].update(temperatur=180, minuten=7)
         await self.confirm(prepared["token"])
+        history.record.assert_awaited_once_with("device", 1, recipe.phases[0], recipe.id)
         self.assertEqual(await repo.async_get(recipe.id), recipe)
 
     async def test_changed_deleted_or_reloaded_recipe_blocks_confirmation(self):

@@ -2,6 +2,8 @@
 
 [Deutsch](ROADMAP.de.md) | [English](ROADMAP.md)
 
+**Dashboard-Beta 0.1.0b13 (2026-11-02):** Freigegebenen neutralen Entwurf 1A mit getrennt dauerhaft gespeicherten zuletzt gesendeten Einstellungen je Fach, Rezept-/Manuell-Bedienung und grafischem Editor umgesetzt. Testvorschau voreingestellt; echte Übertragung verwendet die vorhandene beaufsichtigte Beta ausschließlich für Administratoren. Backend-Geräterechte für normale Benutzer, Personalisierung und native HA-/Companion-Abnahme bleiben offen. [Umsetzung und lokale Prüfung](reports/ISSUE_8_DASHBOARD_CARD.de.md). 170 Python-/80 Frontend-Tests lokal bestanden. Keine GitHub Actions.
+
 **Rezeptabnahme 01.11.2026: R1/R2 als bestanden gemeldet.** Nach der Editor-Korrektur bestätigt der Eigentümer die gespeicherte Rezeptübertragung auf Fach 1 und 2. R3–R7 und restliche Editorvarianten bleiben separat offen. [Nachweis und nächste Prüfungen](reports/ISSUE_7_LOCAL_ACCEPTANCE.de.md). Dashboard samt Backend-Benutzerrechten bleibt das nächste Umsetzungspaket nach gezielter Abnahme. Nur Dokumentation; kein neuer Release und keine GitHub Actions.
 
 **Lokale Abnahme 01.11.2026: Alle zwölf Schritte BESTANDEN.** Der Eigentümer bestätigt die vollständige geführte Folge mit sechs Programmen auf Fach 1 und 2 sowie das anschließend ausgeschaltete Gerät. [Exakte Werte und Nachweisgrenzen](reports/ISSUE_7_LOCAL_ACCEPTANCE.de.md). Nächster offener Gerätepunkt: modellabhängige Adaptergrenzen und Gären; anschließend gezielte Grenzwert-/Fehlerabnahme. Kein neues App-Update und keine GitHub Actions für diesen Dokumentationsnachtrag.

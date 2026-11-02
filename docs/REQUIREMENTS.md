@@ -73,6 +73,8 @@ Last consolidated: 2026-10-24. Project language policy: English default UI langu
 
 ## Validation and acceptance
 
+- Owner-approved neutral card design 1A is implemented in beta 0.1.0b13: original stacked-drawer illustration, tappable zones, recipe/manual values and persistent accepted settings separately per device/zone. Switching zones sends nothing. New cards default to server-enforced dry run; live mode reuses administrator-only supervised beta. Normal-user device ACLs and native card acceptance remain pending. [Scope, installation and checks](reports/ISSUE_8_DASHBOARD_CARD.md).
+
 - Owner-confirmed local acceptance on **Cosori Turbo Tower Pro Smart
   CAF-DC111S-AEU**: the complete supervised twelve-setting sequence passed on
   both zones on 2026-11-01, and the appliance was off afterward. See the

@@ -2,6 +2,8 @@
 
 [English](ROADMAP.md) | [Deutsch](ROADMAP.de.md)
 
+**Dashboard beta 0.1.0b13 (2026-11-02):** Approved neutral design 1A implemented with separate persistent last-sent settings per zone, recipe/manual controls and visual editor. Default dry run; live controls reuse the existing administrator-only supervised beta. Ordinary-user backend device ACLs, personalization and native HA/Companion acceptance remain pending. [Implementation and local procedure](reports/ISSUE_8_DASHBOARD_CARD.md). 170 Python/80 frontend tests passed locally. No GitHub Actions.
+
 **Recipe acceptance 2026-11-01: R1/R2 reported passed.** Following the editor correction, the owner confirms saved-recipe transmission on zones 1 and 2. R3–R7 and remaining editor variants stay separately pending. [Evidence and next checks](reports/ISSUE_7_LOCAL_ACCEPTANCE.md). Dashboard with backend user permissions remains the next implementation package after focused acceptance. Documentation only; no new release or GitHub Actions.
 
 **Local acceptance 2026-11-01: All twelve steps PASS.** The owner confirmed the complete guided sequence with six programs on zones 1 and 2 and the appliance off afterward. [Exact settings and evidence limits](reports/ISSUE_7_LOCAL_ACCEPTANCE.md). Next open device work: model-aware adapter limits and Proof, followed by focused endpoint/error acceptance. No new app update or GitHub Actions for this documentation follow-up.

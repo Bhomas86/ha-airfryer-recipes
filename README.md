@@ -4,7 +4,9 @@
 
 A Home Assistant custom integration for managing reusable air fryer recipes and sending their settings to supported air fryers through existing Home Assistant integrations.
 
-> **Project status: Test beta 0.1.0b12.** The recipe editor offers reported programs in a dropdown and explicit correction of old identifiers. The owner reports saved-recipe transmission passed on zones 1 and 2; other editor/interruption cases remain pending. The earlier twelve-step appliance sequence passed. Proof and wider temperatures remain deferred.
+> **Project status: Test beta 0.1.0b13.** The approved neutral dashboard card with recipe/manual controls and separate persistent last-sent settings per zone is implemented. New cards default to test mode; actual transmission remains administrator-only supervised beta. Native HA/Companion card acceptance is pending. Proof and wider temperatures remain deferred.
+
+**[Add the dashboard card](docs/reports/ISSUE_8_DASHBOARD_CARD.md):** Restart HA after the update, fully reopen the app, then Dashboard → Edit → Add card → Airfryer Recipes. No dashboard is changed automatically. Start with test mode enabled.
 
 **[Local acceptance: six programs passed on both zones](docs/reports/ISSUE_7_LOCAL_ACCEPTANCE.md).** Evidence covers the documented nominal settings, not general approval of all limits.
 
@@ -64,18 +66,18 @@ The first target device is the **Cosori Turbo Tower Pro Smart (CAF-DC111S-AEU)**
 - [x] English and German interface
 - [x] HACS prerelease 0.1.0b2 and documented phone acceptance
 - [ ] Verified model limits and safe live transmission
-- [ ] Lovelace dashboard card and card editor
+- [x] Initial Lovelace dashboard card and visual editor (administrator-only supervised beta)
 - [ ] SYNC/MATCH and stable release
 
-Current beta: 132 Python tests and 29 frontend tests passed locally. No GitHub Actions, HACS/Hassfest or Python 3.14 runs for this update. The fixed Air Fry 170 °C/one-minute test passed local acceptance on both zones; extended programs/settings await acceptance. [New test plan](docs/reports/BETA_0_1_0B5_TEST_PLAN.md).
+Current beta: 170 Python tests and 80 frontend tests passed locally. No GitHub Actions, HACS/Hassfest or Python 3.14 runs for this update. Earlier nominal recipe/manual sends passed on both zones; new dashboard/native HA acceptance remains pending. [Dashboard behavior and checks](docs/reports/ISSUE_8_DASHBOARD_CARD.md). Ordinary-user device permissions and personalization remain planned.
 
 ## Installation
 
-**Prerelease, not a stable release.** Create a Home Assistant backup first. Add this repository as a custom HACS integration repository, show prereleases and select `v0.1.0b12` using “Redownload”. Restart Home Assistant and fully reopen the Companion app.
+**Prerelease, not a stable release.** Create a Home Assistant backup first. Add this repository as a custom HACS integration repository, show prereleases and select `v0.1.0b13` using “Redownload”. Restart Home Assistant and fully reopen the Companion app.
 
 Recipe management works without Airfryer Control and requires no cloud credentials. Install Airfryer Control `1.0.2-beta.1` or newer for the extended device preview. It executes no control commands. For CAF-DC111S-AEU, the six reported programs and limits remain estimated/unverified; `proof` is missing from the upstream contract. Normal transmission remains blocked; the separate supervised beta test requires exactly Airfryer Control 1.0.2-beta.1.
 
-Details: [release notes](docs/releases/0.1.0b6.md), [local test checklist](docs/LOCAL_TEST_CHECKLIST.md) and [roadmap](docs/ROADMAP.md).
+Details: [release notes](docs/releases/0.1.0b13.md), [dashboard setup/checks](docs/reports/ISSUE_8_DASHBOARD_CARD.md), [local test checklist](docs/LOCAL_TEST_CHECKLIST.md) and [roadmap](docs/ROADMAP.md).
 
 ## Safety and privacy
 

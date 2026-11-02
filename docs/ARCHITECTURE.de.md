@@ -53,6 +53,8 @@ Erstes reales Testgerät ist die **Cosori Turbo Tower Pro Smart CAF-DC111S-AEU**
 
 ## Oberfläche und Bilddateien
 
+Die erste Dashboard-Beta (0.1.0b13) lädt ihr lokales Card-Modul über HAs `add_extra_js_url` und verwendet den Verbindungs-/Bestätigungsablauf des Panels mit. Sie nutzt die beaufsichtigte Übertragung ausschließlich für Administratoren; Backend-Geräterechte für normale Benutzer bleiben geplant. Angenommene Stände liegen in einem getrennten versionierten HA Store mit adminpflichtigem Lese-Endpunkt, niemals in einer Befehlswarteschlange. [Umsetzung und Prüfungen](reports/ISSUE_8_DASHBOARD_CARD.de.md).
+
 Zwei JavaScript-Einstiegspunkte dürfen gemeinsame TypeScript-/Lit-Komponenten nutzen, werden aber als lokal gebündelte, versionierte Dateien mit der Integration ausgeliefert. Keine CDN-Abhängigkeit zur Laufzeit. Die Registrierung nutzt unterstützte Home-Assistant-Mechanismen und vermeidet synchrone Dateizugriffe im Event-Loop. Mitgelieferte Gerätebilder sind eigene bzw. korrekt lizenzierte Illustrationen. Eigene Uploads werden lokal mit Größen-/Formatkontrolle und authentifiziertem Zugriff gespeichert. Die antippbaren Fachpositionen verwenden relative Koordinaten. Für unbekannte Modelle gibt es eine neutrale Grafik und den GitHub-Link „Modell fehlt?“.
 
 **Englisch (`en`) bleibt UI-Standardsprache/Fallback**, Deutsch (`de`) wird vollständig unterstützt. Projektberichte, Issues, PRs, Dokumente und Release Notes sind **vollständig zweisprachig und bei Berichten Deutsch zuerst**, mit jeweils `*.md` und `*.de.md`.

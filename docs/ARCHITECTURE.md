@@ -53,6 +53,8 @@ The first device for manual verification is the **Cosori Turbo Tower Pro Smart C
 
 ## UI and image resources
 
+The first dashboard beta (0.1.0b13) loads its local card module through HA's `add_extra_js_url` and shares the panel's connection/token lifecycle. It reuses administrator-only supervised transmission; ordinary-user device ACLs remain planned. Accepted snapshots use a separate versioned HA Store and an admin-only read endpoint, never a command queue. [Implementation and checks](reports/ISSUE_8_DASHBOARD_CARD.md).
+
 Two JavaScript entry points may share TypeScript/Lit components but should ship as locally bundled, versioned assets inside the integration. No runtime CDN dependency. Register frontend resources using supported Home Assistant mechanisms and avoid synchronous file I/O in the event loop. Preset images should be project-owned/licensed illustrations; user-uploaded images are stored locally with safe types, size limits and authenticated access. Store tappable zone hotspot locations in relative coordinates, with a neutral fallback for unknown devices and a button linking to GitHub issues for missing models.
 
 English (`en`) is the **UI fallback language**. German (`de`) is fully supported. Project reports, issue and PR bodies, documentation and release notes are **fully bilingual, German first**, with `*.de.md` and corresponding English `*.md`.

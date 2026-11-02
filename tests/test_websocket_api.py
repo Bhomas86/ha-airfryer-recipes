@@ -530,17 +530,31 @@ class WebsocketTests(unittest.IsolatedAsyncioTestCase):
         ws.registered.clear()
         self.api.register_commands(self.hass)
         commands = {handler._ws_command for handler in ws.registered}
-        self.assertEqual(len(commands), 21)
+        self.assertEqual(len(commands), 22)
         self.assertEqual(
             commands,
             {f"{DOMAIN}/{name}" for name in (
                 "list", "get", "create", "update", "duplicate", "delete",
                 "import_preview", "import_confirm", "export", "favorites", "set_favorite",
-                "devices",
+                "devices", "sent_settings",
                 "prepare_send", "beta_prepare", "beta_confirm", "beta_cancel",
                 "batch_prepare", "batch_start", "batch_next", "batch_stop", "beta_recover",
             )},
         )
+
+    async def test_sent_settings_is_admin_only_read_only_and_rejects_extra_fields(self):
+        history = SimpleNamespace(get=Mock(return_value={"available": True, "zones": {}}))
+        self.hass.data[DOMAIN]["sent_settings"] = history
+        for user in (self.user, FakeConnection(authenticated=False)):
+            self.assertEqual((await self.call("sent_settings", user, device_id="device"))[2], "unauthorized")
+        history.get.assert_not_called()
+        result = await self.call("sent_settings", self.admin, device_id="device")
+        self.assertEqual(result[2], {"available": True, "zones": {}})
+        history.get.assert_called_once_with("device")
+        for params in ({"settings": {}}, {"zone_id": 1}, {"device_id": ""}, {"device_id": 1}):
+            result = await self.call("sent_settings", self.admin, **({"device_id": "device"} | params))
+            self.assertEqual(result[2], "invalid_format")
+        self.assertEqual(history.get.call_count, 1)
 
 
 if __name__ == "__main__":

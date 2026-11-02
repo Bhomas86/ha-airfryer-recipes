@@ -250,6 +250,19 @@ async def ws_set_favorite(hass: Any, connection: Any, msg: dict[str, Any]) -> No
 
 
 @websocket_api.require_admin
+@websocket_api.websocket_command({voluptuous.Required("type"): f"{DOMAIN}/sent_settings",
+                                   voluptuous.Required("device_id"): str})
+@websocket_api.async_response
+async def ws_sent_settings(hass: Any, connection: Any, msg: dict[str, Any]) -> None:
+    """Read local send history, not an appliance state or send permission."""
+    async def run(repo: RecipeRepository) -> dict[str, Any]:
+        if set(msg) != {"id", "type", "device_id"} or not isinstance(msg["device_id"], str) or not 0 < len(msg["device_id"]) <= 128:
+            raise RecipeValidationError("Invalid history target")
+        return hass.data[DOMAIN]["sent_settings"].get(msg["device_id"])
+    await _respond(hass, connection, msg, run)
+
+
+@websocket_api.require_admin
 @websocket_api.websocket_command({voluptuous.Required("type"): f"{DOMAIN}/devices"})
 @websocket_api.async_response
 async def ws_devices(hass: Any, connection: Any, msg: dict[str, Any]) -> None:
@@ -467,6 +480,7 @@ COMMANDS = (
     ws_favorites,
     ws_set_favorite,
     ws_devices,
+    ws_sent_settings,
     ws_prepare_send,
     ws_beta_prepare,
     ws_beta_confirm,

@@ -4,7 +4,9 @@
 
 Benutzerdefinierte Home-Assistant-Integration zur Verwaltung wiederverwendbarer Heißluftfritteusen-Rezepte. Die gespeicherten Einstellungen sollen über bestehende Home-Assistant-Integrationen an unterstützte Geräte übertragen werden.
 
-> **Projektstatus: Test-Beta 0.1.0b12.** Der Rezepteditor bietet gemeldete Programme als Auswahlliste und einen ausdrücklichen Korrekturweg für alte Kennungen. Rezeptübertragung auf Fach 1 und 2 vom Eigentümer als bestanden gemeldet; übrige Editor-/Abbruchfälle noch offen. Frühere Zwölf-Schritte-Gerätefolge bestanden. Gären und erweiterte Temperaturen bleiben zurückgestellt.
+> **Projektstatus: Test-Beta 0.1.0b13.** Die freigegebene neutrale Dashboard-Card mit Rezept-/Manuell-Bedienung und getrennt dauerhaft gespeicherten zuletzt gesendeten Einstellungen je Fach ist umgesetzt. Neue Cards beginnen im Testmodus; echtes Senden bleibt eine beaufsichtigte Beta ausschließlich für Administratoren. Native HA-/Companion-Abnahme der Card steht aus. Gären und erweiterte Temperaturen bleiben zurückgestellt.
+
+**[Dashboard-Card hinzufügen](docs/reports/ISSUE_8_DASHBOARD_CARD.de.md):** Nach dem Update HA neu starten, App vollständig neu öffnen, dann Dashboard → Bearbeiten → Karte hinzufügen → Airfryer Recipes. Kein Dashboard wird automatisch geändert. Zuerst den Testmodus aktiviert lassen.
 
 **[Lokale Abnahme: sechs Programme, beide Fächer bestanden](docs/reports/ISSUE_7_LOCAL_ACCEPTANCE.de.md).** Nachweis für die dokumentierten Beispielwerte; keine allgemeine Freigabe aller Grenzen.
 
@@ -64,18 +66,18 @@ Als erstes Zielgerät dient die **Cosori Turbo Tower Pro Smart (CAF-DC111S-AEU)*
 - [x] Deutsche und englische Oberfläche
 - [x] HACS-Vorabversion 0.1.0b2 und dokumentierte Handy-Abnahme
 - [ ] Verifizierte Modellgrenzen und sichere echte Übertragung
-- [ ] Lovelace-Dashboard-Karte und Karteneditor
+- [x] Erste Lovelace-Dashboard-Card mit grafischem Editor (beaufsichtigte Beta ausschließlich für Administratoren)
 - [ ] SYNC/MATCH und stabile Veröffentlichung
 
-Aktuelle Beta: 132 Python-Tests und 29 Frontend-Tests lokal bestanden. Keine GitHub Actions, HACS-/Hassfest- oder Python-3.14-Läufe für dieses Update. Der feste Airfry-Test 170 °C/eine Minute wurde auf beiden Fächern lokal abgenommen; erweiterte Programme und Werte stehen zur Abnahme aus. [Neue Testliste](docs/reports/BETA_0_1_0B5_TEST_PLAN.de.md).
+Aktuelle Beta: 170 Python-Tests und 80 Frontend-Tests lokal bestanden. Keine GitHub Actions, HACS-/Hassfest- oder Python-3.14-Läufe für dieses Update. Frühere Rezept-/manuelle Nominalübertragungen auf beiden Fächern bestanden; neue Dashboard-/native HA-Abnahme offen. [Dashboard-Verhalten und Prüfungen](docs/reports/ISSUE_8_DASHBOARD_CARD.de.md). Geräteberechtigungen für normale Benutzer und Personalisierung bleiben geplant.
 
 ## Installation
 
-**Vorabversion, kein stabiler Release.** Vorher ein Home-Assistant-Backup erstellen. Dieses Repository als benutzerdefiniertes HACS-Integrationsrepository hinzufügen, Vorabversionen anzeigen und über „Neu herunterladen“ `v0.1.0b12` auswählen. Home Assistant neu starten und die Companion-App vollständig neu öffnen.
+**Vorabversion, kein stabiler Release.** Vorher ein Home-Assistant-Backup erstellen. Dieses Repository als benutzerdefiniertes HACS-Integrationsrepository hinzufügen, Vorabversionen anzeigen und über „Neu herunterladen“ `v0.1.0b13` auswählen. Home Assistant neu starten und die Companion-App vollständig neu öffnen.
 
 Die Rezeptverwaltung funktioniert ohne Airfryer Control und benötigt keine Cloud-Zugangsdaten. Für die erweiterte Geräte-Testvorschau Airfryer Control `1.0.2-beta.1` oder neuer installieren. Sie führt keine Steuerbefehle aus. Für CAF-DC111S-AEU sind die sechs gemeldeten Programme und Grenzen noch geschätzt/ungeprüft; `proof` fehlt im Upstream-Vertrag. Normale Übertragung bleibt gesperrt; der separate beaufsichtigte Beta-Test benötigt exakt Airfryer Control 1.0.2-beta.1.
 
-Details: [Release Notes](docs/releases/0.1.0b6.de.md), [lokale Testcheckliste](docs/LOCAL_TEST_CHECKLIST.de.md) und [Roadmap](docs/ROADMAP.de.md).
+Details: [Release Notes](docs/releases/0.1.0b13.de.md), [Dashboard-Einrichtung/-Prüfungen](docs/reports/ISSUE_8_DASHBOARD_CARD.de.md), [lokale Testcheckliste](docs/LOCAL_TEST_CHECKLIST.de.md) und [Roadmap](docs/ROADMAP.de.md).
 
 ## Sicherheit und Datenschutz
 
