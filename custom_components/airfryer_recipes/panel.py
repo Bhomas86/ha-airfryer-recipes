@@ -31,6 +31,9 @@ async def async_register_panel(hass: Any) -> None:
             StaticPathConfig(f"/api/{DOMAIN}/card.js", str(Path(__file__).parent / "frontend" / "card.js"), cache_headers=False),
         ])
         state["card_registered"] = True
+    if not state.get("designer_registered"):
+        await hass.http.async_register_static_paths([StaticPathConfig(f"/api/{DOMAIN}/personalization.js", str(Path(__file__).parent / "frontend" / "personalization.js"), cache_headers=False)])
+        state["designer_registered"]=True
     from .card_resource import async_register_card_resource
     await async_register_card_resource(hass)
     await panel_custom.async_register_panel(

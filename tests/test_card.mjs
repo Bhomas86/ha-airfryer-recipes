@@ -327,7 +327,7 @@ test("card/editor registration, English fallback and escaping use no copied imag
   assert.equal(context.window.customCards[0].type, "airfryer-recipes-card");
   assert.equal(card.constructor.getStubConfig().dry_run, true);
   assert.equal(card.constructor.getConfigElement() instanceof elements.get("airfryer-recipes-card-editor"), true);
-  assert.match(cardSource, /\.\/panel\.js\?v=0\.1\.0b17/);
+  assert.match(cardSource, /\.\/panel\.js\?v=0\.1\.0b18/);
 });
 
 test("visual editor uses safe defaults and emits dashboard configuration only", () => {
@@ -400,7 +400,7 @@ test("ordinary card loads permitted devices and history through scoped control A
   assert.deepEqual(plain(card.phase()), other);
   assert.match(card.shadowRoot.innerHTML, /Zuletzt gesendet · Fach 2/);
   assert.equal(calls.some((r) => /beta_|create|update|access_/.test(r.type)), false);
-  assert.deepEqual(calls.filter((r) => r.type.endsWith("/control")).map((r) => r.action), ["devices", "sent_settings"]);
+  assert.deepEqual(calls.filter((r) => r.type.endsWith("/control")).map((r) => r.action), ["devices", "sent_settings", "appearance_get"]);
 });
 
 test("ordinary granted user can send either zone with one exact confirmation", async () => {
@@ -515,4 +515,16 @@ test("visual editor emits booleans and size choices without resetting other sett
   for(const target of [{name:"size",value:"compact"},{name:"show_status",checked:false}]) editor.shadowRoot.listeners.get("change")({target});
   assert.equal(events.at(-1).detail.config.show_status,false);assert.equal(events.at(-1).detail.config.size,"compact");
   assert.equal(events.at(-1).detail.config.dry_run,false);assert.equal(events.at(-1).detail.config.title,"Kitchen");
+});
+
+test("saved relative artwork changes only the graphic and does not send settings",()=>{
+ const calls=[];const {card}=makeCard(async r=>{calls.push(r)});
+ card.appearanceDevice='appliance';card.appearance={preset:'side_by_side',image:null,zones:{'1':[4,15,43,75],'2':[53,15,43,75]}};card.render();
+ assert.match(card.shadowRoot.innerHTML,/left:53%;top:15%;width:43%;height:75%/);
+ assert.equal(calls.length,0);assert.equal(card.phase().temperature_c,180);
+ card.selectedDevice().connectivity='offline';assert.equal(Boolean(card.canSend()),false);
+});
+test("appearance from another device never replaces the selected graphic",()=>{
+ const {card}=makeCard();card.appearanceDevice='private-device';card.appearance={preset:'custom',image:'data:image/png;base64,AAAA',zones:{'1':[4,15,43,75],'2':[53,15,43,75]}};card.render();
+ assert.doesNotMatch(card.shadowRoot.innerHTML,/<img src=/);
 });

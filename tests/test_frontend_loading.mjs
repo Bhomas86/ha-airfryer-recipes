@@ -13,7 +13,7 @@ for (const mode of ["fresh", "panel-first", "legacy-panel-first", "multiple-quer
     const globals = ["HTMLElement", "window", "customElements"];
     const descriptors = globals.map((key) => Object.getOwnPropertyDescriptor(globalThis, key));
     try {
-      for (const name of ["panel.js", "card.js"]) cpSync(new URL(`../custom_components/airfryer_recipes/frontend/${name}`, import.meta.url), join(directory, name));
+      for (const name of ["panel.js", "card.js", "personalization.js"]) cpSync(new URL(`../custom_components/airfryer_recipes/frontend/${name}`, import.meta.url), join(directory, name));
       writeFileSync(join(directory, "package.json"), JSON.stringify({ type: "module" }));
       const base = pathToFileURL(`${directory}/`).href;
       const elements = new Map();
@@ -31,12 +31,14 @@ for (const mode of ["fresh", "panel-first", "legacy-panel-first", "multiple-quer
         existingPanel = class LegacyPanel extends HTMLElement {};
         customElements.define("airfryer-recipes-panel", existingPanel);
       } else if (mode !== "fresh") {
-        const query = mode === "panel-first" ? "0.1.0b17" : "previous";
+        const query = mode === "panel-first" ? "0.1.0b18" : "previous";
         await import(new URL("panel.js?v=" + query, base));
         existingPanel = customElements.get("airfryer-recipes-panel");
       }
-      await import(new URL("card.js?v=0.1.0b17", base));
-      const { AirfryerRecipesPanel } = await import(new URL("panel.js?v=0.1.0b17", base));
+      await import(new URL("card.js?v=0.1.0b18", base));
+      const { AirfryerRecipesPanel } = await import(new URL("panel.js?v=0.1.0b18", base));
+      await import(new URL("personalization.js?v=0.1.0b18", base));
+      assert.ok(customElements.get("airfryer-device-designer"));
       const Card = customElements.get("airfryer-recipes-card");
       assert.ok(Card);
       assert.ok(customElements.get("airfryer-recipes-card-editor"));

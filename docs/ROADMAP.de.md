@@ -2,6 +2,8 @@
 
 [Deutsch](ROADMAP.de.md) | [English](ROADMAP.md)
 
+**b18 (03.11.2026):** b17-Karteneditor lokal bestätigt. Private Gerätebild-Galerie/Uploads und relative Fachbereiche pro Gerät mit Admin-Schreibrechten umgesetzt; native neue Abnahme offen. [Einrichtung und Grenzen](releases/0.1.0b18.de.md).
+
 **b17 (03.11.2026):** Drei lokale b16-Freigabeprüfungen bestanden. Karteneditor um Darstellungsgrößen, unabhängige Grafikgröße und Status-/Historienanzeige ergänzt; Standardeinstellungen und Backend-Prüfungen unverändert. [Umsetzung und Prüfung](releases/0.1.0b17.de.md).
 
 **b16-Ganzgerätefreigabe (02.11.2026):** Nach Card-/Historien-/Neustart-Grundabnahme adminverwaltete Benutzer-/Gerätefreigaben umsetzen, gemäß Eigentümerkorrektur: Alle Fächer und verfügbaren Programme gehören zur Gerätefreigabe. Begrenzte Erkennung/Historie/Testvorschau/beaufsichtigtes Senden und Entzugsprüfungen ergänzen; Rezept-/Sicherheitsverwaltung und Testfolgen bleiben adminpflichtig. 203 Python-/93 Frontend-Tests lokal bestanden; neue native Zwei-Konten-Abnahme offen. [Umsetzung und Ablauf](reports/ISSUE_8_DEVICE_ACCESS.de.md). Keine GitHub Actions.

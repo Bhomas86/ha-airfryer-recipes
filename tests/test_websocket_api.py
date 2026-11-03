@@ -530,13 +530,13 @@ class WebsocketTests(unittest.IsolatedAsyncioTestCase):
         ws.registered.clear()
         self.api.register_commands(self.hass)
         commands = {handler._ws_command for handler in ws.registered}
-        self.assertEqual(len(commands), 25)
+        self.assertEqual(len(commands), 28)
         self.assertEqual(
             commands,
             {f"{DOMAIN}/{name}" for name in (
                 "list", "get", "create", "update", "duplicate", "delete",
                 "import_preview", "import_confirm", "export", "favorites", "set_favorite",
-                "devices", "sent_settings", "control", "access_list", "access_set",
+                "devices", "sent_settings", "control", "access_list", "access_set", "appearance_get", "appearance_set", "appearance_upload",
                 "prepare_send", "beta_prepare", "beta_confirm", "beta_cancel",
                 "batch_prepare", "batch_start", "batch_next", "batch_stop", "beta_recover",
             )},
@@ -713,6 +713,30 @@ class WebsocketTests(unittest.IsolatedAsyncioTestCase):
             result = await self.control("beta_recover", device_id="device", acknowledge_physical_reset=True)
             self.assertEqual(result[2], {"rearmed": True, "transmitted": False})
         self.hass.services.async_call.assert_not_awaited()
+
+    async def test_private_appearance_requires_grant_and_cannot_be_written_by_user(self):
+        from custom_components.airfryer_recipes.appearance import AppearanceStore, default_appearance
+        access,_ = await self.access_setup()
+        artwork=AppearanceStore(SimpleNamespace(async_load=AsyncMock(return_value=None),async_save=AsyncMock()))
+        await artwork.load();await artwork.save("device",default_appearance("outline"));self.hass.data[DOMAIN]["appearance"]=artwork
+        self.assertEqual((await self.control("appearance_get",device_id="device"))[2],"unauthorized")
+        for action,params in (("appearance_get",{"device_id":"device"}),("appearance_set",{"device_id":"device","appearance":default_appearance()}),("appearance_upload",{"image":"x"})):
+            self.assertEqual((await self.call(action,self.user,**params))[2],"unauthorized")
+        await access.set("user","device",True)
+        self.assertEqual((await self.control("appearance_get",device_id="device"))[2]["preset"],"outline")
+        self.assertEqual((await self.control("appearance_set",device_id="device",appearance=default_appearance()))[2],"invalid_format")
+        await access.set("user","device",False)
+        self.assertEqual((await self.control("appearance_get",device_id="device"))[2],"unauthorized")
+
+    async def test_admin_appearance_save_read_reset_and_strict_envelope(self):
+        from custom_components.airfryer_recipes.appearance import AppearanceStore, default_appearance
+        await self.access_setup()
+        artwork=AppearanceStore(SimpleNamespace(async_load=AsyncMock(return_value=None),async_save=AsyncMock()))
+        await artwork.load();self.hass.data[DOMAIN]["appearance"]=artwork
+        for value in (default_appearance("side_by_side"),default_appearance()):
+            self.assertEqual((await self.call("appearance_set",self.admin,device_id="device",appearance=value))[2],{"saved":True})
+            self.assertEqual((await self.call("appearance_get",self.admin,device_id="device"))[2],value)
+        self.assertEqual((await self.call("appearance_get",self.admin,device_id="device",user_id="forged"))[2],"invalid_format")
 
 
 if __name__ == "__main__":

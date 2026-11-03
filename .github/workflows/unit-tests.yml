@@ -36,6 +36,8 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+      - name: Image validation test dependency
+        run: python -m pip install Pillow==12.3.0
       - name: Compile source
         run: python -m compileall -q custom_components tests
       - name: Unit tests (offline; no device access)
@@ -46,3 +48,4 @@ jobs:
           node tests/test_panel.mjs
           node tests/test_card.mjs
           node tests/test_frontend_loading.mjs
+          node tests/test_personalization.mjs

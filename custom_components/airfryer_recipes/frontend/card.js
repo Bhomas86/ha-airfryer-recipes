@@ -1,5 +1,5 @@
 // Bundled locally; share the panel's transport, localization and token lifecycle.
-import { AirfryerRecipesPanel } from "./panel.js?v=0.1.0b17";
+import { AirfryerRecipesPanel } from "./panel.js?v=0.1.0b18";
 
 const CARD_TEXT = {
   en: {
@@ -64,6 +64,7 @@ class AirfryerRecipesCard extends AirfryerRecipesPanel {
     this.previewMessage = "";
     this.reloadRequested = false;
     this.accessUserId = "";
+    this.appearance = null;
   }
 
   setConfig(config) {
@@ -92,6 +93,7 @@ class AirfryerRecipesCard extends AirfryerRecipesPanel {
   set hass(value) {
     if (this._hass && (this._hass.user?.id !== value?.user?.id || this._hass.user?.is_admin !== value?.user?.is_admin)) {
       this.drafts.clear();
+      this.appearance=null;this.appearanceDevice="";
       this.accessUserId = "";
       this.history = {};
       this.historyAvailable = null;
@@ -115,7 +117,7 @@ class AirfryerRecipesCard extends AirfryerRecipesPanel {
   get hasDeviceAccess() { return this.admin || Boolean(this.accessUserId && this.accessUserId === this._hass?.user?.id && this.selectedDevice()); }
 
   async request(name, fields = {}) {
-    const controlled = ["devices", "sent_settings", "prepare_send", "beta_prepare", "beta_confirm", "beta_cancel", "beta_recover"];
+    const controlled = ["appearance_get", "devices", "sent_settings", "prepare_send", "beta_prepare", "beta_confirm", "beta_cancel", "beta_recover"];
     if (!this.admin && controlled.includes(name)) {
       if (this._hass?.connection?.connected === false || (!this.panelActive && name !== "beta_cancel")) throw { code: "beta_test_blocked", message: "connection_changed" };
       return super.request("control", { action: name, parameters: fields });
@@ -188,12 +190,21 @@ class AirfryerRecipesCard extends AirfryerRecipesPanel {
       this.selectedDeviceId = this.config.device_id || this.selectedDeviceId || this.deviceState.devices[0]?.device_id || "";
       if (!this.selectedZone()) this.selectedZoneId = String(this.selectedDevice()?.zones?.[0]?.zone_id || "");
       await this.loadHistory();
+      await this.loadAppearance();
       if (!this.controlCurrent(revision) || loading !== this.loadRevision) return;
       this.restoreDraft();
       this.error = "";
     } catch (error) {
       if (this.controlCurrent(revision)) this.showError(error);
     } finally { this.finishWork(); }
+  }
+
+  async loadAppearance() {
+    const device_id=this.selectedDeviceId, revision=this.controlRevision;
+    this.appearance=null;
+    try { const value=await this.request("appearance_get",{device_id});
+      if(this.controlCurrent(revision)&&device_id===this.selectedDeviceId){this.appearance=value;this.appearanceDevice=device_id;}
+    } catch { /* Retain the original neutral graphic on read failure. */ }
   }
 
   async loadHistory() {
@@ -226,6 +237,7 @@ class AirfryerRecipesCard extends AirfryerRecipesPanel {
       this.busy = true;
       this.render();
       await this.loadHistory();
+      await this.loadAppearance();
     }
     this.restoreDraft();
     this.finishWork();
@@ -356,6 +368,9 @@ class AirfryerRecipesCard extends AirfryerRecipesPanel {
     if (!programs.some((p) => p.id === phase.program)) programs.unshift({ id: phase.program, missing: true });
     const layout = displayConfig(this.config);
     const graphic = { small: [130, 66], normal: [178, 90], large: [205, 108] }[layout.graphic_size];
+    const appearance=this.appearanceDevice===this.selectedDeviceId?this.appearance:null;
+    const personalized=appearance?.zones && (appearance.preset!=="stacked" || JSON.stringify(appearance.zones)!==JSON.stringify({"1":[5,8,90,39],"2":[5,53,90,39]}));
+    const artwork=personalized ? `<div class="appliance personalized ${appearance.preset==='outline'?'outline':''}">${appearance.image?.startsWith('data:image/png;base64,')?`<img src="${html(appearance.image)}" alt="">`:''}${zones.map(z=>{const b=appearance.zones[String(z.zone_id)];return b?`<button type="button" data-action="zone" data-zone="${z.zone_id}" aria-label="${t.zone} ${z.zone_id}" aria-pressed="${String(z.zone_id)===this.selectedZoneId}" style="left:${Number(b[0])}%;top:${Number(b[1])}%;width:${Number(b[2])}%;height:${Number(b[3])}%" ${disabled?'disabled':''}>${z.zone_id}</button>`:'';}).join('')}</div>`:null;
     const zoneButton = (zone, graphic = false) => `<button type="button" data-action="zone" data-zone="${zone.zone_id}" class="${graphic ? "drawer" : "zone"} ${String(zone.zone_id) === this.selectedZoneId ? "selected" : ""}" aria-pressed="${String(zone.zone_id) === this.selectedZoneId}" aria-label="${t.zone} ${zone.zone_id}" ${disabled ? "disabled" : ""}>
       ${graphic ? `<b>${zone.zone_id}</b><i></i>` : `<span class="radio"></span><span>${t.zone} ${zone.zone_id}<small>${html(this.statusLabel(zone.status))}</small></span>`}</button>`;
     this.shadowRoot.innerHTML = `<style>
@@ -372,11 +387,12 @@ class AirfryerRecipesCard extends AirfryerRecipesPanel {
       ${layout.size === "large" ? "ha-card{padding:24px}h2{font-size:1.5rem}input,select{min-height:50px}.send{min-height:52px}.overview{gap:24px}" : ""}
       ${layout.show_status ? "" : ".connection,.zone small{display:none}"}
       ${layout.show_last_sent ? "" : ".last{display:none}"}
+      .personalized{aspect-ratio:1;padding:0;position:relative;overflow:hidden}.personalized:after{display:none}.personalized img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}.personalized button{position:absolute;background:#667f9388;color:#fff;border:2px solid #879ba9}.personalized button[aria-pressed=true]{border-color:#e6eef4;background:#869ead99}.personalized.outline{background:transparent;border:2px solid #9aa9b6}
       @media(max-width:340px){ha-card{padding:14px}.overview{gap:12px;grid-template-columns:minmax(90px,38%) minmax(0,1fr)}.drawer{min-height:${Math.min(graphic[1],78)}px}.connection{font-size:.75rem}h2{font-size:1.1rem}.last{font-size:.72rem}}
     </style><ha-card class="${html(connection)}"><header><h2>${html(this.config.title || t.title)}</h2><span class="connection" title="${t.reported}"><i class="dot"></i>${html(t[connection] || t.unknown)}</span><button class="refresh" type="button" data-action="refresh" aria-label="${t.refresh}" title="${t.refresh}" ${this.busy ? "disabled" : ""}>↻</button></header>
       ${!this.admin && (!this.accessUserId || !this.deviceState.devices.length) ? `<p class="message">${t.admin}</p>` : `
       ${!this.config.device_id && (this.deviceState.devices.length > 1 || (!device && this.deviceState.devices.length)) ? `<label for="card-device">${this.words.device}</label><select id="card-device" ${this.busy ? "disabled" : ""}>${!device ? `<option value="" selected disabled>${this.words.device}</option>` : ""}${this.deviceState.devices.map((d) => `<option value="${html(d.device_id)}" ${d.device_id === this.selectedDeviceId ? "selected" : ""}>${html(d.name)}</option>`).join("")}</select>` : ""}
-      <div class="overview"><div class="appliance" role="group" aria-label="${html(device?.name || t.title)}">${zones.map((z) => zoneButton(z, true)).join("") || `<div class="drawer">—</div>`}</div>
+      <div class="overview">${artwork || `<div class="appliance" role="group" aria-label="${html(device?.name || t.title)}">${zones.map((z) => zoneButton(z, true)).join("") || `<div class="drawer">—</div>`}</div>`}
       <div>${zones.map((z) => zoneButton(z)).join("")}<div class="last" title="${t.historyInfo}"><strong>${t.last} · ${t.zone} ${html(this.selectedZoneId || "—")}</strong>${this.historyAvailable === false ? `<p>${t.historyError}</p>` : record ? `<p>${html(this.programName(record.settings.program))}<br>${this.toDisplay(record.settings.temperature_c)} ${this.unit} · ${record.settings.duration_minutes} min</p>` : `<p>${this.historyAvailable === null ? this.words.loading : t.empty}</p>`}</div></div></div>
       ${!device ? `<p class="message">${this.words.targetMissing}</p>` : ""}
       <form id="card-form"><label for="card-recipe">${t.recipe}</label><select id="card-recipe" ${disabled || this.sourceMode !== "recipe" ? "disabled" : ""}><option value="">${t.choose}</option>${recipes.map((r) => `<option value="${html(r.id)}" ${r.id === this.previewRecipeId ? "selected" : ""}>${html(r.name)}</option>`).join("")}</select>
@@ -397,6 +413,10 @@ class AirfryerRecipesCardEditor extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: "open" });
+    this.shadowRoot.addEventListener("click", async (event) => {
+      if(event.target.dataset?.customize!=="true"||!this._hass?.user?.is_admin)return;
+      await import("./personalization.js?v=0.1.0b18");this.customize=true;this.render();
+    });
     this.shadowRoot.addEventListener("change", (event) => {
       const target = event.target;
       if (!["title", "device_id", "dry_run", "size", "graphic_size", "show_status", "show_last_sent"].includes(target.name)) return;
@@ -405,7 +425,7 @@ class AirfryerRecipesCardEditor extends HTMLElement {
     });
   }
   setConfig(config) { this.config = displayConfig({ ...config, dry_run: config.dry_run !== false }); this.render(); }
-  set hass(value) { const language = this._hass?.language; this._hass = value; if (language !== value?.language) this.render(); }
+  set hass(value) { const language = this._hass?.language; this._hass = value; if (language !== value?.language) this.render(); const designer=this.shadowRoot.querySelector?.("airfryer-device-designer");if(designer)designer.hass=value; }
   render() {
     if (!this.config) return;
     const t = textFor(this._hass);
@@ -414,7 +434,8 @@ class AirfryerRecipesCardEditor extends HTMLElement {
       <label>${t.configDevice}<input name="device_id" type="text" value="${html(this.config.device_id || "")}"></label>
       ${[["size", t.size, ["compact", "normal", "large"]], ["graphic_size", t.graphicSize, ["small", "normal", "large"]]].map(([key, label, values]) => `<label>${label}<select name="${key}">${values.map((value) => `<option value="${value}" ${this.config[key] === value ? "selected" : ""}>${t[value]}</option>`).join("")}</select></label>`).join("")}
       ${[["show_status", t.showStatus], ["show_last_sent", t.showHistory]].map(([key, label]) => `<label><input name="${key}" type="checkbox" ${this.config[key] ? "checked" : ""}> ${label}</label>`).join("")}
-      <label><input name="dry_run" type="checkbox" ${this.config.dry_run ? "checked" : ""}> ${t.configTest}</label><p>${t.configHelp}</p>`;
+      <label><input name="dry_run" type="checkbox" ${this.config.dry_run ? "checked" : ""}> ${t.configTest}</label><p>${t.configHelp}</p>${this._hass?.user?.is_admin ? `<button type="button" data-customize="true">${this._hass.language?.startsWith("de")?"Airfryer individualisieren":"Customize Airfryer"}</button>`:""}${this.customize?"<airfryer-device-designer></airfryer-device-designer>":""}`;
+    const designer=this.shadowRoot.querySelector?.("airfryer-device-designer");if(designer){designer.preferredDevice=this.config.device_id||"";designer.hass=this._hass;}
   }
 }
 

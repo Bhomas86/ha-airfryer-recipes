@@ -9,6 +9,7 @@ from .device_access import AccessDenied, authorize_device, device_scope
 from .recipe_model import RecipeValidationError
 
 FIELDS = {
+    "appearance_get": {"device_id"},
     "devices": set(), "sent_settings": {"device_id"},
     "prepare_send": {"device_id", "zone_id", "settings"},
     "beta_prepare": {"device_id", "zone_id", "acknowledge_unverified", "source"},
@@ -28,6 +29,13 @@ async def execute(hass: Any, connection: Any, request_id: int, action: str, para
     if action == "beta_prepare" and not isinstance(params["source"], dict):
         raise RecipeValidationError("Choose recipe or manual settings")
     uid = connection.user.id
+    if action == "appearance_get":
+        from .appearance import repository
+        snapshot = await authorize_device(hass, uid, params["device_id"])
+        result = (await repository(hass)).get(params["device_id"])
+        if await authorize_device(hass, uid, params["device_id"]) != snapshot:
+            raise AccessDenied
+        return result
     if action == "devices":
         allowed, snapshot = await device_scope(hass, uid)
         if allowed == set():

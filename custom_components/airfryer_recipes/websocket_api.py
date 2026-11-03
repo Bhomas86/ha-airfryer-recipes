@@ -534,6 +534,55 @@ async def ws_access_set(hass: Any, connection: Any, msg: dict[str, Any]) -> None
     await _respond(hass, connection, msg, run)
 
 
+@websocket_api.require_admin
+@websocket_api.websocket_command({voluptuous.Required("type"): f"{DOMAIN}/appearance_get", voluptuous.Required("device_id"): str})
+@websocket_api.async_response
+async def ws_appearance_get(hass, connection, msg):
+    async def run(repo):
+        from .appearance import repository
+        if set(msg) != {"id", "type", "device_id"} or not valid_id(msg["device_id"]):
+            raise RecipeValidationError("Invalid appearance target")
+        await _access_admin(hass, connection)
+        result = (await repository(hass)).get(msg["device_id"])
+        await _access_admin(hass, connection)
+        return result
+    await _respond(hass, connection, msg, run)
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command({voluptuous.Required("type"): f"{DOMAIN}/appearance_set", voluptuous.Required("device_id"): str, voluptuous.Required("appearance"): dict})
+@websocket_api.async_response
+async def ws_appearance_set(hass, connection, msg):
+    async def run(repo):
+        from .appearance import repository, normalize_image, validate
+        if set(msg) != {"id", "type", "device_id", "appearance"} or not valid_id(msg["device_id"]):
+            raise RecipeValidationError("Invalid appearance target")
+        await _access_admin(hass, connection)
+        value = validate(msg["appearance"])
+        if value["preset"] == "custom":
+            value["image"] = await hass.async_add_executor_job(normalize_image, value["image"].split(",",1)[1])
+        await _access_admin(hass, connection)
+        artwork = await repository(hass)
+        await _access_admin(hass, connection)
+        await artwork.save(msg["device_id"], value)
+        return {"saved": True}
+    await _respond(hass, connection, msg, run)
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command({voluptuous.Required("type"): f"{DOMAIN}/appearance_upload", voluptuous.Required("image"): str})
+@websocket_api.async_response
+async def ws_appearance_upload(hass, connection, msg):
+    async def run(repo):
+        from .appearance import normalize_image
+        if set(msg) != {"id", "type", "image"}: raise RecipeValidationError("Invalid image request")
+        await _access_admin(hass, connection)
+        image = await hass.async_add_executor_job(normalize_image, msg["image"])
+        await _access_admin(hass, connection)
+        return {"image": image}
+    await _respond(hass, connection, msg, run)
+
+
 COMMANDS = (
     ws_list,
     ws_get,
@@ -554,6 +603,7 @@ COMMANDS = (
     ws_beta_cancel,
     ws_batch_prepare, ws_batch_start, ws_batch_next, ws_batch_stop, ws_beta_recover,
     ws_control, ws_access_list, ws_access_set,
+    ws_appearance_get, ws_appearance_set, ws_appearance_upload,
 )
 
 

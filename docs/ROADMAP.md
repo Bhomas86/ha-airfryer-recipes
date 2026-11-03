@@ -2,6 +2,8 @@
 
 [English](ROADMAP.md) | [Deutsch](ROADMAP.de.md)
 
+**b18 (2026-11-03):** Owner confirmed b17 editor. Private device gallery/uploads and relative zone boxes with admin-only writes implemented; new native acceptance pending. [Setup and limits](releases/0.1.0b18.md).
+
 **b17 (2026-11-03):** Three local b16 grant checks passed. Add card sizes, independent graphic size and status/history display switches; preserve defaults and backend checks. [Implementation and checks](releases/0.1.0b17.md).
 
 **b16 whole-device access (2026-11-02):** After basic card/history/restart acceptance, implement admin-managed user/device grants only, per the owner's correction: every zone and available program belongs to the device grant. Add scoped discovery/history/dry-run/supervised sending and revocation checks; keep recipe/security management and batch tools admin-only. 203 Python/93 frontend tests passed locally; new native two-account acceptance pending. [Implementation and procedure](reports/ISSUE_8_DEVICE_ACCESS.md). No GitHub Actions.

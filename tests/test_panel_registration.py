@@ -58,7 +58,7 @@ class PanelRegistrationTests(unittest.TestCase):
             async_remove_panel(hass)
             asyncio.run(async_register_panel(hass))
 
-        self.assertEqual(len([call for call in calls if call[0] == "static"]), 2)
+        self.assertEqual(len([call for call in calls if call[0] == "static"]), 3)
         self.assertEqual(len([call for call in calls if call[0] == "panel"]), 2)
         static = calls[0][1][0]
         self.assertEqual(static.url_path, MODULE_URL)
@@ -72,5 +72,5 @@ class PanelRegistrationTests(unittest.TestCase):
         self.assertTrue(Path(card.path).is_file())
         self.assertEqual(card.url_path, f"/api/{DOMAIN}/card.js")
         self.assertFalse(card.cache_headers)
-        self.assertEqual([call[1] for call in calls if call[0] == "card"], [f"/api/{DOMAIN}/card.js?v=0.1.0b17"])
-        self.assertEqual(panels[0]["module_url"], f"{MODULE_URL}?v=0.1.0b17")
+        self.assertEqual([call[1] for call in calls if call[0] == "card"], [f"/api/{DOMAIN}/card.js?v=0.1.0b18"])
+        self.assertEqual(panels[0]["module_url"], f"{MODULE_URL}?v=0.1.0b18")
