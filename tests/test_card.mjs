@@ -327,7 +327,7 @@ test("card/editor registration, English fallback and escaping use no copied imag
   assert.equal(context.window.customCards[0].type, "airfryer-recipes-card");
   assert.equal(card.constructor.getStubConfig().dry_run, true);
   assert.equal(card.constructor.getConfigElement() instanceof elements.get("airfryer-recipes-card-editor"), true);
-  assert.match(cardSource, /\.\/panel\.js\?v=0\.1\.0b16/);
+  assert.match(cardSource, /\.\/panel\.js\?v=0\.1\.0b17/);
 });
 
 test("visual editor uses safe defaults and emits dashboard configuration only", () => {
@@ -478,4 +478,41 @@ test("ordinary user recovery retains explicit read-only acknowledgement", async 
   assert.equal(calls.length, 1);
   assert.equal(calls[0].action, "beta_recover");
   assert.equal(calls[0].parameters.acknowledge_physical_reset, true);
+});
+
+test("display defaults preserve the approved layout", () => {
+  const {card}=makeCard(); card.setConfig({});
+  assert.equal(card.config.size,"normal"); assert.equal(card.config.graphic_size,"normal");
+  assert.equal(card.config.show_status,true); assert.equal(card.config.show_last_sent,true);
+  assert.equal(card.getCardSize(),14);
+});
+test("display sizes and visibility are independent and do not enable offline sending", () => {
+  const {card}=makeCard(); card.setConfig({size:"compact",graphic_size:"small",show_status:false,show_last_sent:false});
+  assert.equal(card.getCardSize(),11); assert.match(card.shadowRoot.innerHTML,/max-width:130px/);
+  assert.match(card.shadowRoot.innerHTML,/\.connection,\.zone small\{display:none\}/);
+  assert.match(card.shadowRoot.innerHTML,/\.last\{display:none\}/);
+  card.selectedDevice().connectivity="offline"; assert.equal(Boolean(card.canSend()),false);
+  card.setConfig({size:"large",graphic_size:"large"}); assert.equal(card.getCardSize(),17);
+  assert.match(card.shadowRoot.innerHTML,/max-width:205px/);
+});
+test("invalid display options cannot inject styles or weaken validation", () => {
+  const {card}=makeCard();
+  for(const config of [{size:"evil"},{graphic_size:"1px;"},{show_status:"false"},{show_last_sent:0}]) assert.throws(()=>card.setConfig(config));
+});
+test("appearance changes keep zone drafts and saved history without sending", async () => {
+  const calls=[]; const {card}=makeCard(async r=>{calls.push(r);return {}});
+  card.history={"1":record(phase),"2":record(other)};
+  card.onInput({target:{id:"card-temperature",value:"185"}});
+  card.setConfig({size:"compact",show_last_sent:false});
+  await card.selectTarget("appliance","2"); await card.selectTarget("appliance","1");
+  assert.equal(card.phase().temperature_c,185); assert.equal(card.history["1"].settings.temperature_c,180);
+  assert.equal(calls.length,0);
+});
+test("visual editor emits booleans and size choices without resetting other settings", () => {
+  const {elements,events}=makeCard(); const editor=new (elements.get("airfryer-recipes-card-editor"))();
+  editor.setConfig({type:"custom:airfryer-recipes-card",dry_run:false,title:"Kitchen"});editor.hass={language:"de"};
+  assert.match(editor.shadowRoot.innerHTML,/Kartengröße/);assert.match(editor.shadowRoot.innerHTML,/graphic_size/);
+  for(const target of [{name:"size",value:"compact"},{name:"show_status",checked:false}]) editor.shadowRoot.listeners.get("change")({target});
+  assert.equal(events.at(-1).detail.config.show_status,false);assert.equal(events.at(-1).detail.config.size,"compact");
+  assert.equal(events.at(-1).detail.config.dry_run,false);assert.equal(events.at(-1).detail.config.title,"Kitchen");
 });

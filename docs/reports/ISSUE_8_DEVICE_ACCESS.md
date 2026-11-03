@@ -2,6 +2,8 @@
 
 [Deutsch](ISSUE_8_DEVICE_ACCESS.de.md) | [English](ISSUE_8_DEVICE_ACCESS.md)
 
+**Local follow-up 2026-11-03: PASS** for default deny, both zones after whole-device grant and device removal after revoke/refresh. This does not establish additional real in-flight revocation or permission-restart acceptance.
+
 Beta 0.1.0b16 implements requirement 17 after the owner accepted the basic card flow: sending to both zones, reuse after physical reset, correct per-zone last-sent settings and survival across HA restart. The earlier Grill 200 °C attempt was blocked by the reviewed adapter range; it is not evidence of a zone-2 permission failure. No new Grill endpoint or broader temperature acceptance is inferred.
 
 The owner also confirmed automatic upgrade of the existing dashboard resource URL; creation on a fresh HA instance remains untested.

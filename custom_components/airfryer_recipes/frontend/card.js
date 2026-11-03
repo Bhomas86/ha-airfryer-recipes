@@ -1,5 +1,5 @@
 // Bundled locally; share the panel's transport, localization and token lifecycle.
-import { AirfryerRecipesPanel } from "./panel.js?v=0.1.0b16";
+import { AirfryerRecipesPanel } from "./panel.js?v=0.1.0b17";
 
 const CARD_TEXT = {
   en: {
@@ -17,6 +17,7 @@ const CARD_TEXT = {
     confirm: "Send these exact settings once as a supervised beta test? Check both zones are idle. Cooking starts at the appliance only.",
     configTitle: "Title", configDevice: "Home Assistant device ID (optional)", configTest: "Test mode (no device commands)",
     configHelp: "Leave the device ID empty to initially select an available appliance. Administrators grant ordinary users an entire device in the recipe library. Live transmission remains a supervised beta test.",
+    size: "Card size", graphicSize: "Device graphic size", compact: "Compact", normal: "Normal", large: "Large", small: "Small", showStatus: "Show status", showHistory: "Show last sent settings",
     invalidConfig: "Invalid Airfryer Recipes card configuration",
   },
   de: {
@@ -34,6 +35,7 @@ const CARD_TEXT = {
     confirm: "Diese Einstellungen einmalig als beaufsichtigten Beta-Test senden? Beide Fächer müssen ruhen. Garstart nur am Gerät.",
     configTitle: "Titel", configDevice: "Home-Assistant-Geräte-ID (optional)", configTest: "Testmodus (keine Gerätebefehle)",
     configHelp: "Ohne Geräte-ID wird anfangs ein verfügbares Gerät ausgewählt. Administratoren geben normalen Benutzern in der Rezeptbibliothek ein ganzes Gerät frei. Echtes Senden bleibt ein beaufsichtigter Beta-Test.",
+    size: "Kartengröße", graphicSize: "Größe der Gerätegrafik", compact: "Kompakt", normal: "Normal", large: "Groß", small: "Klein", showStatus: "Status anzeigen", showHistory: "Zuletzt gesendete Einstellungen anzeigen",
     invalidConfig: "Ungültige Konfiguration der Airfryer-Recipes-Card",
   },
 };
@@ -41,6 +43,10 @@ const html = (value) => String(value ?? "").replace(/[&<>"']/g, (c) => ({
   "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
 }[c]));
 const textFor = (hass) => CARD_TEXT[hass?.language?.toLowerCase().startsWith("de") ? "de" : "en"];
+const displayConfig = (config) => ({ size: "normal", graphic_size: "normal", show_status: true, show_last_sent: true, ...config });
+const validDisplay = (config) => [undefined, "compact", "normal", "large"].includes(config.size) &&
+  [undefined, "small", "normal", "large"].includes(config.graphic_size) &&
+  ["show_status", "show_last_sent"].every((key) => config[key] === undefined || typeof config[key] === "boolean");
 const samePhase = (a, b) => a && b && ["program", "temperature_c", "duration_minutes"].every((key) => a[key] === b[key]);
 
 class AirfryerRecipesCard extends AirfryerRecipesPanel {
@@ -61,12 +67,12 @@ class AirfryerRecipesCard extends AirfryerRecipesPanel {
   }
 
   setConfig(config) {
-    if (!config || (config.device_id !== undefined && typeof config.device_id !== "string") ||
+    if (!config || !validDisplay(config) || (config.device_id !== undefined && typeof config.device_id !== "string") ||
         (config.title !== undefined && typeof config.title !== "string") ||
         (config.dry_run !== undefined && typeof config.dry_run !== "boolean")) throw new Error(this.cardWords.invalidConfig);
     this.saveDraft();
     this.invalidateControls();
-    this.config = { ...config, dry_run: config.dry_run !== false };
+    this.config = displayConfig({ ...config, dry_run: config.dry_run !== false });
     if (config.device_id) this.selectedDeviceId = config.device_id;
     this.clearFeedback();
     if (this.started) this.scheduleReload();
@@ -130,7 +136,7 @@ class AirfryerRecipesCard extends AirfryerRecipesPanel {
     } catch (error) { if (this.controlCurrent(revision)) this.betaMessage = this.betaError(error); }
     finally { this.finishWork(); }
   }
-  getCardSize() { return 14; }
+  getCardSize() { return { compact: 11, normal: 14, large: 17 }[this.config.size || "normal"]; }
   static getStubConfig() { return { dry_run: true }; }
   static getConfigElement() { return document.createElement("airfryer-recipes-card-editor"); }
   key() { return JSON.stringify([this.selectedDeviceId, this.selectedZoneId]); }
@@ -348,6 +354,8 @@ class AirfryerRecipesCard extends AirfryerRecipesPanel {
     const recipes = this.recipes.filter((r) => r.phases?.length === 1);
     const programs = [...(device?.programs || [])];
     if (!programs.some((p) => p.id === phase.program)) programs.unshift({ id: phase.program, missing: true });
+    const layout = displayConfig(this.config);
+    const graphic = { small: [130, 66], normal: [178, 90], large: [205, 108] }[layout.graphic_size];
     const zoneButton = (zone, graphic = false) => `<button type="button" data-action="zone" data-zone="${zone.zone_id}" class="${graphic ? "drawer" : "zone"} ${String(zone.zone_id) === this.selectedZoneId ? "selected" : ""}" aria-pressed="${String(zone.zone_id) === this.selectedZoneId}" aria-label="${t.zone} ${zone.zone_id}" ${disabled ? "disabled" : ""}>
       ${graphic ? `<b>${zone.zone_id}</b><i></i>` : `<span class="radio"></span><span>${t.zone} ${zone.zone_id}<small>${html(this.statusLabel(zone.status))}</small></span>`}</button>`;
     this.shadowRoot.innerHTML = `<style>
@@ -359,7 +367,12 @@ class AirfryerRecipesCard extends AirfryerRecipesPanel {
       .drawer{display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;min-height:90px;margin:4px 0;border:1px solid #677584;background:linear-gradient(120deg,#596876,#263442 65%,#1b2631);border-radius:15px;box-shadow:inset 0 1px 3px #b3bdc855;color:#eaf0f4}.drawer b{font-size:1.7rem;font-weight:600}.drawer i{height:8px;width:65%;margin-top:12px;border-radius:5px;background:linear-gradient(#a3adb5,#333d47);box-shadow:0 3px 4px #0009}.drawer.selected{border-color:#c1d0dc;box-shadow:inset 0 0 14px #9caebe55,0 0 0 2px #99aebe44}.offline .appliance{filter:grayscale(1);opacity:.55}
       .zone{width:100%;display:flex;align-items:center;gap:10px;text-align:start;background:none;border:0;padding:10px 4px}.radio{display:block;width:23px;height:23px;border:2px solid #84919e;border-radius:50%;flex-shrink:0}.selected .radio:after{content:"";display:block;border-radius:50%;margin:4px;width:11px;height:11px;background:#b7c8d5}.zone small{display:block;color:var(--secondary-text-color,#aebac5);margin-top:4px}.last{margin-top:9px;padding-top:12px;border-top:1px solid var(--divider-color,#34404e);font-size:.78rem;line-height:1.5;overflow-wrap:anywhere}.last strong{display:block;font-weight:500;color:var(--secondary-text-color,#aebac5)}.last p{margin:4px 0 0}
       label{display:block;font-size:.82rem;margin:10px 0 5px;color:var(--secondary-text-color,#b8c2cc)}input,select{width:100%;min-height:44px;padding:9px 11px;min-width:0}input:disabled,select:disabled{opacity:.7}.tabs{display:flex;border:1px solid var(--divider-color,#3c4957);border-radius:24px;margin:12px 0;overflow:hidden}.tabs button{border:0;border-radius:23px;flex:1;min-height:42px;background:none}.tabs button.active,.send{background:#a6b7c5;color:#15212b;font-weight:600}.values{display:grid;grid-template-columns:1fr 1fr;gap:12px}.send{width:100%;min-height:46px;margin-top:14px;border:0}.foot{border-top:1px solid var(--divider-color,#34404e);text-align:center;padding-top:13px;margin:14px 0 0;font-size:.8rem;color:var(--secondary-text-color,#aebac5)}.mode-note{font-size:.75rem;margin:8px 0 0;text-align:center;color:var(--secondary-text-color,#aebac5)}.message{font-size:.85rem;line-height:1.45;margin:12px 0 0;overflow-wrap:anywhere}.error{color:var(--error-color,#e49c95)}.preview{font-size:.8rem;margin-top:10px;overflow-wrap:anywhere}.preview p{margin:6px 0}.recover{min-height:44px;padding:9px;margin-top:10px}
-      @media(max-width:340px){ha-card{padding:14px}.overview{gap:12px;grid-template-columns:minmax(90px,38%) minmax(0,1fr)}.drawer{min-height:78px}.connection{font-size:.75rem}h2{font-size:1.1rem}.last{font-size:.72rem}}
+      .appliance{max-width:${graphic[0]}px}.drawer{min-height:${graphic[1]}px}
+      ${layout.size === "compact" ? "ha-card{padding:14px}header{margin-bottom:10px}label{margin-top:7px}.overview{gap:12px;margin-bottom:12px}.tabs{margin:8px 0}.foot{margin-top:10px}" : ""}
+      ${layout.size === "large" ? "ha-card{padding:24px}h2{font-size:1.5rem}input,select{min-height:50px}.send{min-height:52px}.overview{gap:24px}" : ""}
+      ${layout.show_status ? "" : ".connection,.zone small{display:none}"}
+      ${layout.show_last_sent ? "" : ".last{display:none}"}
+      @media(max-width:340px){ha-card{padding:14px}.overview{gap:12px;grid-template-columns:minmax(90px,38%) minmax(0,1fr)}.drawer{min-height:${Math.min(graphic[1],78)}px}.connection{font-size:.75rem}h2{font-size:1.1rem}.last{font-size:.72rem}}
     </style><ha-card class="${html(connection)}"><header><h2>${html(this.config.title || t.title)}</h2><span class="connection" title="${t.reported}"><i class="dot"></i>${html(t[connection] || t.unknown)}</span><button class="refresh" type="button" data-action="refresh" aria-label="${t.refresh}" title="${t.refresh}" ${this.busy ? "disabled" : ""}>↻</button></header>
       ${!this.admin && (!this.accessUserId || !this.deviceState.devices.length) ? `<p class="message">${t.admin}</p>` : `
       ${!this.config.device_id && (this.deviceState.devices.length > 1 || (!device && this.deviceState.devices.length)) ? `<label for="card-device">${this.words.device}</label><select id="card-device" ${this.busy ? "disabled" : ""}>${!device ? `<option value="" selected disabled>${this.words.device}</option>` : ""}${this.deviceState.devices.map((d) => `<option value="${html(d.device_id)}" ${d.device_id === this.selectedDeviceId ? "selected" : ""}>${html(d.name)}</option>`).join("")}</select>` : ""}
@@ -386,19 +399,21 @@ class AirfryerRecipesCardEditor extends HTMLElement {
     this.attachShadow({ mode: "open" });
     this.shadowRoot.addEventListener("change", (event) => {
       const target = event.target;
-      if (!["title", "device_id", "dry_run"].includes(target.name)) return;
-      this.config = { ...this.config, [target.name]: target.name === "dry_run" ? target.checked : target.value.trim() };
+      if (!["title", "device_id", "dry_run", "size", "graphic_size", "show_status", "show_last_sent"].includes(target.name)) return;
+      this.config = { ...this.config, [target.name]: ["dry_run", "show_status", "show_last_sent"].includes(target.name) ? target.checked : target.value.trim() };
       this.dispatchEvent(new CustomEvent("config-changed", { detail: { config: this.config }, bubbles: true, composed: true }));
     });
   }
-  setConfig(config) { this.config = { ...config, dry_run: config.dry_run !== false }; this.render(); }
+  setConfig(config) { this.config = displayConfig({ ...config, dry_run: config.dry_run !== false }); this.render(); }
   set hass(value) { const language = this._hass?.language; this._hass = value; if (language !== value?.language) this.render(); }
   render() {
     if (!this.config) return;
     const t = textFor(this._hass);
-    this.shadowRoot.innerHTML = `<style>:host{display:block}label{display:block;margin:14px 0}input[type=text]{display:block;box-sizing:border-box;width:100%;min-height:44px;margin-top:6px;padding:8px;font:inherit;color:var(--primary-text-color);background:var(--card-background-color);border:1px solid var(--divider-color);border-radius:6px}p{font-size:.85rem;line-height:1.5}</style>
+    this.shadowRoot.innerHTML = `<style>:host{display:block}label{display:block;margin:14px 0}input[type=text],select{display:block;box-sizing:border-box;width:100%;min-height:44px;margin-top:6px;padding:8px;font:inherit;color:var(--primary-text-color);background:var(--card-background-color);border:1px solid var(--divider-color);border-radius:6px}p{font-size:.85rem;line-height:1.5}</style>
       <label>${t.configTitle}<input name="title" type="text" value="${html(this.config.title || "")}"></label>
       <label>${t.configDevice}<input name="device_id" type="text" value="${html(this.config.device_id || "")}"></label>
+      ${[["size", t.size, ["compact", "normal", "large"]], ["graphic_size", t.graphicSize, ["small", "normal", "large"]]].map(([key, label, values]) => `<label>${label}<select name="${key}">${values.map((value) => `<option value="${value}" ${this.config[key] === value ? "selected" : ""}>${t[value]}</option>`).join("")}</select></label>`).join("")}
+      ${[["show_status", t.showStatus], ["show_last_sent", t.showHistory]].map(([key, label]) => `<label><input name="${key}" type="checkbox" ${this.config[key] ? "checked" : ""}> ${label}</label>`).join("")}
       <label><input name="dry_run" type="checkbox" ${this.config.dry_run ? "checked" : ""}> ${t.configTest}</label><p>${t.configHelp}</p>`;
   }
 }

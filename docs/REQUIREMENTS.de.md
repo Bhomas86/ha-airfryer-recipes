@@ -2,6 +2,8 @@
 
 [Deutsch](REQUIREMENTS.de.md) | [English](REQUIREMENTS.md)
 
+**b17 (03.11.2026):** Drei lokale b16-Freigabeprüfungen bestanden. Karteneditor um Darstellungsgrößen, unabhängige Grafikgröße und Status-/Historienanzeige ergänzt; Standardeinstellungen und Backend-Prüfungen unverändert. [Umsetzung und Prüfung](releases/0.1.0b17.de.md).
+
 Status: **Abgestimmte Produktanforderungen, keine Liste bereits implementierter Funktionen.**
 Letzte Zusammenfassung: 24.10.2026. Projektstandard: Englisch als Fallback; Projektberichte für den Nutzer zuerst auf Deutsch und zusätzlich vollständig auf Englisch.
 

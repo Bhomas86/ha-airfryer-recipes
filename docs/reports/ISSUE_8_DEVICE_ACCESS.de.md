@@ -2,6 +2,8 @@
 
 [Deutsch](ISSUE_8_DEVICE_ACCESS.de.md) | [English](ISSUE_8_DEVICE_ACCESS.md)
 
+**Lokaler Nachtrag 03.11.2026: BESTANDEN** für Standardsperre ohne Freigabe, beide Fächer nach Gerätefreigabe und Verschwinden nach Entzug/Aktualisieren. Keine zusätzliche reale Entzugsprüfung während einer Übertragung oder Rechte-Neustartabnahme daraus ableiten.
+
 Beta 0.1.0b16 setzt Anforderung 17 nach der grundlegenden Card-Abnahme des Eigentümers um: Senden an beide Fächer, erneute Verwendung nach physischem Zurücksetzen, korrekte zuletzt gesendete Werte je Fach und Erhalt über HA-Neustart. Der frühere Versuch mit Grillen bei 200 °C wurde wegen des geprüften Adapterbereichs gesperrt; er belegt keinen Berechtigungsfehler von Fach 2. Daraus wird keine neue Grill-Grenze oder erweiterte Temperaturabnahme abgeleitet.
 
 Der Eigentümer bestätigt auch die automatische Aktualisierung der bestehenden Dashboard-Ressourcen-URL; Anlegen auf einer frischen HA-Instanz bleibt ungeprüft.

@@ -2,6 +2,8 @@
 
 [English](ROADMAP.md) | [Deutsch](ROADMAP.de.md)
 
+**b17 (2026-11-03):** Three local b16 grant checks passed. Add card sizes, independent graphic size and status/history display switches; preserve defaults and backend checks. [Implementation and checks](releases/0.1.0b17.md).
+
 **b16 whole-device access (2026-11-02):** After basic card/history/restart acceptance, implement admin-managed user/device grants only, per the owner's correction: every zone and available program belongs to the device grant. Add scoped discovery/history/dry-run/supervised sending and revocation checks; keep recipe/security management and batch tools admin-only. 203 Python/93 frontend tests passed locally; new native two-account acceptance pending. [Implementation and procedure](reports/ISSUE_8_DEVICE_ACCESS.md). No GitHub Actions.
 
 **b15 resource registration (2026-11-02):** Owner confirms b14 display after manual module registration. Register/update that same dashboard resource automatically in storage mode, preserve manual entry/other resources and retain YAML fallback. Keep only the current beta published; preserve older releases as drafts with tags/code/assets. 178 Python/84 frontend tests passed locally; automatic native acceptance pending. [Evidence and procedure](reports/ISSUE_8_CARD_RESOURCES.md). No GitHub Actions.

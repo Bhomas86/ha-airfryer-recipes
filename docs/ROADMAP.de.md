@@ -2,6 +2,8 @@
 
 [Deutsch](ROADMAP.de.md) | [English](ROADMAP.md)
 
+**b17 (03.11.2026):** Drei lokale b16-Freigabeprüfungen bestanden. Karteneditor um Darstellungsgrößen, unabhängige Grafikgröße und Status-/Historienanzeige ergänzt; Standardeinstellungen und Backend-Prüfungen unverändert. [Umsetzung und Prüfung](releases/0.1.0b17.de.md).
+
 **b16-Ganzgerätefreigabe (02.11.2026):** Nach Card-/Historien-/Neustart-Grundabnahme adminverwaltete Benutzer-/Gerätefreigaben umsetzen, gemäß Eigentümerkorrektur: Alle Fächer und verfügbaren Programme gehören zur Gerätefreigabe. Begrenzte Erkennung/Historie/Testvorschau/beaufsichtigtes Senden und Entzugsprüfungen ergänzen; Rezept-/Sicherheitsverwaltung und Testfolgen bleiben adminpflichtig. 203 Python-/93 Frontend-Tests lokal bestanden; neue native Zwei-Konten-Abnahme offen. [Umsetzung und Ablauf](reports/ISSUE_8_DEVICE_ACCESS.de.md). Keine GitHub Actions.
 
 **b15-Ressourcenregistrierung (02.11.2026):** Eigentümer bestätigt b14-Anzeige nach manueller Modulregistrierung. Dieselbe Dashboard-Ressource im Storage-Modus automatisch registrieren/aktualisieren, manuellen Eintrag/andere Ressourcen erhalten und YAML-Alternative beibehalten. Nur die aktuelle Beta veröffentlicht lassen; ältere als Entwürfe samt Tags/Code/Assets erhalten. 178 Python-/84 Frontend-Tests lokal bestanden; automatische native Abnahme offen. [Nachweis und Ablauf](reports/ISSUE_8_CARD_RESOURCES.de.md). Keine GitHub Actions.

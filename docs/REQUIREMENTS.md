@@ -2,6 +2,8 @@
 
 [English](REQUIREMENTS.md) | [Deutsch](REQUIREMENTS.de.md)
 
+**b17 (2026-11-03):** Three local b16 grant checks passed. Add card sizes, independent graphic size and status/history display switches; preserve defaults and backend checks. [Implementation and checks](releases/0.1.0b17.md).
+
 Status: **Agreed product requirements, not an implemented feature list**.
 Last consolidated: 2026-10-24. Project language policy: English default UI language; complete English and German documentation, with German-first reports to the project owner.
 
