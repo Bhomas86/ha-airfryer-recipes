@@ -2,15 +2,17 @@
 
 [English](README.md) | [Deutsch](README.de.md)
 
+**[b19: Appearance updates immediately](docs/releases/0.1.0b19.md).** After Save appearance, cards in the same page reread the saved artwork without a page reload. Saving on b18 is owner-confirmed after reloading; new native refresh acceptance remains pending.
+
 **[b18: Device artwork](docs/releases/0.1.0b18.md).** Admin card editor → Customize Airfryer: neutral gallery, private images and relative zone boxes.
 
-**[b17: Display options](docs/releases/0.1.0b18.md).** Card size, graphic size and status/history visibility in the visual editor. Three local permission checks passed.
+**[b17: Display options](docs/releases/0.1.0b17.md).** Card size, graphic size and status/history visibility in the visual editor. Three local permission checks passed.
 
 **[b16: Share an entire device](docs/reports/ISSUE_8_DEVICE_ACCESS.md).** Admins explicitly grant a whole device to an ordinary HA user, including all zones and available programs. No grants by default; recipe/security management stays admin-only. Only the current beta remains published.
 
 A Home Assistant custom integration for managing reusable air fryer recipes and sending their settings to supported air fryers through existing Home Assistant integrations.
 
-> **Project status: Test beta 0.1.0b18.** Basic card sends to both zones, physical-reset reuse, per-zone history and restart persistence are owner-confirmed. Whole-device user grants are implemented with backend enforcement; three local grant checks passed; new display acceptance remains pending. New cards default to test mode; live transmission remains supervised beta. Proof and wider temperatures stay deferred.
+> **Project status: Test beta 0.1.0b19.** Basic card sends to both zones, physical-reset reuse, per-zone history and restart persistence are owner-confirmed. Whole-device user grants are implemented with backend enforcement; three local grant checks passed; new display acceptance remains pending. New cards default to test mode; live transmission remains supervised beta. Proof and wider temperatures stay deferred.
 
 **[Add the dashboard card](docs/reports/ISSUE_8_DASHBOARD_CARD.md):** Restart HA after the update, fully reopen the app, then Dashboard → Edit → Add card → Airfryer Recipes. No dashboard is changed automatically. Start with test mode enabled.
 
@@ -79,11 +81,11 @@ Current beta: 212 Python tests and 104 frontend tests passed locally. No GitHub 
 
 ## Installation
 
-**Prerelease, not a stable release.** Create a Home Assistant backup first. Add this repository as a custom HACS integration repository, show prereleases and select `v0.1.0b18` using “Redownload”. Restart Home Assistant and fully reopen the Companion app.
+**Prerelease, not a stable release.** Create a Home Assistant backup first. Add this repository as a custom HACS integration repository, show prereleases and select `v0.1.0b19` using “Redownload”. Restart Home Assistant and fully reopen the Companion app.
 
 Recipe management works without Airfryer Control and requires no cloud credentials. Install Airfryer Control `1.0.2-beta.1` or newer for the extended device preview. It executes no control commands. For CAF-DC111S-AEU, the six reported programs and limits remain estimated/unverified; `proof` is missing from the upstream contract. Normal transmission remains blocked; the separate supervised beta test requires exactly Airfryer Control 1.0.2-beta.1.
 
-Details: [release notes](docs/releases/0.1.0b18.md), [dashboard setup/checks](docs/reports/ISSUE_8_DASHBOARD_CARD.md), [local test checklist](docs/LOCAL_TEST_CHECKLIST.md) and [roadmap](docs/ROADMAP.md).
+Details: [release notes](docs/releases/0.1.0b19.md), [dashboard setup/checks](docs/reports/ISSUE_8_DASHBOARD_CARD.md), [local test checklist](docs/LOCAL_TEST_CHECKLIST.md) and [roadmap](docs/ROADMAP.md).
 
 ## Safety and privacy
 

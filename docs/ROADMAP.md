@@ -2,6 +2,8 @@
 
 [English](ROADMAP.md) | [Deutsch](ROADMAP.de.md)
 
+**b19 (2026-11-03):** Owner confirms b18 custom-image saving after a page reload. Add same-page card refresh after successful saves, refresh on reattachment and visible save feedback; preserve device permissions and cooking drafts. New native refresh acceptance pending. [Fix and local checks](releases/0.1.0b19.md).
+
 **b18 (2026-11-03):** Owner confirmed b17 editor. Private device gallery/uploads and relative zone boxes with admin-only writes implemented; new native acceptance pending. [Setup and limits](releases/0.1.0b18.md).
 
 **b17 (2026-11-03):** Three local b16 grant checks passed. Add card sizes, independent graphic size and status/history display switches; preserve defaults and backend checks. [Implementation and checks](releases/0.1.0b17.md).

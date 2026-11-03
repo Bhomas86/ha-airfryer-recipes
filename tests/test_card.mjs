@@ -27,7 +27,7 @@ function makeCard(api = async () => ({}), dialog = () => true) {
       dispatchEvent(event) { events.push(event); }
     },
     customElements: { define: (name, type) => elements.set(name, type), get: (name) => elements.get(name) },
-    window: {}, confirm: dialog, Event, CustomEvent: class { constructor(type, options) { this.type = type; Object.assign(this, options); } },
+    window: new EventTarget(), confirm: dialog, Event, CustomEvent: class extends Event { constructor(type, options) { super(type, options); this.detail = options?.detail; } },
     setTimeout, URL, Blob, structuredClone,
     document: { createElement: (name) => new (elements.get(name))() },
   };
@@ -327,7 +327,7 @@ test("card/editor registration, English fallback and escaping use no copied imag
   assert.equal(context.window.customCards[0].type, "airfryer-recipes-card");
   assert.equal(card.constructor.getStubConfig().dry_run, true);
   assert.equal(card.constructor.getConfigElement() instanceof elements.get("airfryer-recipes-card-editor"), true);
-  assert.match(cardSource, /\.\/panel\.js\?v=0\.1\.0b18/);
+  assert.match(cardSource, /\.\/panel\.js\?v=0\.1\.0b19/);
 });
 
 test("visual editor uses safe defaults and emits dashboard configuration only", () => {
@@ -527,4 +527,91 @@ test("saved relative artwork changes only the graphic and does not send settings
 test("appearance from another device never replaces the selected graphic",()=>{
  const {card}=makeCard();card.appearanceDevice='private-device';card.appearance={preset:'custom',image:'data:image/png;base64,AAAA',zones:{'1':[4,15,43,75],'2':[53,15,43,75]}};card.render();
  assert.doesNotMatch(card.shadowRoot.innerHTML,/<img src=/);
+});
+
+const artwork = {preset:'custom',image:'data:image/png;base64,AAAA',zones:{'1':[29,30,45,20],'2':[27,62,45,30]}};
+const designerSource = readFileSync(new URL('../custom_components/airfryer_recipes/frontend/personalization.js', import.meta.url), 'utf8');
+const settle = () => new Promise(resolve => setImmediate(resolve));
+function notify(context, device_id='appliance') {
+  context.window.dispatchEvent(new context.CustomEvent('airfryer-recipes-appearance-saved', {detail:{device_id}}));
+}
+
+test('saving in the designer updates the connected card without reloading or changing cooking settings', async () => {
+  const calls=[];
+  const {card,context,elements}=makeCard(async r=>{calls.push(r);return r.type.endsWith('appearance_get')?artwork:{saved:true};});
+  card.connectedCallback();
+  card.onInput({target:{id:'card-temperature',value:'185'}});
+  card.history={'1':record(phase)};
+  const revision=card.controlRevision;
+  vm.runInNewContext(designerSource,context);
+  const designer=new (elements.get('airfryer-device-designer'))();
+  designer._hass=card._hass;designer.device='appliance';designer.draft=structuredClone(artwork);
+  await designer.click({target:{closest:()=>({dataset:{action:'save'}})}});
+  await settle();
+  assert.deepEqual(calls.map(r=>r.type),['airfryer_recipes/appearance_set','airfryer_recipes/appearance_get']);
+  assert.match(card.shadowRoot.innerHTML,/<img src="data:image\/png;base64,AAAA"/);
+  assert.match(card.shadowRoot.innerHTML,/left:29%;top:30%;width:45%;height:20%/);
+  assert.equal(card.phase().temperature_c,185);
+  assert.equal(card.history['1'].settings.temperature_c,180);
+  assert.equal(card.controlRevision,revision);
+  assert.match(designer.shadowRoot.innerHTML,/Darstellung gespeichert/);
+  card.disconnectedCallback();
+});
+
+test('appearance notifications ignore other devices and read through normal-user permissions', async () => {
+  const calls=[];
+  const {card,context}=makeCard(async r=>{calls.push(r);return artwork;});
+  card._hass.user={id:'ordinary',is_admin:false};card.accessUserId='ordinary';card.connectedCallback();
+  notify(context,'other-appliance');await settle();assert.equal(calls.length,0);
+  notify(context);await settle();
+  assert.deepEqual(plain(calls),[{type:'airfryer_recipes/control',action:'appearance_get',parameters:{device_id:'appliance'}}]);
+  card.disconnectedCallback();
+});
+
+test('appearance refresh waits for active work and coalesces repeated notifications', async () => {
+  const calls=[];const {card,context}=makeCard(async r=>{calls.push(r);return artwork;});
+  card.connectedCallback();card.busy=true;
+  notify(context);notify(context);assert.equal(calls.length,0);
+  card.finishWork();await settle();
+  assert.equal(calls.length,1);assert.deepEqual(plain(card.appearance),artwork);
+  card.disconnectedCallback();
+});
+
+test('a late appearance read cannot overwrite a newer saved appearance', async () => {
+  const pending=[];const {card}=makeCard(()=>new Promise(resolve=>pending.push(resolve)));
+  const old=card.refreshAppearance(),latest=card.refreshAppearance();
+  pending[1](artwork);await latest;
+  pending[0]({...artwork,preset:'outline',image:null});await old;
+  assert.deepEqual(plain(card.appearance),artwork);
+});
+
+test('detached cards stop listening and reread saved appearance when reattached', async () => {
+  const calls=[];const {card,context}=makeCard(async r=>{calls.push(r);return artwork;});
+  card.connectedCallback();card.disconnectedCallback();
+  notify(context);await settle();assert.equal(calls.length,0);
+  card.connectedCallback();await settle();assert.equal(calls.length,1);
+  assert.deepEqual(plain(card.appearance),artwork);
+  card.disconnectedCallback();
+});
+
+test('appearance replies after a role change or disconnect are discarded', async () => {
+  for(const change of ['role','disconnect']){
+    let resolve;const {card}=makeCard(r=>r.type.endsWith('appearance_get')
+      ?new Promise(done=>{resolve=done;}):Promise.resolve({recipes:[],devices:[]}));
+    card.started=true;
+    const task=card.refreshAppearance();
+    if(change==='role')card.hass={...card._hass,user:{id:'ordinary',is_admin:false}};
+    else card.disconnectedCallback();
+    resolve(artwork);await task;
+    assert.equal(card.appearance,null);
+    assert.doesNotMatch(card.shadowRoot.innerHTML,/<img src=/);
+  }
+});
+
+test('failed appearance refresh falls back without changing settings or resending', async () => {
+  const calls=[];const {card}=makeCard(async r=>{calls.push(r);throw Error('denied');});
+  card.appearance=artwork;card.appearanceDevice='appliance';
+  await card.refreshAppearance();
+  assert.equal(card.appearance,null);assert.equal(card.phase().temperature_c,180);
+  assert.deepEqual(calls.map(r=>r.type),['airfryer_recipes/appearance_get']);
 });

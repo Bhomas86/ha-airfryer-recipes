@@ -1,5 +1,5 @@
 // Bundled locally; share the panel's transport, localization and token lifecycle.
-import { AirfryerRecipesPanel } from "./panel.js?v=0.1.0b18";
+import { AirfryerRecipesPanel } from "./panel.js?v=0.1.0b19";
 
 const CARD_TEXT = {
   en: {
@@ -65,6 +65,24 @@ class AirfryerRecipesCard extends AirfryerRecipesPanel {
     this.reloadRequested = false;
     this.accessUserId = "";
     this.appearance = null;
+    this.appearanceRevision = 0;
+    this.appearanceRefreshPending = false;
+    this.appearanceChanged = (event) => {
+      if (event.detail?.device_id === this.selectedDeviceId) this.refreshAppearance();
+    };
+  }
+
+  connectedCallback() {
+    super.connectedCallback();
+    window.addEventListener("airfryer-recipes-appearance-saved", this.appearanceChanged);
+    // HA can detach the dashboard card while its editor is open.
+    if (this.appearanceConnectedOnce) this.refreshAppearance();
+    this.appearanceConnectedOnce = true;
+  }
+
+  disconnectedCallback() {
+    window.removeEventListener("airfryer-recipes-appearance-saved", this.appearanceChanged);
+    super.disconnectedCallback();
   }
 
   setConfig(config) {
@@ -88,6 +106,7 @@ class AirfryerRecipesCard extends AirfryerRecipesPanel {
     this.busy = false;
     this.render();
     if (this.reloadRequested) { this.reloadRequested = false; this.load(); }
+    else if (this.appearanceRefreshPending) this.refreshAppearance();
   }
 
   set hass(value) {
@@ -201,10 +220,22 @@ class AirfryerRecipesCard extends AirfryerRecipesPanel {
 
   async loadAppearance() {
     const device_id=this.selectedDeviceId, revision=this.controlRevision;
+    const loading = ++this.appearanceRevision;
+    const current = () => this.controlCurrent(revision) && loading === this.appearanceRevision && device_id === this.selectedDeviceId;
+    this.appearanceRefreshPending = false;
     this.appearance=null;
+    this.appearanceDevice="";
+    if (!device_id || !this.hasDeviceAccess) return false;
     try { const value=await this.request("appearance_get",{device_id});
-      if(this.controlCurrent(revision)&&device_id===this.selectedDeviceId){this.appearance=value;this.appearanceDevice=device_id;}
+      if(current()){this.appearance=value;this.appearanceDevice=device_id;}
     } catch { /* Retain the original neutral graphic on read failure. */ }
+    return current();
+  }
+
+  async refreshAppearance() {
+    if (!this.panelActive || !this._hass || this._hass.connection?.connected === false || !this.hasDeviceAccess) return;
+    if (this.busy) { this.appearanceRefreshPending = true; return; }
+    if (await this.loadAppearance()) this.render();
   }
 
   async loadHistory() {
@@ -415,7 +446,7 @@ class AirfryerRecipesCardEditor extends HTMLElement {
     this.attachShadow({ mode: "open" });
     this.shadowRoot.addEventListener("click", async (event) => {
       if(event.target.dataset?.customize!=="true"||!this._hass?.user?.is_admin)return;
-      await import("./personalization.js?v=0.1.0b18");this.customize=true;this.render();
+      await import("./personalization.js?v=0.1.0b19");this.customize=true;this.render();
     });
     this.shadowRoot.addEventListener("change", (event) => {
       const target = event.target;
