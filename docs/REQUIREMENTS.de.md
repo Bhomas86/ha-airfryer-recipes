@@ -2,6 +2,8 @@
 
 [Deutsch](REQUIREMENTS.de.md) | [English](REQUIREMENTS.md)
 
+**b23 (04.11.2026):** Eigentümer bestätigt gezielten b22-Speicher-/Neustarttest und wünscht Entfernung der Kommentare zu ungeprüften Grenzen/Senden. Programmauswahlen zeigen nur lokalisierte Namen; Hinweise auf fehlende Programme und Backend-Fähigkeitsdaten/-Prüfungen bleiben erhalten. Offizielle HACS-/Hassfest-Nachweise bleiben getrennt. [Änderung und Prüfungen](releases/0.1.0b23.de.md).
+
 **b22-Abschlussprüfung (04.11.2026):** Eigentümer bestätigt abgeschlossene 44-Schritt-Rückmeldungsfolge, Karte und Gären-Rezeptablauf. Favoritenkapazität/gelöschte Verweise korrigiert und native Store-Dateien nach Schreiben geprüft. 232 Python-Tests je 3.12/3.14 plus 125 Frontend-Tests bestanden. Aktueller nativer Speicher-/Neustarttest und offizielle HACS-/Hassfest-Nachweise bleiben vor einem Kandidaten offen. [Prüfung und Umfang](reports/FINAL_REVIEW.de.md).
 
 **b21 (04.11.2026):** Eigentümer bestätigt beide b20-Varianten; B wird zuerst/Standard ohne eigenes UI-Update. Controller 1.0.3-beta.3 geprüft/gepinnt, Modelltemperaturen und Gären mit ungeprüfter Herkunft übernommen und beaufsichtigten Lauf auf 44 Einstellungen beider Fächer erweitert. Native Grenzwert-/Gären-Abnahme offen. [Prüfung und Testtabelle](reports/ISSUE_7_CONTROLLER_BETA3.de.md).

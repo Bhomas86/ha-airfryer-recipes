@@ -600,12 +600,14 @@ test("temperature batch lists resets before a same-program temperature change", 
   assert.equal(panel.batchNeedsReset(plan,1),false);assert.equal(panel.batchNeedsReset(plan,2),true);
 });
 
-test("owner-reported Proof appears without claiming confirmed limits or transmission", () => {
+test("program labels show names only without modifying capability metadata", () => {
   const panel=betaPanel();
   const program={id:'proof',limits_status:'owner_reported',send_status:'unverified',temperature_step_c:1};
-  assert.match(panel.programOption(program),/Gären · Besitzerangabe · Grenzen ungeprüft · Senden ungeprüft/);
+  const before=JSON.stringify(program);
+  assert.equal(panel.programOption(program),'Gären');
   panel._hass.language='en';
-  assert.match(panel.programOption(program),/Proof · owner-reported · limits unverified · sending unverified/);
+  assert.equal(panel.programOption(program),'Proof');
+  assert.equal(JSON.stringify(program),before);
 });
 
 test("navigation remains available during loading and uses the HA sidebar event", async () => {
@@ -679,7 +681,7 @@ test("new recipe uses reported program IDs in a localized dropdown without picki
   const form = panel.shadowRoot.innerHTML.match(/<form id="editor"[\s\S]*?<\/form>/)[0];
   assert.match(form, /<select id="recipe-program" name="program" required>/);
   assert.match(form, /<option value="" disabled selected>Programm auswählen/);
-  assert.match(form, /value="airfry" >Heißluft-Frittieren · geschätzt · Senden ungeprüft/);
+  assert.match(form, /value="airfry" >Heißluft-Frittieren<\/option>/);
   assert.match(form, /value="roast" >Braten/);
   assert.match(form, /value="dry" >Dörren/);
   assert.doesNotMatch(form, /value="proof"|<input id="recipe-program"/);
@@ -974,8 +976,8 @@ test("dry-run UI uses only reported zones and sends no live-control fields", asy
   assert.match(panel.shadowRoot.innerHTML, /Geräte-Testvorschau/);
   assert.match(panel.shadowRoot.innerHTML, /Küche &lt;oben&gt;/);
   assert.match(panel.shadowRoot.innerHTML, /Fach 2 · Gart/);
-  assert.match(panel.shadowRoot.innerHTML, /Heißluft-Frittieren · geschätzt · Senden ungeprüft/);
-  assert.match(panel.shadowRoot.innerHTML, /Backen · bestätigt · Senden bestätigt/);
+  assert.match(panel.shadowRoot.innerHTML, />Heißluft-Frittieren<\/option>/);
+  assert.match(panel.shadowRoot.innerHTML, />Backen<\/option>/);
   assert.match(panel.shadowRoot.innerHTML, /Meldezeit geliefert/);
   assert.match(panel.shadowRoot.innerHTML, /Testvorschau prüfen/);
   assert.match(panel.shadowRoot.innerHTML, /Es wird kein Gerätebefehl ausgeführt/);
@@ -1000,7 +1002,7 @@ test("dry-run UI uses only reported zones and sends no live-control fields", asy
   assert.match(panel.shadowRoot.innerHTML, /Device test preview/);
   assert.match(panel.shadowRoot.innerHTML, /Nothing was transmitted to the appliance/);
   assert.match(panel.shadowRoot.innerHTML, /The upstream send contract is not verified/);
-  assert.match(panel.shadowRoot.innerHTML, /Air Fry · estimated · sending unverified/);
+  assert.match(panel.shadowRoot.innerHTML, />Air Fry<\/option>/);
 });
 
 test("saved recipe program absent from adapter remains unchanged and is marked", async () => {
