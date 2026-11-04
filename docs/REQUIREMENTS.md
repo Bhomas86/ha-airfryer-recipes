@@ -2,6 +2,8 @@
 
 [English](REQUIREMENTS.md) | [Deutsch](REQUIREMENTS.de.md)
 
+**b20 (2026-11-04):** Owner requests both approved artwork designs as a card setting. A uses a thin active outline and small markers; B uses invisible but tappable configured image zones, with visible selection beside the photo. Designer rectangles stay visible for positioning. Implemented; native acceptance pending. [Settings and checks](releases/0.1.0b20.md).
+
 **b19 (2026-11-03):** Owner confirms b18 custom-image saving after a page reload. Add same-page card refresh after successful saves, refresh on reattachment and visible save feedback; preserve device permissions and cooking drafts. New native refresh acceptance pending. [Fix and local checks](releases/0.1.0b19.md).
 
 **b18 (2026-11-03):** Owner confirmed b17 editor. Private device gallery/uploads and relative zone boxes with admin-only writes implemented; new native acceptance pending. [Setup and limits](releases/0.1.0b18.md).
@@ -27,7 +29,7 @@ Last consolidated: 2026-10-24. Project language policy: English default UI langu
 | 10 | Optional completion notifications (B) | Disabled by default; opt into mobile push to chosen recipient/device; only on reliable completion signal. |
 | 11 | Rich recipe organization (C) | Categories, favorites, search, free-form tags, recently used. In the recipe editor, choose an existing category or add a new one as the final option; reuse names that differ only in letter case. |
 | 12 | JSON import and export (B) | Single or all recipes; validate schema and detect duplicates; use a human-readable export filename. Keep local HA backups. |
-| 13 | Visual card editor + device personalization (B+) | Toggle labels/status/timer, choose graphic size; 'Customize Airfryer' opens gallery, own image upload, drag/drop zone hotspot positions stored in relative coordinates per device, and reset. Include a 'Missing your model?' GitHub issue link. |
+| 13 | Visual card editor + device personalization (B+) | Toggle labels/status/timer, choose graphic size; 'Customize Airfryer' opens gallery, own image upload, drag/drop zone hotspot positions stored in relative coordinates per device, and reset. Include a 'Missing your model?' GitHub issue link. Per-card A/B setting: A shows a subtle active outline and small zone markers; B keeps the same configured touch areas invisible on the active dashboard. Positioning/resizing rectangles remain visible in the designer (owner decision 2026-11-04). |
 | 14 | Automatic discovery + profile fallback (B) | Detect model, zones and supported capabilities from adapters where possible; verified profiles fill gaps. Once the adapter exists, offer verified cooking programs as choices in the recipe editor while keeping recipes device-independent. Unknown controls remain off. |
 | 15 | Manual retry, offline UI (B+) | Show sending/error details; preserve selected settings; never auto-retry. Offline graphic grayed out and sending disabled; show distinct unknown state. |
 | 16 | Independent recipe library (B) | Missing or broken Airfryer Control must not prevent editing/importing/exporting recipes. |

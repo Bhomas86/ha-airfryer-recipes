@@ -2,6 +2,8 @@
 
 [Deutsch](ROADMAP.de.md) | [English](ROADMAP.md)
 
+**b20 (04.11.2026):** Eigentümer wünscht beide Gerätebild-Entwürfe als Karteneinstellung. A nutzt eine dünne aktive Kontur und kleine Markierungen; B nutzt unsichtbare, antippbare eingerichtete Bildbereiche mit sichtbarer Fachauswahl neben dem Foto. Bildeditor-Rechtecke bleiben zum Positionieren sichtbar. Umgesetzt; native Abnahme offen. [Einstellungen und Prüfungen](releases/0.1.0b20.de.md).
+
 **b19 (03.11.2026):** Eigentümer bestätigt b18-Bildspeicherung nach Seitenneuladen. Nach erfolgreichem Speichern Karten derselben Seite aktualisieren, beim Wiedereinblenden nachladen und Speichern sichtbar bestätigen; Geräteberechtigungen und Garentwürfe erhalten. Neue native Aktualisierungsabnahme offen. [Korrektur und lokale Prüfungen](releases/0.1.0b19.de.md).
 
 **b18 (03.11.2026):** b17-Karteneditor lokal bestätigt. Private Gerätebild-Galerie/Uploads und relative Fachbereiche pro Gerät mit Admin-Schreibrechten umgesetzt; native neue Abnahme offen. [Einrichtung und Grenzen](releases/0.1.0b18.de.md).

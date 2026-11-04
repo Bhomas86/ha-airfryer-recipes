@@ -2,6 +2,8 @@
 
 [Deutsch](REQUIREMENTS.de.md) | [English](REQUIREMENTS.md)
 
+**b20 (04.11.2026):** Eigentümer wünscht beide Gerätebild-Entwürfe als Karteneinstellung. A nutzt eine dünne aktive Kontur und kleine Markierungen; B nutzt unsichtbare, antippbare eingerichtete Bildbereiche mit sichtbarer Fachauswahl neben dem Foto. Bildeditor-Rechtecke bleiben zum Positionieren sichtbar. Umgesetzt; native Abnahme offen. [Einstellungen und Prüfungen](releases/0.1.0b20.de.md).
+
 **b19 (03.11.2026):** Eigentümer bestätigt b18-Bildspeicherung nach Seitenneuladen. Nach erfolgreichem Speichern Karten derselben Seite aktualisieren, beim Wiedereinblenden nachladen und Speichern sichtbar bestätigen; Geräteberechtigungen und Garentwürfe erhalten. Neue native Aktualisierungsabnahme offen. [Korrektur und lokale Prüfungen](releases/0.1.0b19.de.md).
 
 **b18 (03.11.2026):** b17-Karteneditor lokal bestätigt. Private Gerätebild-Galerie/Uploads und relative Fachbereiche pro Gerät mit Admin-Schreibrechten umgesetzt; native neue Abnahme offen. [Einrichtung und Grenzen](releases/0.1.0b18.de.md).
@@ -27,7 +29,7 @@ Letzte Zusammenfassung: 24.10.2026. Projektstandard: Englisch als Fallback; Proj
 | 10 | Optionale Fertigmeldung (B) | Standardmäßig aus; Push aufs ausgewählte HA-Mobilgerät optional; nur bei verlässlichem Fertigstatus. |
 | 11 | Erweiterte Organisation (C) | Kategorien, Favoriten, Suche, freie Tags und zuletzt verwendet. Im Rezepteditor vorhandene Kategorien wählen oder als letzte Option eine neue hinzufügen; gleich geschriebene Namen mit anderer Groß-/Kleinschreibung wiederverwenden. |
 | 12 | JSON-Import/-Export (B) | Einzelne oder alle Rezepte, Validierung und Duplikatprüfung; Export mit verständlichem Dateinamen; reguläre HA-Backups bleiben bestehen. |
-| 13 | Grafischer Karteneditor und Individualisierung (B+) | Status/Beschriftung/Restzeit/Größe konfigurieren; „Airfryer individualisieren“ für Bildergalerie, eigenes Bild, verschiebbare Fach-Schaltflächen mit relativen Koordinaten und Zurücksetzen. Link „Dein Modell fehlt?“ zu GitHub-Issues. |
+| 13 | Grafischer Karteneditor und Individualisierung (B+) | Status/Beschriftung/Restzeit/Größe konfigurieren; „Airfryer individualisieren“ für Bildergalerie, eigenes Bild, verschiebbare Fach-Schaltflächen mit relativen Koordinaten und Zurücksetzen. Link „Dein Modell fehlt?“ zu GitHub-Issues. A/B-Auswahl pro Karte: A zeigt eine dezente aktive Kontur und kleine Fachmarkierungen; B lässt dieselben eingerichteten Touchbereiche im aktiven Dashboard unsichtbar. Rechtecke zum Positionieren/Vergrößern bleiben im Bildeditor sichtbar (Eigentümerentscheidung 04.11.2026). |
 | 14 | Automatische Erkennung und Profil-Fallback (B) | Modell, Fächer und Fähigkeiten nach Möglichkeit automatisch lesen; nur bestätigte Profile ergänzen. Nach der Adapteranbindung im Rezepteditor verifizierte Programmfunktionen als Auswahl anbieten; das Rezept bleibt geräteunabhängig. Unbekannte Fähigkeiten bleiben deaktiviert. |
 | 15 | Manueller Neuversuch und Offline-Darstellung (B+) | Sende-/Fehlerstatus zeigen; Auswahl erhalten, keine automatische Wiederholung. Offline-Grafik ausgrauen, Senden sperren; unbekannten Status gesondert anzeigen. |
 | 16 | Unabhängige Rezeptbibliothek (B) | Rezeptverwaltung/Import/Export bleiben auch bei fehlendem oder defektem Airfryer Control verfügbar. |

@@ -327,7 +327,7 @@ test("card/editor registration, English fallback and escaping use no copied imag
   assert.equal(context.window.customCards[0].type, "airfryer-recipes-card");
   assert.equal(card.constructor.getStubConfig().dry_run, true);
   assert.equal(card.constructor.getConfigElement() instanceof elements.get("airfryer-recipes-card-editor"), true);
-  assert.match(cardSource, /\.\/panel\.js\?v=0\.1\.0b19/);
+  assert.match(cardSource, /\.\/panel\.js\?v=0\.1\.0b20/);
 });
 
 test("visual editor uses safe defaults and emits dashboard configuration only", () => {
@@ -614,4 +614,109 @@ test('failed appearance refresh falls back without changing settings or resendin
   await card.refreshAppearance();
   assert.equal(card.appearance,null);assert.equal(card.phase().temperature_c,180);
   assert.deepEqual(calls.map(r=>r.type),['airfryer_recipes/appearance_get']);
+});
+
+const hotspots = card => [...card.shadowRoot.innerHTML.matchAll(/<button[^>]*class="hotspot"[^>]*>[\s\S]*?<\/button>/g)].map(match => match[0]);
+function setArtwork(card) {card.appearanceDevice='appliance';card.appearance=structuredClone(artwork);card.render();}
+
+test('old card configurations default to A; unknown zone styles are rejected', () => {
+  const {card}=makeCard();card.setConfig({});assert.equal(card.config.zone_style,'outline');
+  card.setConfig({zone_style:undefined});assert.equal(card.config.zone_style,'outline');
+  for(const zone_style of ['filled','outline;display:none',false,null,{}])assert.throws(()=>card.setConfig({zone_style}));
+});
+
+test('A shows small markers and the active outline using the stored relative areas', () => {
+  const {card}=makeCard();card.setConfig({zone_style:'outline'});setArtwork(card);
+  const buttons=hotspots(card);assert.equal(buttons.length,2);
+  assert.match(card.shadowRoot.innerHTML,/<ha-card class="online zone-style-outline"/);
+  assert.match(buttons[0],/aria-pressed="true"/);assert.match(buttons[1],/aria-pressed="false"/);
+  assert.match(buttons[0],/left:29%;top:30%;width:45%;height:20%/);
+  assert.match(buttons[0],/<span class="zone-marker" aria-hidden="true">1<\/span>/);
+  assert.match(card.shadowRoot.innerHTML,/\.zone-style-outline \.hotspot\[aria-pressed=true\]\{border-color:/);
+  assert.doesNotMatch(card.shadowRoot.innerHTML,/#667f9388|#869ead99/);
+});
+
+test('B retains empty labeled buttons over the photo and visible side selection', () => {
+  const {card}=makeCard();card.setConfig({zone_style:'invisible'});setArtwork(card);
+  const buttons=hotspots(card);assert.equal(buttons.length,2);
+  assert.match(card.shadowRoot.innerHTML,/<ha-card class="online zone-style-invisible"/);
+  for(const [index,button] of buttons.entries()){
+    assert.match(button,new RegExp('aria-label="Fach '+(index+1)+'"'));
+    assert.match(button,/><\/button>$/);
+    assert.doesNotMatch(button,/disabled|tabindex="-1"|hidden|display:none/);
+  }
+  assert.match(buttons[1],/left:27%;top:62%;width:45%;height:30%/);
+  assert.match(card.shadowRoot.innerHTML,/\.zone-style-invisible \.hotspot\{border:0;border-radius:0;background:transparent;box-shadow:none\}/);
+  assert.match(card.shadowRoot.innerHTML,/\.zone-style-invisible \.zone.selected\{border-color:/);
+  assert.match(card.shadowRoot.innerHTML,/button:focus-visible/);
+});
+
+test('both styles select either zone without transmitting and preserve independent drafts', async () => {
+  for(const zone_style of ['outline','invisible']){
+    const calls=[];const {card}=makeCard(async r=>{calls.push(r);});
+    card.setConfig({zone_style});setArtwork(card);card.onInput({target:{id:'card-temperature',value:'185'}});
+    await click(card,'zone',{zone:'2'});card.onInput({target:{id:'card-duration',value:'12'}});
+    assert.match(hotspots(card)[1],/aria-pressed="true"/);
+    assert.match(card.shadowRoot.innerHTML,/class="zone selected"[^>]*aria-pressed="true" aria-label="Fach 2"/);
+    await click(card,'zone',{zone:'1'});assert.equal(card.phase().temperature_c,185);
+    await click(card,'zone',{zone:'2'});assert.equal(card.phase().duration_minutes,12);
+    assert.equal(calls.length,0);
+    card.selectedDevice().connectivity='offline';assert.equal(Boolean(card.canSend()),false);
+  }
+});
+
+test('zone style changes preserve the private image, saved boxes and cooking values', () => {
+  const calls=[];const {card}=makeCard(async r=>{calls.push(r);});setArtwork(card);
+  card.history={'1':record(phase)};card.onInput({target:{id:'card-temperature',value:'185'}});
+  for(const zone_style of ['invisible','outline'])card.setConfig({zone_style});
+  assert.deepEqual(plain(card.appearance),artwork);assert.equal(card.phase().temperature_c,185);
+  assert.equal(card.history['1'].settings.temperature_c,180);assert.equal(calls.length,0);
+});
+
+test('invisible areas respect busy and ungranted states', () => {
+  const {card}=makeCard();card.setConfig({zone_style:'invisible'});setArtwork(card);
+  card.busy=true;card.render();assert.ok(hotspots(card).every(button=>button.includes(' disabled')));
+  card.busy=false;card._hass.user={id:'ordinary',is_admin:false};card.accessUserId='';card.render();
+  assert.equal(hotspots(card).length,0);assert.equal(Boolean(card.canSend()),false);
+});
+
+test('editor saves A/B as card configuration in both languages without changing device artwork', () => {
+  const {card,elements,events}=makeCard();setArtwork(card);
+  const Editor=elements.get('airfryer-recipes-card-editor');const editor=new Editor();
+  editor.setConfig({type:'custom:airfryer-recipes-card',title:'Kitchen',dry_run:true,graphic_size:'large'});
+  editor.hass={language:'de'};
+  assert.match(editor.shadowRoot.innerHTML,/A – Dezente Markierung/);
+  assert.match(editor.shadowRoot.innerHTML,/B – Unsichtbare Touchbereiche/);
+  assert.match(editor.shadowRoot.innerHTML,/name="zone_style"/);
+  editor.shadowRoot.listeners.get('change')({target:{name:'zone_style',value:'invisible'}});
+  assert.equal(events.at(-1).type,'config-changed');assert.equal(events.at(-1).detail.config.zone_style,'invisible');
+  assert.equal(events.at(-1).detail.config.graphic_size,'large');assert.equal(events.at(-1).detail.config.dry_run,true);
+  editor.hass={language:'en'};assert.match(editor.shadowRoot.innerHTML,/B – Invisible touch areas/);
+  assert.match(editor.shadowRoot.innerHTML,/value="invisible" selected/);
+  const reopened=new Editor();reopened.setConfig(plain(events.at(-1).detail.config));
+  assert.equal(reopened.config.zone_style,'invisible');assert.deepEqual(plain(card.appearance),artwork);
+});
+
+test('B keeps rectangles visible in the designer and applies resized invisible areas after saving', async () => {
+  const calls=[];let saved=structuredClone(artwork);
+  const {card,context,elements}=makeCard(async r=>{
+    calls.push(r);
+    if(r.type.endsWith('appearance_set')){saved=plain(r.appearance);return {saved:true};}
+    return structuredClone(saved);
+  });
+  card.setConfig({zone_style:'invisible'});setArtwork(card);card.connectedCallback();
+  vm.runInNewContext(designerSource,context);
+  const designer=new (elements.get('airfryer-device-designer'))();
+  designer._hass=card._hass;designer.device='appliance';designer.devices=[device()];
+  designer.saved=structuredClone(artwork);designer.draft=structuredClone(artwork);designer.render();
+  assert.match(designer.shadowRoot.innerHTML,/<button type="button" data-zone="1"[^>]*>Fach 1<\/button>/);
+  assert.match(designer.shadowRoot.innerHTML,/Hier bleiben sie zum Ausrichten sichtbar/);
+  await designer.change({target:{dataset:{zoneInput:'1',index:'2'},value:'50'}});
+  assert.equal(designer.saved.zones['1'][2],45);
+  await designer.click({target:{closest:()=>({dataset:{action:'save'}})}});await settle();
+  assert.equal(saved.zones['1'][2],50);
+  assert.match(hotspots(card)[0],/width:50%;height:20%/);
+  assert.ok(hotspots(card).every(button=>/><\/button>$/.test(button)));
+  assert.deepEqual(calls.map(r=>r.type),['airfryer_recipes/appearance_set','airfryer_recipes/appearance_get']);
+  card.disconnectedCallback();
 });
