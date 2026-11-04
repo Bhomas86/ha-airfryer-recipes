@@ -1,10 +1,19 @@
 name: Home Assistant and HACS validation
 
 on:
-  push:
-    branches: ["main"]
   pull_request:
+    paths:
+      - "custom_components/**/manifest.json"
+      - "custom_components/**/strings.json"
+      - "custom_components/**/translations/**"
+      - "custom_components/**/services.yaml"
+      - "hacs.json"
+      - ".github/workflows/integration-validation.yml"
   workflow_dispatch:
+
+concurrency:
+  group: integration-validation-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -13,6 +22,7 @@ jobs:
   hassfest:
     name: Hassfest manifest check
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: home-assistant/actions/hassfest@master
@@ -20,6 +30,7 @@ jobs:
   hacs:
     name: HACS integration check
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: hacs/action@main

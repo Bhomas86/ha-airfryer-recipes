@@ -38,7 +38,7 @@ Letzte Zusammenfassung: 24.10.2026. Projektstandard: Englisch als Fallback; Proj
 | 27 | Geführte Einrichtung (B) | Gerät erkennen, Modell/Fächer wählen, optionale Beispielrezepte und Dashboard-Hilfe; funktioniert auch ohne Gerät. |
 | 28 | Stable + Beta (B) | HACS über GitHub-Releases; optionale Vorabversionen, CI, zweisprachige Release Notes und datenschonende Migrationen. |
 | 29 | Automatische und reale Tests (B) | GitHub-CI mit Mock-Geräten, lokale Testcheckliste; echte Cosori-Tests nur in eigener HA-Umgebung, kein LAN-Zugriff aus Cloud/Codex. |
-| 30 | GitHub-/Codex-Prozess (B) | AGENTS.md, Anforderungen, Roadmap, Issue-/PR-Vorlagen, Feature-Branches, CI und verpflichtende Modell-/Aufgabenprüfung vor jedem Codex-Arbeitspaket. Ab 29.10.2026: ausschließlich GPT-6.1 Sol mit Denkaufwand niedrig, mittel oder hoch; ersetzt frühere Modellempfehlungen. |
+| 30 | GitHub-/Codex-Prozess (B) | AGENTS.md, Anforderungen, Roadmap, Issue-/PR-Vorlagen, Feature-Branches, CI und verpflichtende Modell-/Aufgabenprüfung vor jedem Codex-Arbeitspaket. Ab 29.10.2026: ausschließlich GPT-6.1 Sol mit Denkaufwand niedrig, mittel oder hoch; ersetzt frühere Modellempfehlungen. Actions sparsam: kleine gezielte Prüfungen während der Entwicklung, vollständige Läufe am Abschnittsende; keine Code-CI für reine Dokumentation und keine doppelten Merge-Läufe. |
 | 31 | Modulare Home-Assistant-Architektur (B) | Ein HACS-Paket mit Python-Backend, separater Admin-Rezeptverwaltung und Lovelace-Dashboard, versioniertem lokalem Speicher, authentifizierter Backend-API und austauschbaren Geräteadaptern. Keine Zusatzdienste. Siehe [Architektur](ARCHITECTURE.de.md). |
 
 ## Zentrale Nutzerführung

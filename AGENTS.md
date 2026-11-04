@@ -128,6 +128,15 @@ Action: Confirm current model before implementation; do not claim to switch it.
 9. Record decisions in `docs/REQUIREMENTS.md` and staged work in
    `docs/ROADMAP.md`. Do not label planned features as implemented.
 
+## GitHub Actions budget (effective 2026-10-30)
+
+- Use GitHub Actions sparingly; the available allowance is limited.
+- During development, run targeted local checks first, batch changes and use only small, relevant automatic jobs.
+- Documentation-only changes must not trigger code, HACS or Hassfest runs. Cancel superseded runs on the same branch.
+- Run the full Python matrix and comprehensive validation at the end of a larger section or before release. Do not repeat unchanged checks without a new reason.
+- Avoid duplicate automatic checks for the same state on a PR and its subsequent merge. Required safety and release checks remain mandatory; plan their scope around the section.
+- Full offline validation: manually run “Offline unit tests” with `full_suite=true`. Run HACS/Hassfest for relevant metadata changes or through the manual “Home Assistant and HACS validation” workflow.
+
 ## Helpful references
 
 - Home Assistant developer docs: https://developers.home-assistant.io/
