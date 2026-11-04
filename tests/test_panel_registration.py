@@ -41,6 +41,7 @@ class PanelRegistrationTests(unittest.TestCase):
         http = types.ModuleType("homeassistant.components.http")
         panel_custom.async_register_panel = register_panel
         frontend.async_remove_panel = lambda hass, path: calls.append(("remove", path))
+        frontend.add_extra_js_url = lambda hass, url: calls.append(("card", url))
         http.StaticPathConfig = StaticPathConfig
         components.panel_custom = panel_custom
         components.frontend = frontend
@@ -57,12 +58,19 @@ class PanelRegistrationTests(unittest.TestCase):
             async_remove_panel(hass)
             asyncio.run(async_register_panel(hass))
 
-        self.assertEqual(len([call for call in calls if call[0] == "static"]), 1)
+        self.assertEqual(len([call for call in calls if call[0] == "static"]), 3)
         self.assertEqual(len([call for call in calls if call[0] == "panel"]), 2)
         static = calls[0][1][0]
         self.assertEqual(static.url_path, MODULE_URL)
         self.assertTrue(Path(static.path).is_file())
         self.assertFalse(static.cache_headers)
-        self.assertTrue(calls[1][1]["require_admin"])
-        self.assertEqual(calls[1][1]["frontend_url_path"], PANEL_PATH)
-        self.assertEqual(calls[2], ("remove", PANEL_PATH))
+        panels = [call[1] for call in calls if call[0] == "panel"]
+        self.assertTrue(panels[0]["require_admin"])
+        self.assertEqual(panels[0]["frontend_url_path"], PANEL_PATH)
+        self.assertIn(("remove", PANEL_PATH), calls)
+        card = [call[1][0] for call in calls if call[0] == "static"][1]
+        self.assertTrue(Path(card.path).is_file())
+        self.assertEqual(card.url_path, f"/api/{DOMAIN}/card.js")
+        self.assertFalse(card.cache_headers)
+        self.assertEqual([call[1] for call in calls if call[0] == "card"], [f"/api/{DOMAIN}/card.js?v=0.1.0b23"])
+        self.assertEqual(panels[0]["module_url"], f"{MODULE_URL}?v=0.1.0b23")

@@ -2,6 +2,20 @@
 
 [Deutsch](REQUIREMENTS.de.md) | [English](REQUIREMENTS.md)
 
+**b23 (04.11.2026):** Eigentümer bestätigt gezielten b22-Speicher-/Neustarttest und wünscht Entfernung der Kommentare zu ungeprüften Grenzen/Senden. Programmauswahlen zeigen nur lokalisierte Namen; Hinweise auf fehlende Programme und Backend-Fähigkeitsdaten/-Prüfungen bleiben erhalten. Offizielle HACS-/Hassfest-Nachweise bleiben getrennt. [Änderung und Prüfungen](releases/0.1.0b23.de.md).
+
+**b22-Abschlussprüfung (04.11.2026):** Eigentümer bestätigt abgeschlossene 44-Schritt-Rückmeldungsfolge, Karte und Gären-Rezeptablauf. Favoritenkapazität/gelöschte Verweise korrigiert und native Store-Dateien nach Schreiben geprüft. 232 Python-Tests je 3.12/3.14 plus 125 Frontend-Tests bestanden. Aktueller nativer Speicher-/Neustarttest und offizielle HACS-/Hassfest-Nachweise bleiben vor einem Kandidaten offen. [Prüfung und Umfang](reports/FINAL_REVIEW.de.md).
+
+**b21 (04.11.2026):** Eigentümer bestätigt beide b20-Varianten; B wird zuerst/Standard ohne eigenes UI-Update. Controller 1.0.3-beta.3 geprüft/gepinnt, Modelltemperaturen und Gären mit ungeprüfter Herkunft übernommen und beaufsichtigten Lauf auf 44 Einstellungen beider Fächer erweitert. Native Grenzwert-/Gären-Abnahme offen. [Prüfung und Testtabelle](reports/ISSUE_7_CONTROLLER_BETA3.de.md).
+
+**b20 (04.11.2026):** Eigentümer wünscht beide Gerätebild-Entwürfe als Karteneinstellung. A nutzt eine dünne aktive Kontur und kleine Markierungen; B nutzt unsichtbare, antippbare eingerichtete Bildbereiche mit sichtbarer Fachauswahl neben dem Foto. Bildeditor-Rechtecke bleiben zum Positionieren sichtbar. Umgesetzt; native Abnahme offen. [Einstellungen und Prüfungen](releases/0.1.0b20.de.md).
+
+**b19 (03.11.2026):** Eigentümer bestätigt b18-Bildspeicherung nach Seitenneuladen. Nach erfolgreichem Speichern Karten derselben Seite aktualisieren, beim Wiedereinblenden nachladen und Speichern sichtbar bestätigen; Geräteberechtigungen und Garentwürfe erhalten. Neue native Aktualisierungsabnahme offen. [Korrektur und lokale Prüfungen](releases/0.1.0b19.de.md).
+
+**b18 (03.11.2026):** b17-Karteneditor lokal bestätigt. Private Gerätebild-Galerie/Uploads und relative Fachbereiche pro Gerät mit Admin-Schreibrechten umgesetzt; native neue Abnahme offen. [Einrichtung und Grenzen](releases/0.1.0b18.de.md).
+
+**b17 (03.11.2026):** Drei lokale b16-Freigabeprüfungen bestanden. Karteneditor um Darstellungsgrößen, unabhängige Grafikgröße und Status-/Historienanzeige ergänzt; Standardeinstellungen und Backend-Prüfungen unverändert. [Umsetzung und Prüfung](releases/0.1.0b17.de.md).
+
 Status: **Abgestimmte Produktanforderungen, keine Liste bereits implementierter Funktionen.**
 Letzte Zusammenfassung: 24.10.2026. Projektstandard: Englisch als Fallback; Projektberichte für den Nutzer zuerst auf Deutsch und zusätzlich vollständig auf Englisch.
 
@@ -21,11 +35,11 @@ Letzte Zusammenfassung: 24.10.2026. Projektstandard: Englisch als Fallback; Proj
 | 10 | Optionale Fertigmeldung (B) | Standardmäßig aus; Push aufs ausgewählte HA-Mobilgerät optional; nur bei verlässlichem Fertigstatus. |
 | 11 | Erweiterte Organisation (C) | Kategorien, Favoriten, Suche, freie Tags und zuletzt verwendet. Im Rezepteditor vorhandene Kategorien wählen oder als letzte Option eine neue hinzufügen; gleich geschriebene Namen mit anderer Groß-/Kleinschreibung wiederverwenden. |
 | 12 | JSON-Import/-Export (B) | Einzelne oder alle Rezepte, Validierung und Duplikatprüfung; Export mit verständlichem Dateinamen; reguläre HA-Backups bleiben bestehen. |
-| 13 | Grafischer Karteneditor und Individualisierung (B+) | Status/Beschriftung/Restzeit/Größe konfigurieren; „Airfryer individualisieren“ für Bildergalerie, eigenes Bild, verschiebbare Fach-Schaltflächen mit relativen Koordinaten und Zurücksetzen. Link „Dein Modell fehlt?“ zu GitHub-Issues. |
+| 13 | Grafischer Karteneditor und Individualisierung (B+) | Status/Beschriftung/Restzeit/Größe konfigurieren; „Airfryer individualisieren“ für Bildergalerie, eigenes Bild, verschiebbare Fach-Schaltflächen mit relativen Koordinaten und Zurücksetzen. Link „Dein Modell fehlt?“ zu GitHub-Issues. A/B-Auswahl pro Karte: A zeigt eine dezente aktive Kontur und kleine Fachmarkierungen; B lässt dieselben eingerichteten Touchbereiche im aktiven Dashboard unsichtbar. Rechtecke zum Positionieren/Vergrößern bleiben im Bildeditor sichtbar (Eigentümerentscheidung 04.11.2026). Beide Varianten abgenommen; B steht zuerst/gilt ohne ausdrückliche Stilwahl als Standard (Eigentümerentscheidung 04.11.2026). |
 | 14 | Automatische Erkennung und Profil-Fallback (B) | Modell, Fächer und Fähigkeiten nach Möglichkeit automatisch lesen; nur bestätigte Profile ergänzen. Nach der Adapteranbindung im Rezepteditor verifizierte Programmfunktionen als Auswahl anbieten; das Rezept bleibt geräteunabhängig. Unbekannte Fähigkeiten bleiben deaktiviert. |
 | 15 | Manueller Neuversuch und Offline-Darstellung (B+) | Sende-/Fehlerstatus zeigen; Auswahl erhalten, keine automatische Wiederholung. Offline-Grafik ausgrauen, Senden sperren; unbekannten Status gesondert anzeigen. |
 | 16 | Unabhängige Rezeptbibliothek (B) | Rezeptverwaltung/Import/Export bleiben auch bei fehlendem oder defektem Airfryer Control verfügbar. |
-| 17 | Zwei Berechtigungsstufen (B) | Administratoren verwalten Rezepte und Sicherheitseinstellungen; normale HA-Benutzer dürfen zulässige Fächer bedienen. Backend prüft Rechte. |
+| 17 | Zwei Berechtigungsstufen (B) | Administratoren verwalten Rezepte und Sicherheitseinstellungen; normale HA-Benutzer dürfen Rezepte wählen und ausdrücklich freigegebene ganze Geräte mit sämtlichen Fächern und verfügbaren Programmen bedienen. Keine einzelnen Fach-/Programm-/Menüfreigaben (Eigentümerkorrektur 02.11.2026). Backend prüft Rechte. |
 | 18 | Übersetzung und Einheiten | Englisch und Deutsch wie bei Battery Flow Card; **Englisch ist Standard/Fallback**. HA-Benutzersprache und °C/°F-Einstellung übernehmen; intern Celsius. Eigene Rezeptnamen nicht automatisch übersetzen. |
 | 19 | Versionierte Speicherung/Migration (B) | Lokal speichern; vor Migration sichern; ursprüngliche Daten bei Fehler erhalten; HACS-Updates überschreiben keine Rezeptdaten. |
 | 20 | Kompatibilitätsanpassung (B) | Bei der Gerätebedienung nur bestätigte Programmfunktionen des gewählten Airfryers anbieten. Bei inkompatiblem Programm/Temperatur/Zeit warnen und unterstützte Alternativen anbieten; ausdrückliche Bestätigung; Originalrezept bleibt unverändert. |
@@ -69,8 +83,37 @@ Letzte Zusammenfassung: 24.10.2026. Projektstandard: Englisch als Fallback; Proj
 
 ## Validierung und Abnahme
 
-- Mit Airfryer Control bereits real getestet: **Cosori Turbo Tower Pro Smart CAF-DC111S-AEU**, Temperatur- und Zeitübertragung an Fach 2.
-- Das bestätigt **noch nicht** SYNC/MATCH oder Funktionen in diesem neuen Projekt.
+- Eigentümer nimmt die Card-Grundfunktion ab: beide Fächer senden, erneute Verwendung nach physischem Zurücksetzen, getrennte zuletzt gesendete Werte und Erhalt nach HA-Neustart. b16 ergänzt ausdrückliche Ganzgerätefreigaben für normale Benutzer samt Backend-Prüfung und Admin-Verwaltung. Neue native Rechteabnahme steht aus; normale Benutzer haben standardmäßig keine Freigaben. [Nachweis, Umfang und Checkliste](reports/ISSUE_8_DEVICE_ACCESS.de.md).
+
+- 02.11.2026: Eigentümer bestätigt die b14-Card-Anzeige nach manuellem Eintragen der Dashboard-Modulressource. Beta b15 setzt deren automatisches Anlegen/Aktualisieren unter Erhalt dieses Eintrags um; automatische native Abnahme und Card-Sende-/Historientests bleiben offen. Nur die aktuelle Beta bleibt veröffentlicht; ältere werden nach Prüfung des neuen Releases zu Entwürfen, unter Erhalt von Tags/Code/Assets. [Nachweis, Umsetzung und Release-Vorgabe](reports/ISSUE_8_CARD_RESOURCES.de.md).
+
+- Beta 0.1.0b14 korrigiert einen reproduzierten Modulfehler durch doppelte Elementregistrierung nach der Eigentümermeldung einer fehlenden Card unter b13. Die Card importiert nun die aktuelle exportierte Basisklasse; vorhandene Panel-Registrierungen bleiben erhalten. Keine Sende-/Rechte-/Speicheränderungen. Native Prüfung bleibt offen. [Nachweis und alternative Modulressource](reports/ISSUE_8_CARD_LOADING.de.md).
+
+- Der freigegebene neutrale Card-Entwurf 1A ist in Beta 0.1.0b13 umgesetzt: eigene Grafik mit gestapelten Schubladen, antippbare Fächer, Rezept-/Manuell-Werte und dauerhaft getrennte angenommene Einstellungen je Gerät/Fach. Fachwechsel senden nichts. Neue Cards beginnen mit serverseitiger Testvorschau; echter Modus verwendet die beaufsichtigte Beta ausschließlich für Administratoren. Backend-Geräterechte für normale Benutzer und native Card-Abnahme bleiben offen. [Umfang, Installation und Prüfungen](reports/ISSUE_8_DASHBOARD_CARD.de.md).
+
+- Vom Eigentümer lokal bestätigt am **Cosori Turbo Tower Pro Smart CAF-DC111S-AEU**: vollständige beaufsichtigte Folge mit zwölf Einstellungen auf beiden Fächern am 01.11.2026 bestanden; Gerät anschließend aus. Siehe [exakte Werte und Nachweisumfang](reports/ISSUE_7_LOCAL_ACCEPTANCE.de.md).
+- Anschließend bestätigte der Eigentümer die gespeicherte Rezeptübertragung auf Fach 1 und 2 (R1/R2); R3–R7 bleiben für die reale Abnahme offen. [Nachtrag](reports/ISSUE_7_LOCAL_ACCEPTANCE.de.md).
+- Das bestimmt nicht sämtliche Temperatur-/Zeitgrenzen, Gären, Änderungen aktiver Fächer, SYNC/MATCH oder allgemeine Kompatibilität.
 - Vor stabilen Releases: Codeprüfung, automatisierte Tests und dokumentierte lokale Testergebnisse.
 
 Umsetzungsstand zu Anforderungen 14/15/26: Issue #7 liefert lesende Geräteerkennung mit deaktivierten Steuerfähigkeiten. Airfryer Control `1.0.2-beta.1` ergänzt den öffentlichen lesenden Dienst `faehigkeiten`; die Administrator-Vorschau übernimmt daraus ausschließlich erlaubte Programme, Bereiche, Herkunft, Verbindung, Meldezeit und Revision. Geschätzte oder nicht gemeldete Programme bleiben sichtbar ungeprüft und erteilen niemals eine Sendeerlaubnis. Die adminpflichtige API `prepare_send` und ihre [Handy-Oberfläche](reports/ISSUE_7_DRY_RUN_UI.de.md) bleiben serverseitig erzwungener Testmodus und können nicht übertragen. Siehe [Sendevertrag](reports/ISSUE_7_COMMAND_CONTRACT.de.md) und [Prüfbericht](reports/ISSUE_7_DISCOVERY.de.md).
+
+Beta-Abnahmeentscheidung vom 30.10.2026: Auf ausdrücklichen Auftrag des Eigentümers wird vor der realen Abnahme eine separate, adminpflichtige und beaufsichtigte Testübertragung für CAF-DC111S-AEU, Fach 1/2, Airfry 170 °C und eine Minute implementiert. Dies ist eine begrenzte Ausnahme für den Ersttest, keine allgemeine Sendeerlaubnis aus geschätzten Fähigkeiten. Normale Steuerung bleibt gesperrt; siehe [Beta-Testvertrag und Anleitung](reports/ISSUE_7_BETA_SEND.de.md).
+
+Korrektur 0.1.0b4: Die beaufsichtigte Testvorbereitung fordert über einen passenden HA-Sensor genau einmal einen neuen lesenden Gerätebericht an. Alte Berichte werden nicht künstlich aufgefrischt; Frische, Rechte und Gerätesperren bleiben verpflichtend. [Nachweis und lokale Abnahme](reports/ISSUE_7_STATUS_REFRESH.de.md).
+
+Beta 0.1.0b5: Auf Eigentümerwunsch beaufsichtigte Rezept-/manuelle Übertragung aller sechs aktuell gemeldeten, im geprüften Vertrag enthaltenen Programme. Keine allgemeine Modellfreigabe. [Umsetzung und Grenzen](reports/ISSUE_7_RECIPE_SEND.de.md), [60-teilige Abnahme](reports/BETA_0_1_0B5_TEST_PLAN.de.md). Ausschließlich lokal geprüft; keine GitHub Actions.
+
+Eigentümerentscheidung: Einmalige Bestätigung der vollständigen beaufsichtigten Testliste, danach einzeln sequenzielle Schritte mit frischer Zustandsprüfung und Abbruch. Beta 0.1.0b6 enthält maximal zwölf normale Testeinstellungen auf beiden Fächern, keine automatische Garfolge. [Umsetzung und Abnahme](reports/ISSUE_7_GUIDED_BATCH.de.md). Keine GitHub Actions.
+
+Eigentümervorgabe: Nach beaufsichtigtem Abbruch muss ein neuer Test ohne HA-Neustart möglich sein. Beta 0.1.0b7 erlaubt manuelle Wiederfreigabe erst nach frischem Bereitschaftsnachweis und verwirft alte Tokens; kein Replay. [Umsetzung und offener Abbruchgrund](reports/ISSUE_7_MANUAL_RECOVERY.de.md). Keine GitHub Actions.
+
+Beta 0.1.0b8: Vom Eigentümer benannte Fach-Schalter zum gezielten Beenden eigener vorbereiteter Einstellungen vor Programmwechsel integrieren. Je Fach frische Kontrolle, nur turn_off, kein globales Beenden. [Verhalten und Abnahme](reports/ISSUE_7_ZONE_RESET.de.md). Keine GitHub Actions.
+
+Beta 0.1.0b9: Beide Einzeltest-Buttons übernehmen dieselbe Formularauswahl; Bestätigung/Fehler werden ins Bild gescrollt. Dörren auf 35–95 °C begrenzen (Eigentümerangabe); Testfolge 55 °C / 360 Minuten nach erfolgreichem Einzeltest beider Fächer. Keine Mindestdauer daraus ableiten. [Korrektur und Abnahme](reports/ISSUE_7_SELECTED_TEST_SETTINGS.de.md). Keine GitHub Actions.
+
+Beta 0.1.0b10: Sieben vom Eigentümer gemeldete Turbo-Tower-Temperaturbereiche getrennt von Adapterfähigkeiten hinterlegen und anzeigen. Beaufsichtigtes Senden erzwingt zusätzlich Modellgrenzen, behält aber die geprüften Adaptergrenzen bei; vollständige Bereiche und Gären benötigen eine Upstream-Anpassung. [Profil und Schnittmenge](reports/ISSUE_7_MODEL_TEMPERATURES.de.md). Keine GitHub Actions.
+
+Beta 0.1.0b11: Rezept-/manuelle Bestätigungen an die WebSocket-Verbindung binden; Verwerfen vor Steuerübergabe serverseitig unterstützen, verspätete UI-Antworten und Offline-Anfragen sperren. Zwölf Rezeptübertragungen durch Routen/Repository/Sender simuliert, Daten unverändert. [Umsetzung und sieben gezielte Gerätefälle](reports/ISSUE_7_RECIPE_LIFECYCLE.de.md). Reale neue Abnahme offen; danach Dashboard samt Backend-Benutzerrechten. Gären/erweiterte Temperaturen zurückgestellt. Keine GitHub Actions.
+
+Beta 0.1.0b12: Rezepteditor mit gemeldeten Programmen des gewählten Airfryers als Auswahlliste; exakte Kennungen speichern, alte Kennungen nur nach ausdrücklicher Auswahl und Speichern korrigieren. Freie Eingabe/fehlender Adapter bleiben unterstützt, Entwürfe bei Render-Vorgängen erhalten. [Umsetzung und erneute Rezeptabnahme](reports/ISSUE_7_EDITOR_PROGRAM_PICKER.de.md). Keine Sendefreigabe oder neuen Programme daraus ableiten. Keine GitHub Actions.

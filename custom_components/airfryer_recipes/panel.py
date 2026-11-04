@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from .const import DOMAIN
+from .const import DOMAIN, FRONTEND_VERSION
 
 PANEL_PATH = "airfryer-recipes"
 MODULE_URL = f"/api/{DOMAIN}/panel.js"
@@ -26,13 +26,23 @@ async def async_register_panel(hass: Any) -> None:
             )
         ])
         state["static_registered"] = True
+    if not state.get("card_registered"):
+        await hass.http.async_register_static_paths([
+            StaticPathConfig(f"/api/{DOMAIN}/card.js", str(Path(__file__).parent / "frontend" / "card.js"), cache_headers=False),
+        ])
+        state["card_registered"] = True
+    if not state.get("designer_registered"):
+        await hass.http.async_register_static_paths([StaticPathConfig(f"/api/{DOMAIN}/personalization.js", str(Path(__file__).parent / "frontend" / "personalization.js"), cache_headers=False)])
+        state["designer_registered"]=True
+    from .card_resource import async_register_card_resource
+    await async_register_card_resource(hass)
     await panel_custom.async_register_panel(
         hass,
         frontend_url_path=PANEL_PATH,
         webcomponent_name="airfryer-recipes-panel",
         sidebar_title="Airfryer Recipes",
         sidebar_icon="mdi:chef-hat",
-        module_url=MODULE_URL,
+        module_url=f"{MODULE_URL}?v={FRONTEND_VERSION}",
         require_admin=True,
         config_panel_domain=DOMAIN,
     )

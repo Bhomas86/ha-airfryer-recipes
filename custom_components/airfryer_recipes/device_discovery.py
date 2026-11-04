@@ -10,6 +10,8 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any
 
+from .model_profiles import describe_model_profile
+
 UPSTREAM_DOMAIN = "airfryer_control"
 CAPABILITIES_SERVICE = "faehigkeiten"
 STATUS_MAP = {
@@ -78,6 +80,7 @@ def normalize_capabilities(payload: Any) -> dict[str, Any] | None:
         limits = {
             "vesync_app": "confirmed",
             "geschaetzt": "estimated",
+            "besitzer": "owner_reported",
         }.get(raw.get("grenzen"), "unknown")
         send = {
             "bestaetigt": "confirmed",
@@ -87,6 +90,7 @@ def normalize_capabilities(payload: Any) -> dict[str, Any] | None:
             "id": program_id,
             "temperature_c": temperature,
             "duration_minutes": duration,
+            "temperature_step_c": _bounded_int(raw.get("temperatur_schritt"), 1, 100),
             "suggested": {
                 "temperature_c": suggested_temperature,
                 "duration_minutes": suggested_duration,
@@ -149,6 +153,7 @@ def describe_devices(devices: Any, entries: Any) -> list[dict[str, Any]]:
             "device_id": device.id,
             "name": device.name_by_user or device.name or "Airfryer",
             "model": device.model,
+            "model_profile": describe_model_profile(device.model),
             "adapter": UPSTREAM_DOMAIN,
             "connectivity": "offline" if online is False else (
                 "unknown" if online is not True or last_error else "reported_online"
@@ -164,7 +169,7 @@ def describe_devices(devices: Any, entries: Any) -> list[dict[str, Any]]:
     return sorted(result, key=lambda device: device["device_id"])
 
 
-async def discover_devices(hass: Any) -> dict[str, Any]:
+async def discover_devices(hass: Any, *, allowed_device_ids: set[str] | None = None) -> dict[str, Any]:
     """Read reported zones and enrich them through the public read-only service."""
     from homeassistant.helpers import device_registry as dr
 
@@ -172,6 +177,8 @@ async def discover_devices(hass: Any) -> dict[str, Any]:
         entries = list(hass.config_entries.async_loaded_entries(UPSTREAM_DOMAIN))
         registry = dr.async_get(hass)
         devices = describe_devices(registry.devices.values(), entries)
+        if allowed_device_ids is not None:
+            devices = [device for device in devices if device["device_id"] in allowed_device_ids]
     except (AttributeError, KeyError, TypeError, ValueError):
         # An incompatible optional adapter must not break recipe management.
         return {"status": "adapter_incompatible", "devices": [], "live_send_enabled": False}

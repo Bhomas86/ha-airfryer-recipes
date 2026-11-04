@@ -2,6 +2,8 @@
 
 [English](BACKEND_REVIEW.md) | [Deutsch](BACKEND_REVIEW.de.md)
 
+**Current acceptance/review (b22, 2026-11-04):** Owner confirms card behavior, completion of all 44 reported-value steps and the subsequent Proof recipe test. Historical pending statements below describe their release-time evidence. Current b22 native restart and official metadata checks are still pending. [Exact evidence, fixes and release decision](FINAL_REVIEW.md).
+
 As of 25 October 2026. Review of GitHub PR refs `a9137a6` (#13) and `bfe4f6d` (#14). The two confirmed defects were subsequently fixed by commit `5b3bfdc` directly on PR #13's feature branch.
 
 ## Project status

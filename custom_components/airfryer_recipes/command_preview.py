@@ -18,7 +18,7 @@ class PreviewTargetNotFound(ValueError):
 
 
 async def prepare_preview(
-    hass: Any, *, device_id: str, zone_id: int, settings: dict[str, Any]
+    hass: Any, *, device_id: str, zone_id: int, settings: dict[str, Any], allowed_device_ids: set[str] | None = None
 ) -> dict[str, Any]:
     """Validate exact desired settings and read the target again on every request.
 
@@ -37,7 +37,7 @@ async def prepare_preview(
     phase = CookingPhase(**settings)
     if phase.program != settings["program"]:
         raise RecipeValidationError("Program must not contain surrounding whitespace")
-    discovery = await discover_devices(hass)
+    discovery = await discover_devices(hass, allowed_device_ids=allowed_device_ids) if allowed_device_ids is not None else await discover_devices(hass)
     device = next((item for item in discovery["devices"] if item["device_id"] == device_id), None)
     if device is None:
         raise PreviewTargetNotFound

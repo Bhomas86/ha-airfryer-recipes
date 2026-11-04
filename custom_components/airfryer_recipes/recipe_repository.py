@@ -124,6 +124,15 @@ class RecipeRepository:
             except KeyError as err:
                 raise RecipeNotFoundError(recipe_id) from err
 
+    def matches_snapshot(self, recipe: Recipe) -> bool:
+        """Check an immutable recipe immediately before a non-awaiting decision.
+
+        Event-loop only. An in-progress library operation blocks confirmation;
+        writers publish records atomically after their awaited storage succeeds.
+        """
+        self._require_loaded()
+        return not self._lock.locked() and self._records.get(recipe.id) == recipe
+
     async def async_export_json(self) -> str:
         """Export all recipes; no device, zone or private settings included."""
         async with self._lock:

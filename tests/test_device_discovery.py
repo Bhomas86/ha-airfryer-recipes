@@ -1,6 +1,7 @@
 """Offline discovery safety: no import of upstream code and no control calls."""
 
 import json
+from pathlib import Path
 import sys
 import types
 import unittest
@@ -15,6 +16,15 @@ from custom_components.airfryer_recipes.device_discovery import (
 
 
 class DiscoveryTests(unittest.IsolatedAsyncioTestCase):
+    def test_reviewed_owner_profile_preserves_unverified_provenance_and_proof_one_degree_step(self):
+        fixture=json.loads((Path(__file__).parent/'fixtures/airfryer_control_1_0_3_beta_3.json').read_text())
+        programs={p['id']:p for p in normalize_capabilities(fixture['capabilities'])['programs']}
+        self.assertEqual(len(programs),7)
+        self.assertTrue(all(p['limits_status']=='owner_reported' and p['send_status']=='unverified' for p in programs.values()))
+        self.assertEqual(programs['proof']['temperature_c'],{'min':30,'max':45})
+        self.assertEqual(programs['proof']['temperature_step_c'],1)
+        self.assertEqual(programs['dry']['duration_minutes']['max'],2880)
+
     def setUp(self):
         self.device = NS(id="ha-device", name="Kitchen", name_by_user=None,
                          model="CAF-DC111S-AEU", disabled_by=None,
@@ -56,8 +66,22 @@ class DiscoveryTests(unittest.IsolatedAsyncioTestCase):
 
     def test_unknown_model_has_no_guessed_programs_or_control_capabilities(self):
         self.device.model = "unknown-model"
+        self.assertIsNone(self.describe()[0]["model_profile"])
         self.assertEqual(self.describe()[0]["programs"], [])
         self.assertFalse(any(self.describe()[0]["capabilities"].values()))
+
+    def test_owner_model_profile_does_not_synthesize_adapter_programs_or_enable_send(self):
+        device = self.describe()[0]
+        profile = device["model_profile"]
+        self.assertEqual(profile["source"], "owner_reported")
+        by_id = {program["id"]: program for program in profile["programs"]}
+        self.assertEqual(by_id["proof"], {"id": "proof", "temperature_c": {"min": 30, "max": 45},
+                                           "temperature_step_c": 1})
+        self.assertEqual(by_id["roast"]["temperature_c"], {"min": 175, "max": 230})
+        self.assertIsNone(by_id["roast"]["temperature_step_c"])
+        self.assertEqual(device["programs"], [])
+        self.assertFalse(any(device["capabilities"].values()))
+        self.assertEqual(self.runtime.api.mock_calls, [])
 
     def test_credentials_raw_data_and_error_messages_are_not_exposed(self):
         self.fryer.raw_multi = {"token": "private-token"}
@@ -128,9 +152,11 @@ class DiscoveryTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(result["status"], "adapter_beta")
         self.assertFalse(result["live_send_enabled"])
         device = result["devices"][0]
+        self.assertIn("proof", [p["id"] for p in device["model_profile"]["programs"]])
+        self.assertNotIn("proof", [p["id"] for p in device["programs"]])
         self.assertEqual(device["programs"], [{
             "id": "airfry", "temperature_c": {"min": 120, "max": 205},
-            "duration_minutes": {"min": 1, "max": 60},
+            "duration_minutes": {"min": 1, "max": 60}, "temperature_step_c": None,
             "suggested": {"temperature_c": 195, "duration_minutes": 15},
             "limits_status": "estimated", "send_status": "unverified",
         }])
@@ -143,6 +169,17 @@ class DiscoveryTests(unittest.IsolatedAsyncioTestCase):
             "airfryer_control", "faehigkeiten", {"geraet": "ha-device"},
             blocking=True, return_response=True,
         )
+
+    async def test_device_scope_filters_before_any_capability_service_call(self):
+        helpers = types.ModuleType("homeassistant.helpers")
+        dr = types.ModuleType("homeassistant.helpers.device_registry")
+        helpers.device_registry = dr
+        dr.async_get = Mock(return_value=NS(devices={self.device.id: self.device}))
+        services = NS(has_service=Mock(return_value=True), async_call=AsyncMock(return_value={}))
+        hass = NS(config_entries=NS(async_loaded_entries=Mock(return_value=[self.entry])), services=services)
+        with patch.dict(sys.modules, {"homeassistant.helpers": helpers, "homeassistant.helpers.device_registry": dr}):
+            self.assertEqual((await discover_devices(hass, allowed_device_ids={"another-device"}))["devices"], [])
+        services.async_call.assert_not_awaited()
 
     def test_malformed_capability_fields_fail_closed(self):
         payload = {

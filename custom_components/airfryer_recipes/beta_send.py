@@ -1,0 +1,486 @@
+"""Supervised, single-shot commissioning; never used by the dry-run API.
+
+Only the reviewed public Airfryer Control service is called. This beta test is
+not a compatibility approval: the authorized user must observe the appliance.
+"""
+
+from __future__ import annotations
+
+from dataclasses import asdict, dataclass
+import asyncio
+from datetime import datetime, timezone
+import secrets
+import time
+from typing import Any, Callable
+
+from .const import DOMAIN
+from .device_discovery import normalize_capabilities
+from .model_profiles import TURBO_TOWER_MODEL, TURBO_TOWER_TEMPERATURES
+from .recipe_model import CookingPhase, Recipe
+from .recipe_repository import RecipeNotFoundError
+
+UPSTREAM = "airfryer_control"
+MODEL = TURBO_TOWER_MODEL
+VERSION = "1.0.3-beta.3"
+REVIEWED_COMMIT = "a9fc49e37c3d2698d21bfb361192717ff790eb6e"
+TTL_SECONDS = 15
+MAX_REPORT_AGE = 15
+MODE_NAMES = {"airfry": "airfry", "roast": "roast", "bake": "bake", "grill": "grill", "reheat": "reheat", "dry": "dry", "proof": "proof"}
+
+TEST_SETTINGS = {"program": "airfry", "temperature_c": 170, "duration_minutes": 1}
+# Reviewed upstream contract bounds, NOT verified CAF-DC111S-AEU capabilities.
+# Recipe schema v1 caps duration at 1440 minutes, including manual beta input.
+REVIEWED_PROGRAM_LIMITS = {
+    "airfry": (120, 230, 60), "roast": (175, 230, 240),
+    "bake": (80, 205, 240), "grill": (160, 230, 30),
+    "reheat": (40, 205, 60), "dry": (35, 95, 1440),
+    "proof": (30, 45, 720),
+}
+# Owner-reported model bounds apply in addition to the upstream contract.
+# This does not mark sending or duration bounds as model-confirmed.
+MODEL_TEMPERATURE_LIMITS = TURBO_TOWER_TEMPERATURES
+
+
+def validate_settings(phase: CookingPhase) -> None:
+    """Bound supervised commissioning; these are not verified model limits."""
+    require(phase.program in REVIEWED_PROGRAM_LIMITS, "program_unsupported")
+    low, high, minutes = REVIEWED_PROGRAM_LIMITS[phase.program]
+    require(low <= phase.temperature_c <= high and 1 <= phase.duration_minutes <= minutes,
+            "test_range")
+    if phase.program in MODEL_TEMPERATURE_LIMITS:
+        low, high = MODEL_TEMPERATURE_LIMITS[phase.program]
+        require(low <= phase.temperature_c <= high, "test_range")
+
+
+class BetaTestBlocked(ValueError):
+    """A public, allowlisted reason; never contains upstream exceptions."""
+
+
+def require(condition: bool, reason: str) -> None:
+    if not condition:
+        raise BetaTestBlocked(reason)
+
+
+@dataclass(frozen=True)
+class Target:
+    name: str
+    fingerprint: tuple
+    unchanged: Callable[[], bool] = lambda: True
+
+
+async def read_target(
+    hass: Any, device_id: str, zone_id: int, *, refresh: bool = False, context: Any = None,
+    settings: CookingPhase | None = None, prepared_zones: dict[int, CookingPhase] | None = None,
+    wait_for_report: bool = False,
+) -> Target:
+    """Read a coherent idle snapshot; optionally request a read-only refresh.
+
+    The report timestamp is part of the confirmation binding. Even an identical
+    new report invalidates a prepared test, as does a different adapter instance.
+    """
+    from homeassistant.helpers import device_registry as dr
+    from homeassistant.loader import async_get_integration
+
+    phase = settings or CookingPhase(**TEST_SETTINGS)
+    validate_settings(phase)
+    require(isinstance(device_id, str) and 0 < len(device_id) <= 128, "target")
+    require(type(zone_id) is int and zone_id in (1, 2), "target")
+    integration = await async_get_integration(hass, UPSTREAM)
+    require(integration.version == VERSION, "adapter_version")
+    require(hass.services.has_service(UPSTREAM, "programm_senden"), "adapter_version")
+    device = dr.async_get(hass).async_get(device_id)
+    require(device is not None and device.disabled_by is None, "target")
+    require(device.model == MODEL, "model")
+    identities = [v for d, v in device.identifiers if d == UPSTREAM]
+    require(len(identities) == 1, "target")
+    matches = []
+    for entry in hass.config_entries.async_loaded_entries(UPSTREAM):
+        runtime = getattr(entry, "runtime_data", None)
+        fryers = getattr(runtime, "fryers", {})
+        if entry.entry_id in device.config_entries and isinstance(fryers, dict):
+            if identities[0] in fryers:
+                matches.append((entry, runtime, fryers[identities[0]]))
+    require(len(matches) == 1, "target")
+    entry, runtime, fryer = matches[0]
+    if refresh:
+        from homeassistant.helpers import entity_registry as er
+
+        require(context is not None, "unauthorized")
+        require(hass.services.has_service("homeassistant", "update_entity"), "refresh_unavailable")
+        registry = er.async_get(hass)
+        # All sensors of the reviewed upstream use CoordinatorEntity. Updating
+        # one loaded sensor requests a coordinator read, never a control action.
+        sensors = sorted(
+            entity.entity_id
+            for entity in er.async_entries_for_device(registry, device_id)
+            if entity.platform == UPSTREAM and entity.config_entry_id == entry.entry_id
+            and entity.disabled_by is None and entity.entity_id.startswith("sensor.")
+            and hass.states.get(entity.entity_id) is not None
+        )
+        require(bool(sensors), "refresh_unavailable")
+        before = getattr(fryer, "last_report", None)
+        requested_at = datetime.now(timezone.utc)
+        try:
+            async with asyncio.timeout(20):
+                await hass.services.async_call(
+                    "homeassistant", "update_entity", {"entity_id": [sensors[0]]},
+                    blocking=True, context=context,
+                )
+                if wait_for_report:
+                    # HA may debounce the public refresh. Wait only for reads;
+                    # never repeat a control command or fabricate freshness.
+                    while True:
+                        current = getattr(fryer, "last_report", None)
+                        if (isinstance(current, datetime) and current.tzinfo is not None
+                                and current >= requested_at
+                                and (not isinstance(before, datetime) or before.tzinfo is None or current > before)):
+                            break
+                        await asyncio.sleep(0.25)
+        except Exception:
+            raise BetaTestBlocked("refresh_failed") from None
+        after = getattr(fryer, "last_report", None)
+        require(isinstance(after, datetime) and after.tzinfo is not None, "refresh_failed")
+        require(after >= requested_at, "refresh_failed")
+        if isinstance(before, datetime) and before.tzinfo is not None:
+            require(after > before, "refresh_failed")
+    payload = await hass.services.async_call(
+        UPSTREAM, "faehigkeiten", {"geraet": device_id},
+        blocking=True, return_response=True,
+    )
+    caps = normalize_capabilities(payload)
+    require(caps is not None, "capabilities")
+    require(getattr(fryer, "model", None) == MODEL, "model")
+    require(fryer.online is True and not fryer.last_error and caps["connection"] == "ok", "connection")
+    reported = getattr(fryer, "last_report", None)
+    require(isinstance(reported, datetime) and reported.tzinfo is not None, "freshness")
+    require(0 <= (datetime.now(timezone.utc) - reported).total_seconds() <= MAX_REPORT_AGE, "freshness")
+    require(caps["reported_at"] == reported.isoformat(), "freshness")
+    revision = getattr(fryer, "revision", None)
+    require(type(revision) is int and revision >= 0 and caps["revision"] == revision, "freshness")
+    expected = dict(prepared_zones or {})
+    state = fryer.state
+    def safe_zones() -> bool:
+        if set(state.zones) != {1, 2} or any(type(z) is not int for z in state.zones):
+            return False
+        for z, item in state.zones.items():
+            if item.active is not False:
+                return False
+            if z in expected:
+                wanted = expected[z]
+                if not (item.status == "wartet_auf_start" and isinstance(item.mode, str)
+                        and item.mode.lower() == MODE_NAMES[wanted.program]
+                        and item.set_temp == wanted.temperature_c
+                        and item.set_time_s == wanted.duration_minutes * 60):
+                    return False
+            elif item.status not in ("aus", "bereit"):
+                return False
+        return True
+    safe_statuses = ("aus", "bereit", "wartet_auf_start") if expected else ("aus", "bereit")
+    require(type(state.sync_type) is int and state.sync_type == 0, "zones")
+    require(state.temp_unit == "celsius", "zones")
+    require(state.status in safe_statuses and state.active is False, "zones")
+    require(set(state.zones) == {1, 2} and all(type(z) is int for z in state.zones), "zones")
+    statuses = tuple((z, state.zones[z].status) for z in (1, 2))
+    require(safe_zones(), "zones")
+    program = next((p for p in caps["programs"] if p["id"] == phase.program), None)
+    require(program is not None and program["limits_status"] in ("confirmed", "estimated", "owner_reported")
+            and program["send_status"] in ("confirmed", "unverified"), "capabilities")
+    if phase.program == "proof":
+        require(program.get("temperature_step_c") == 1, "capabilities")
+    require(program["temperature_c"]["min"] <= phase.temperature_c <= program["temperature_c"]["max"]
+            and program["duration_minutes"]["min"] <= phase.duration_minutes <= program["duration_minutes"]["max"], "capabilities")
+    programs = tuple((p["id"], p["temperature_c"]["min"], p["temperature_c"]["max"],
+                      p["duration_minutes"]["min"], p["duration_minutes"]["max"],
+                      p["limits_status"], p["send_status"], p.get("temperature_step_c")) for p in caps["programs"])
+
+    def unchanged() -> bool:
+        current = dr.async_get(hass).async_get(device_id)
+        return (
+            current is device and current.disabled_by is None and current.model == MODEL
+            and entry.runtime_data is runtime and runtime.fryers.get(identities[0]) is fryer
+            and entry in hass.config_entries.async_loaded_entries(UPSTREAM)
+            and fryer.state is state and fryer.online is True and not fryer.last_error
+            and fryer.last_report == reported and fryer.revision == revision
+            and state.status in safe_statuses and state.active is False
+            and type(state.sync_type) is int and state.sync_type == 0
+            and state.temp_unit == "celsius" and set(state.zones) == {1, 2}
+            and tuple((z, state.zones[z].status) for z in (1, 2)) == statuses
+            and safe_zones()
+            and 0 <= (datetime.now(timezone.utc) - reported).total_seconds() <= MAX_REPORT_AGE
+        )
+
+    return Target(device.name_by_user or device.name or "Airfryer",
+                  (entry.entry_id, id(runtime), id(fryer), reported.isoformat(), revision,
+                   statuses, programs, MODEL, VERSION), unchanged)
+
+
+@dataclass
+class SendPermit:
+    """One websocket lifetime; closing never recalls an already submitted call."""
+
+    owner: Any = None
+    active: bool = True
+    cleanup: Callable[[], None] | None = None
+
+    def close(self, *, disconnected: bool = False) -> None:
+        self.active = False
+        cleanup, self.cleanup = self.cleanup, None
+        if cleanup is not None and not disconnected:
+            cleanup()
+
+
+@dataclass(frozen=True)
+class Confirmation:
+    user_id: str
+    device_id: str
+    zone_id: int
+    target: Target
+    expires: float
+    phase: CookingPhase
+    recipe: Recipe | None
+    repository: Any
+    variable: bool
+    permit: SendPermit
+    access_snapshot: Any = None
+
+
+class BetaSender:
+    """Volatile confirmations and fail-fast per-device locks, never a queue."""
+
+    def __init__(self, hass: Any) -> None:
+        self.hass = hass
+        self.pending: dict[str, Confirmation] = {}
+        self.confirming: dict[str, Confirmation] = {}
+        state = hass.data[DOMAIN]
+        # Survive integration reload, including old service calls still in flight.
+        self.busy: set[str] = state.setdefault("beta_busy", set())
+        self.uncertain: set[str] = state.setdefault("beta_uncertain", set())
+        self.batch_devices: dict[str, str] = {}
+        self.closed = False
+
+    def close(self) -> None:
+        self.closed = True
+        for prepared in (*self.pending.values(), *self.confirming.values()):
+            prepared.permit.close()
+        self.pending.clear()
+
+    def close_permit(self, permit: SendPermit, *, disconnected: bool = False) -> None:
+        """Invalidate waiting and validating work when the connection disappears."""
+        permit.close(disconnected=disconnected)
+        self.pending = {k: v for k, v in self.pending.items() if v.permit is not permit}
+
+    def _discard_pending(self, predicate: Callable[[Confirmation], bool]) -> None:
+        for token, prepared in tuple(self.pending.items()):
+            if predicate(prepared):
+                self.pending.pop(token)
+                prepared.permit.close()
+
+    async def _authorized(self, user_id: str, device_id: str | None = None) -> Any:
+        from .device_access import AccessDenied, active_user, authorize_device
+        try:
+            if device_id is None:
+                user = await active_user(self.hass, user_id)
+                require(user.is_admin, "unauthorized")
+                snapshot = None
+            else:
+                snapshot = await authorize_device(self.hass, user_id, device_id)
+        except AccessDenied:
+            raise BetaTestBlocked("unauthorized") from None
+        require(not self.closed and self.hass.data.get(DOMAIN, {}).get("beta_sender") is self,
+                "not_configured")
+        return snapshot
+
+    async def _read(self, device_id: str, zone_id: int, **kwargs: Any) -> Target:
+        try:
+            return await read_target(self.hass, device_id, zone_id, **kwargs)
+        except BetaTestBlocked:
+            raise
+        except Exception:
+            raise BetaTestBlocked("adapter_data") from None
+
+    async def prepare(
+        self, user_id: str, device_id: str, zone_id: int, acknowledge: bool, context: Any,
+        *, source: dict | None = None, permit: SendPermit | None = None,
+    ) -> dict:
+        require(acknowledge is True, "acknowledgement")
+        access_snapshot = await self._authorized(user_id, device_id)
+        require(device_id not in self.busy and device_id not in self.batch_devices, "busy")
+        require(device_id not in self.uncertain, "outcome_unknown")
+        self.busy.add(device_id)
+        permit = permit if permit is not None else SendPermit()
+        try:
+            # Starting a fresh preparation invalidates older confirmations for
+            # this user even when the refresh subsequently fails.
+            self._discard_pending(lambda prepared: prepared.user_id == user_id)
+            require(permit.active, "connection_changed")
+            recipe, repository = None, None
+            phase = CookingPhase(**TEST_SETTINGS)
+            if source is not None:
+                require(isinstance(source, dict), "source")
+                if set(source) == {"recipe_id"}:
+                    recipe_id = source["recipe_id"]
+                    require(isinstance(recipe_id, str) and 0 < len(recipe_id) <= 128, "source")
+                    repository = self.hass.data[DOMAIN]["repository"]
+                    try:
+                        recipe = await repository.async_get(recipe_id)
+                    except RecipeNotFoundError:
+                        raise BetaTestBlocked("recipe_changed") from None
+                    require(len(recipe.phases) == 1, "source")
+                    phase = recipe.phases[0]
+                else:
+                    require(set(source) == {"settings"} and isinstance(source["settings"], dict), "source")
+                    raw = source["settings"]
+                    require(set(raw) == {"program", "temperature_c", "duration_minutes"}, "source")
+                    phase = CookingPhase(**raw)
+                    require(phase.program == raw["program"], "source")
+                validate_settings(phase)
+            require(await self._authorized(user_id, device_id) == access_snapshot, "unauthorized")
+            require(permit.active, "connection_changed")
+            extra = {"settings": phase} if source is not None else {}
+            target = await self._read(device_id, zone_id, refresh=True, context=context, **extra)
+            require(await self._authorized(user_id, device_id) == access_snapshot, "unauthorized")
+            require(permit.active, "connection_changed")
+            if recipe is not None:
+                require(repository.matches_snapshot(recipe), "recipe_changed")
+            now = time.monotonic()
+            self._discard_pending(lambda prepared: prepared.expires <= now)
+            require(len(self.pending) < 32, "busy")
+            token = secrets.token_urlsafe(32)
+            self.pending[token] = Confirmation(user_id, device_id, zone_id, target, now + TTL_SECONDS,
+                                               phase, recipe, repository, source is not None, permit, access_snapshot)
+            return {"mode": "supervised_beta_test", "token": token, "expires_seconds": TTL_SECONDS,
+                    "device_id": device_id, "device_name": target.name, "zone_id": zone_id,
+                    "settings": asdict(phase), "recipe_name": recipe.name if recipe else None,
+                    "transmitted": False,
+                    "compatibility_verified": False}
+        except BaseException:
+            permit.close()
+            raise
+        finally:
+            self.busy.discard(device_id)
+
+    async def confirm(self, user_id: str, token: str, acknowledge: bool, context: Any,
+                      *, owner: Any = None) -> dict:
+        require(acknowledge is True, "acknowledgement")
+        require(isinstance(token, str) and 0 < len(token) <= 128, "confirmation")
+        prepared = self.pending.get(token)
+        require(prepared is not None and prepared.user_id == user_id, "confirmation")
+        require(prepared.permit.owner is owner and prepared.permit.active, "connection_changed")
+        self.pending.pop(token)  # Consume before any await, including failed validation.
+        device_id = prepared.device_id
+        locked = False
+        self.confirming[token] = prepared
+        try:
+            require(await self._authorized(user_id, device_id) == prepared.access_snapshot, "unauthorized")
+            require(time.monotonic() < prepared.expires, "confirmation")
+            require(device_id not in self.busy and device_id not in self.batch_devices, "busy")
+            require(device_id not in self.uncertain, "outcome_unknown")
+            self.busy.add(device_id)
+            locked = True
+            extra = {"settings": prepared.phase} if prepared.variable else {}
+            target = await self._read(device_id, prepared.zone_id, **extra)
+            require(target.fingerprint == prepared.target.fingerprint, "state_changed")
+            require(await self._authorized(user_id, device_id) == prepared.access_snapshot, "unauthorized")
+            require(prepared.permit.active, "connection_changed")
+            require(time.monotonic() < prepared.expires, "confirmation")
+            if prepared.recipe is not None:
+                require(self.hass.data[DOMAIN].get("repository") is prepared.repository
+                        and prepared.repository.matches_snapshot(prepared.recipe), "recipe_changed")
+            phase = prepared.phase
+            validate_settings(phase)
+            try:
+                unchanged = target.unchanged()
+            except Exception:
+                unchanged = False
+            require(unchanged, "state_changed")
+            return await self.send_once(device_id, prepared.zone_id, phase, context,
+                                        recipe_id=prepared.recipe.id if prepared.recipe else None)
+        finally:
+            self.confirming.pop(token, None)
+            prepared.permit.close()
+            if locked:
+                self.busy.discard(device_id)
+
+    async def cancel(self, user_id: str, token: str, *, owner: Any = None) -> dict:
+        """Discard pending work, including validation; never send a stop command."""
+        from .device_access import AccessDenied, active_user
+        try:
+            await active_user(self.hass, user_id)
+        except AccessDenied:
+            raise BetaTestBlocked("unauthorized") from None
+        require(not self.closed and self.hass.data.get(DOMAIN, {}).get("beta_sender") is self, "not_configured")
+        require(isinstance(token, str) and 0 < len(token) <= 128, "confirmation")
+        prepared = self.pending.get(token) or self.confirming.get(token)
+        if prepared is None:
+            return {"discarded": False, "transmitted": False}
+        require(prepared.user_id == user_id and prepared.permit.owner is owner, "confirmation")
+        self.close_permit(prepared.permit)
+        return {"discarded": True, "transmitted": False}
+
+    async def recover(self, user_id: str, device_id: str, ack: bool, context: Any) -> dict:
+        """Explicit local re-arm after physical reset; read-only, never a retry."""
+        require(ack is True, "acknowledgement")
+        access_snapshot = await self._authorized(user_id, device_id)
+        require(device_id not in self.busy and device_id not in self.batch_devices, "busy")
+        self.busy.add(device_id)
+        try:
+            target = await self._read(device_id, 1, refresh=True, wait_for_report=True, context=context)
+            require(await self._authorized(user_id, device_id) == access_snapshot, "unauthorized")
+            require(target.unchanged(), "state_changed")
+            self._discard_pending(lambda prepared: prepared.device_id == device_id)
+            self.uncertain.discard(device_id)
+            return {"rearmed": True, "transmitted": False}
+        finally:
+            self.busy.discard(device_id)
+
+    async def send_once(self, device_id: str, zone_id: int, phase: CookingPhase, context: Any,
+                        *, recipe_id: str | None = None) -> dict:
+        """One public transport attempt; caller owns validation and per-device lock."""
+        # This is the only control call. Never invoke raw, SYNC/MATCH or a
+        # start-capable service, and never trust upstream cached confirmation.
+        try:
+            self.uncertain.add(device_id)
+            result = await self.hass.services.async_call(
+                UPSTREAM, "programm_senden",
+                {"geraet": device_id, "zone": zone_id, "programm": phase.program,
+                 "temperatur": phase.temperature_c, "minuten": phase.duration_minutes, "variante": "multi_app",
+                 "einmal": True, "streng": True, "bestaetigen": False},
+                blocking=True, return_response=True, context=context,
+            )
+        except asyncio.CancelledError:
+            raise  # Uncertain latch remains set; never permit a replay.
+        except Exception:
+            return self._result("unknown")
+        if isinstance(result, dict) and result.get("ok") is False and result.get("ergebnis") == "abgelehnt":
+            rejected = self._result("rejected")
+            code = result.get("code")
+            rejected["error_code"] = code if type(code) is int and -(2**31) <= code < 2**31 else None
+            return rejected
+        # Only accept a complete, exact response contract. Nothing from the
+        # upstream response (including error strings or raw data) is exposed.
+        exact = {"programm": phase.program, "temperatur": phase.temperature_c,
+                 "minuten": phase.duration_minutes, "zone": zone_id}
+        if (isinstance(result, dict) and result.get("ok") is True
+                and result.get("ergebnis") == "angenommen"
+                and type(result.get("versuche")) is int and result["versuche"] == 1
+                and result.get("variante") == "multi_app" and result.get("gesendet") == exact
+                and all(type(result["gesendet"][k]) is type(v) for k, v in exact.items())):
+            self.uncertain.discard(device_id)
+            accepted = self._result("accepted")
+            history = self.hass.data.get(DOMAIN, {}).get("sent_settings")
+            if history is not None:
+                try:
+                    await history.record(device_id, zone_id, phase, recipe_id)
+                    accepted["history_saved"] = True
+                except Exception:
+                    # The command already succeeded; never turn a storage
+                    # failure into a resend or a false transmission failure.
+                    accepted["history_saved"] = False
+            return accepted
+        return self._result("unknown")
+
+    @staticmethod
+    def _result(outcome: str) -> dict:
+        return {"mode": "supervised_beta_test", "attempted": True, "outcome": outcome,
+                "accepted_by_adapter": outcome == "accepted", "confirmed_on_device": False,
+                "compatibility_verified": False, "automatic_retry": False}

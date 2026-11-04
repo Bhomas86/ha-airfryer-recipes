@@ -1,66 +1,38 @@
-# Local test checklist — appliance tests
+# Local acceptance checklist
 
-[English](LOCAL_TEST_CHECKLIST.md) | [Deutsch](LOCAL_TEST_CHECKLIST.de.md)
+[Deutsch](LOCAL_TEST_CHECKLIST.de.md) | [English](LOCAL_TEST_CHECKLIST.md)
 
-**This project has read-only device discovery but no live send adapter or dashboard.** Do not run these
-steps until the corresponding phase has been implemented and a beta build is
-available for manual installation. Real tests take place only in the owner's
-Home Assistant environment; Cloud Codex and GitHub Actions must not contact
-the local network or real VeSync device.
+Current: **b23**, exactly **Airfryer Control 1.0.3-beta.3** for supervised settings on CAF-DC111S-AEU. The dashboard, recipe manager, whole-device grants, private artwork and supervised sender are implemented. [Current review and evidence](reports/FINAL_REVIEW.md). Real HA/appliance checks are performed only by the owner; cloud Codex and Actions have no LAN/appliance access.
 
-## Before any real-device test
+## Focused b22 save/restart check
 
-- [ ] Record Home Assistant, HACS integration and adapter versions.
-- [ ] Confirm backup and working upstream Airfryer Control integration.
-- [ ] Check appliance is empty, unobstructed and attended.
-- [ ] Verify recipe app test mode means **no actual device commands**.
-- [ ] Verify live mode still requires a deliberate Send action.
-- [ ] Check current state of each zone; never assume stale state means idle.
-- [ ] Confirm manual start is required at the device and no unexpected heater start occurs.
+This checks the corrected persistence path and requires no appliance transmission. The card, whole-device grant flow, completed 44-step reported-value sequence and Proof recipe test are owner-confirmed; do not automatically repeat all device settings for these storage fixes.
 
-## Independent zone testing
+1. Install b22, restart HA and reopen the app. Keep the card in test mode.
+2. Save a harmless recipe edit (for example its description), change a personal favorite and confirm both changes succeeded. If a spare recipe is available, mark it as a favorite, delete it as admin, then change another favorite; no stale deleted reference should prevent saving. There is no need to create 501 favorites manually.
+3. Note the current Proof recipe, device photo/zone positions, selected A/B style, device grants and separate last-sent values for both zones.
+4. Restart HA and fully reopen the app. Check the recipe edit/favorite and noted settings are retained; the granted ordinary user still sees the intended device. No old confirmation or automatic settings transmission may resume.
+5. Report PASS / FAIL / NOT TESTED with installed versions and the specific observation. The owner has now reported this b22 save/restart check passed. The b23 label-only change does not require repeating the storage or 44-step appliance tests.
 
-- [ ] Select a reported device/zone in the administrator panel; preview explicitly says nothing was transmitted.
-- [ ] With Airfryer Control `1.0.2-beta.1` or newer, verify the program dropdown matches `faehigkeiten`; estimated/unverified entries are visibly labeled and an unreported saved-recipe program is not silently replaced.
-- [ ] Check a saved recipe and manual values separately in preview; desired values remain unchanged.
-- [ ] Device discovery without/broken Airfryer Control does not affect recipe management.
-- [ ] Check preview in German and English and with °C/°F user settings.
-- [ ] Send test mode settings to zone 1; no real transmission occurs.
-- [ ] Send test mode settings to zone 2; no real transmission occurs.
-- [ ] Send simple supported settings to idle zone 1 and inspect appliance display.
-- [ ] Send simple supported settings to idle zone 2 and inspect appliance display.
-- [ ] Verify no unintended changes in the other zone.
-- [ ] Verify program, target temperature and time individually (if supported).
-- [ ] During active cooking, verify default blocking.
-- [ ] After admin opt-in, verify confirmation and adapter support before changes.
-- [ ] Verify no automatic heater start.
-- [ ] Offline and unknown state: controls disabled; graphic grayed out.
-- [ ] Disconnect/reconnect: no automatic retry or queued commands.
-- [ ] Upstream integration removed: recipe editor still works.
+## Permissions and failure regression, when relevant
 
-## Data and localization
+- [ ] New ordinary user has no device by default. A whole-device grant exposes both zones and all reported programs; revocation removes new reads/sends after refreshing. No per-zone/program/menu grants.
+- [ ] Ordinary users cannot use admin recipe mutations/import/export, image writes, grant management or batch tools, even through direct WebSocket calls. Personal favorites belong only to the authenticated user.
+- [ ] Test mode sends no device control command. Unknown/offline/cooking states block settings; connection loss/reconnect never retries an old command.
+- [ ] Missing/broken Airfryer Control leaves recipe management usable. A different controller version cannot pass the pinned supervised contract.
+- [ ] Invalid import/future schema leaves original data unchanged. Test backup recovery only on a disposable copy; no migration is claimed for schema version 1.
+- [ ] If a storage error occurs naturally, the UI must not falsely confirm saving. An accepted device transmission with failed history saving must remain accepted and must not be resent merely to save it. Do not damage production storage to provoke errors; automated tests cover simulated failures.
 
-- [ ] Without Airfryer Control, open the “Airfryer Recipes” admin sidebar on a phone; verify there is no horizontal overflow.
-- [ ] Create, edit, duplicate and confirm deletion; verify saved recipes remain after restarting HA.
-- [ ] Choose an existing category in the recipe editor; “Add new category” is last and reuses an existing name when only letter case differs.
-- [ ] Test shared and personal favorites separately; a second user's personal favorites remain independent.
-- [ ] Preview JSON imports with matching names/IDs and apply only after deliberate selection; verify export uses `Airfryer-Rezepte-Home-Assistant.json`.
-- [ ] As a regular user, verify the admin panel is inaccessible and write WebSocket commands are denied.
-- [ ] Create/edit/delete/duplicate/export/import in both languages.
-- [ ] Import an invalid JSON file and a future schema version; preserve data.
-- [ ] Check schema migration backup and rollback using a test copy only.
-- [ ] Verify normal users cannot modify recipes or safety preferences.
-- [ ] Check °C/°F presentation, device-specific limits and range warnings.
-- [ ] Inspect diagnostic preview for any secrets before sharing.
-- [ ] Compare German and English reports and release notes for completeness.
+## Existing user workflows
 
-## Future SYNC / MATCH test (not MVP)
+- [ ] Recipe create/edit/copy/confirmed delete, categories, tags, search and shared/personal favorites; duplicate names/case handling.
+- [ ] Versioned JSON import preview and explicit conflict choice; authenticated named export excludes device images, grants and account data.
+- [ ] Recipe/manual source selection, zone-specific drafts/history, either zone selectable without sending, correct reported programs including Proof and unverified provenance.
+- [ ] A shows thin active outline/small markers; B keeps configured photo zones invisible and tappable. Designer rectangles stay visible, scale with the image and persist after Save appearance. Card A/B choice uses the separate HA Save button.
+- [ ] German/English UI and °C/°F display; stored temperatures remain Celsius. Native keyboard/accessibility/mobile variants not explicitly reported remain separate checks.
 
-- [ ] Confirm the exact HA actions and required argument ordering.
-- [ ] Configure both zones with different durations.
-- [ ] Run SYNC only in supported, approved appliance state.
-- [ ] Verify correct device display and manual-start behavior.
-- [ ] Run MATCH separately and verify equal settings only.
-- [ ] Verify unsupported model safely hides/disables both controls.
+For the large supervised temperature run, use [the exact table/procedure](reports/ISSUE_7_CONTROLLER_BETA3.md). It contains 44 settings on both zones, not cooking or duration-boundary acceptance. Remain beside the empty appliance, do not press Start, and cancel final preparations physically.
 
-Document each test as PASS / FAIL / NOT TESTED, with reproducible notes.
+## Release status and later work
+
+Before candidate/stable promotion, retain the focused native restart result and official HACS/Hassfest validation. Local mock/metadata tests are recorded separately; no Actions may run until the owner changes that instruction. Diagnostics export, guided onboarding, notifications, active-zone modification and SYNC/MATCH are planned separately and must not be presented as implemented here. Record any real check as PASS / FAIL / NOT TESTED, with version, expected/actual outcome and no credentials, cloud IDs or raw diagnostic dumps.

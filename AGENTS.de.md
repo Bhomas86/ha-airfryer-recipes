@@ -84,7 +84,11 @@ Aktion: Modell vor der Implementierung bestätigen lassen.
 8. Home-Assistant-Async-Regeln beachten; keine blockierenden Dateizugriffe im Event-Loop und keine Umgehung der Berechtigungen.
 9. Entscheidungen unter `docs/REQUIREMENTS.md` / `docs/REQUIREMENTS.de.md` sowie Zeitplanung unter `docs/ROADMAP.md` / `docs/ROADMAP.de.md` festhalten. Geplante Funktionen nie als fertig bezeichnen.
 
+**Aktuelle Eigentümervorgabe (30.10.2026): Für weitere Updates vorerst keine GitHub Actions auslösen; ausschließlich lokal prüfen. Diese Vorgabe hat Vorrang vor den nachfolgenden allgemeinen Budgetregeln. Bei späterer Veröffentlichung automatische PR-/Push-Läufe ebenfalls unterdrücken (z. B. `[skip ci]` im Commit); keine Workflows manuell starten.**
+
 ## GitHub-Actions-Budget (ab 30.10.2026)
+
+**Eigentümervorgabe (02.11.2026): Nur die aktuelle Beta veröffentlicht lassen. Nach Veröffentlichung einer neuen Beta prüfen, dass Release/Tag auf den getesteten Commit zeigen, dann ältere veröffentlichte Beta-Releases als Entwurf setzen (`draft: true`). Tags, Commits und Assets erhalten; nichts löschen und stabile Releases nicht ändern. Scheitern Veröffentlichung/Prüfung, die vorherige Beta aktiv lassen. Abschließende Release-Liste prüfen. Gilt für dieses Repository und benötigt keine erneute Erlaubnisfrage.**
 
 - GitHub Actions sparsam nutzen; das verfügbare Kontingent ist begrenzt.
 - Während der Entwicklung zuerst gezielte lokale Prüfungen ausführen, Änderungen bündeln und nur kleine, relevante automatische Jobs nutzen.
@@ -92,6 +96,7 @@ Aktion: Modell vor der Implementierung bestätigen lassen.
 - Die vollständige Python-Matrix und umfassende Validierungen am Ende eines größeren Abschnitts bzw. vor einer Freigabe ausführen. Keine unveränderten Prüfungen ohne neuen Grund wiederholen.
 - Keine automatischen Doppelprüfungen für denselben Stand bei PR und anschließendem Merge. Erforderliche Sicherheits- und Release-Prüfungen bleiben verpflichtend; ihren Umfang passend zum Abschnitt planen.
 - Vollständige Offline-Prüfung: Workflow „Offline unit tests“ manuell mit `full_suite=true`. HACS/Hassfest bei relevanten Metadatenänderungen oder über den manuellen Workflow „Home Assistant and HACS validation“.
+- Ein abgeschlossener Abschnitt kann die vollständige Matrix im einmaligen PR-Lauf mit `[full-ci]` im PR-Titel anfordern. Das vermeidet einen separaten doppelten Lauf vor einer Beta; die Kennzeichnung nicht für Zwischenschritte verwenden.
 
 ## Referenzen
 

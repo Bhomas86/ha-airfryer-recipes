@@ -2,6 +2,20 @@
 
 [English](REQUIREMENTS.md) | [Deutsch](REQUIREMENTS.de.md)
 
+**b23 (2026-11-04):** Owner confirms the focused b22 save/restart check and requests removal of unverified limit/send comments. Program selections now display only localized names; missing-program warnings and backend capability data/checks remain. Official HACS/Hassfest evidence is still separate. [Change and checks](releases/0.1.0b23.md).
+
+**b22 final review (2026-11-04):** Owner confirms the completed 44-step reported-value sequence, card and Proof recipe workflow. Fix favorite capacity/deleted-reference accumulation and verify native Store files after writes. 232 Python tests per 3.12/3.14 plus 125 frontend tests passed. Current native save/restart and official HACS/Hassfest evidence remain pending before a candidate. [Review and scope](reports/FINAL_REVIEW.md).
+
+**b21 (2026-11-04):** Owner confirms both b20 styles; B becomes first/default without a standalone UI release. Review/pin controller 1.0.3-beta.3, enable model-specific temperatures and Proof with unverified provenance, and expand the supervised run to 44 settings on both zones. Native endpoint/Proof acceptance pending. [Review and test table](reports/ISSUE_7_CONTROLLER_BETA3.md).
+
+**b20 (2026-11-04):** Owner requests both approved artwork designs as a card setting. A uses a thin active outline and small markers; B uses invisible but tappable configured image zones, with visible selection beside the photo. Designer rectangles stay visible for positioning. Implemented; native acceptance pending. [Settings and checks](releases/0.1.0b20.md).
+
+**b19 (2026-11-03):** Owner confirms b18 custom-image saving after a page reload. Add same-page card refresh after successful saves, refresh on reattachment and visible save feedback; preserve device permissions and cooking drafts. New native refresh acceptance pending. [Fix and local checks](releases/0.1.0b19.md).
+
+**b18 (2026-11-03):** Owner confirmed b17 editor. Private device gallery/uploads and relative zone boxes with admin-only writes implemented; new native acceptance pending. [Setup and limits](releases/0.1.0b18.md).
+
+**b17 (2026-11-03):** Three local b16 grant checks passed. Add card sizes, independent graphic size and status/history display switches; preserve defaults and backend checks. [Implementation and checks](releases/0.1.0b17.md).
+
 Status: **Agreed product requirements, not an implemented feature list**.
 Last consolidated: 2026-10-24. Project language policy: English default UI language; complete English and German documentation, with German-first reports to the project owner.
 
@@ -21,11 +35,11 @@ Last consolidated: 2026-10-24. Project language policy: English default UI langu
 | 10 | Optional completion notifications (B) | Disabled by default; opt into mobile push to chosen recipient/device; only on reliable completion signal. |
 | 11 | Rich recipe organization (C) | Categories, favorites, search, free-form tags, recently used. In the recipe editor, choose an existing category or add a new one as the final option; reuse names that differ only in letter case. |
 | 12 | JSON import and export (B) | Single or all recipes; validate schema and detect duplicates; use a human-readable export filename. Keep local HA backups. |
-| 13 | Visual card editor + device personalization (B+) | Toggle labels/status/timer, choose graphic size; 'Customize Airfryer' opens gallery, own image upload, drag/drop zone hotspot positions stored in relative coordinates per device, and reset. Include a 'Missing your model?' GitHub issue link. |
+| 13 | Visual card editor + device personalization (B+) | Toggle labels/status/timer, choose graphic size; 'Customize Airfryer' opens gallery, own image upload, drag/drop zone hotspot positions stored in relative coordinates per device, and reset. Include a 'Missing your model?' GitHub issue link. Per-card A/B setting: A shows a subtle active outline and small zone markers; B keeps the same configured touch areas invisible on the active dashboard. Positioning/resizing rectangles remain visible in the designer (owner decision 2026-11-04). Both styles accepted; B is first/default when no explicit style is configured (owner decision 2026-11-04). |
 | 14 | Automatic discovery + profile fallback (B) | Detect model, zones and supported capabilities from adapters where possible; verified profiles fill gaps. Once the adapter exists, offer verified cooking programs as choices in the recipe editor while keeping recipes device-independent. Unknown controls remain off. |
 | 15 | Manual retry, offline UI (B+) | Show sending/error details; preserve selected settings; never auto-retry. Offline graphic grayed out and sending disabled; show distinct unknown state. |
 | 16 | Independent recipe library (B) | Missing or broken Airfryer Control must not prevent editing/importing/exporting recipes. |
-| 17 | Two permission levels (B) | Administrators edit/delete recipes and configure safety; normal HA users may select recipes and manually control permitted zones. Enforce in backend. |
+| 17 | Two permission levels (B) | Administrators edit/delete recipes and configure safety; normal HA users may select recipes and manually control explicitly shared whole devices, including every zone and available program. No per-zone/program/menu grants (owner correction 2026-11-02). Enforce in backend. |
 | 18 | Localization and units | English and German as for Battery Flow Card; **English default/fallback**. Use HA user language; temperature displayed according to HA °C/°F setting, stored in Celsius. User recipe names are not auto-translated. |
 | 19 | Versioned data with migrations (B) | Persist locally; migrate on updates only after backup; preserve originals on failure; HACS updates do not replace storage. |
 | 20 | Device compatibility adaptation (B) | Offer only verified cooking programs of the selected air fryer in device controls. If program/time/temp is unsupported, warn and propose available substitutions; require explicit user approval; original recipe unchanged. |
@@ -73,10 +87,41 @@ Last consolidated: 2026-10-24. Project language policy: English default UI langu
 
 ## Validation and acceptance
 
-- Real device currently proven via upstream Airfryer Control: **Cosori Turbo
-  Tower Pro Smart CAF-DC111S-AEU**, zone 2 temperature/time transmission.
-- This does **not** confirm upstream SYNC/MATCH on the device or any
-  functionality in this new project.
+- Owner accepted the basic card flow: sends to both zones, reuse after physical reset, separate last-sent settings and persistence across HA restart. b16 adds explicit whole-device grants for ordinary users with backend enforcement and an admin management section. New native permission acceptance remains pending; ordinary users have no grants by default. [Evidence, scope and checklist](reports/ISSUE_8_DEVICE_ACCESS.md).
+
+- 2026-11-02: Owner confirms b14 card display after manually adding the dashboard module resource. Beta b15 implements automatic resource creation/update, preserving that entry; automatic native acceptance and card transmission/history tests remain pending. Only the current beta stays published; older betas become drafts after new-release verification, with tags/code/assets preserved. [Evidence, implementation and release policy](reports/ISSUE_8_CARD_RESOURCES.md).
+
+- Beta 0.1.0b14 corrects a reproduced duplicate-element module failure after the owner reported the card missing on b13. The card now imports the current exported base class; existing panel registrations are preserved. No send/permission/storage changes. Native verification remains pending. [Evidence and module-resource fallback](reports/ISSUE_8_CARD_LOADING.md).
+
+- Owner-approved neutral card design 1A is implemented in beta 0.1.0b13: original stacked-drawer illustration, tappable zones, recipe/manual values and persistent accepted settings separately per device/zone. Switching zones sends nothing. New cards default to server-enforced dry run; live mode reuses administrator-only supervised beta. Normal-user device ACLs and native card acceptance remain pending. [Scope, installation and checks](reports/ISSUE_8_DASHBOARD_CARD.md).
+
+- Owner-confirmed local acceptance on **Cosori Turbo Tower Pro Smart
+  CAF-DC111S-AEU**: the complete supervised twelve-setting sequence passed on
+  both zones on 2026-11-01, and the appliance was off afterward. See the
+  [exact settings and evidence scope](reports/ISSUE_7_LOCAL_ACCEPTANCE.md).
+- The owner subsequently confirmed saved-recipe transmission on zones 1 and 2 (R1/R2); R3–R7 remain pending for real acceptance. [Follow-up](reports/ISSUE_7_LOCAL_ACCEPTANCE.md).
+- This does not establish all temperature/duration endpoints, Proof,
+  active-zone changes, SYNC/MATCH or general compatibility.
 - Code review, tests and documented local test outcomes precede stable releases.
 
 Implementation note for requirements 14/15/26: Issue #7 exposes read-only discovery with disabled control capabilities. Airfryer Control `1.0.2-beta.1` adds the public read-only `faehigkeiten` service; the administrator preview allowlists its reported programs, ranges, provenance, connection, report time and revision. Estimated or unreported programs remain visibly unverified and never authorize transmission. The administrator-only `prepare_send` API and its [phone UI](reports/ISSUE_7_DRY_RUN_UI.md) remain server-enforced dry run and cannot transmit. See the [send contract](reports/ISSUE_7_COMMAND_CONTRACT.md) and [review](reports/ISSUE_7_DISCOVERY.md).
+
+Beta acceptance decision on 2026-10-30: At the owner’s explicit request, implement a separate administrator-only supervised test transmission before real acceptance for CAF-DC111S-AEU, zone 1/2, Air Fry 170 °C and one minute. This is a bounded initial-test exception, not general send permission from estimated capabilities. Normal control remains blocked; see the [beta test contract and procedure](reports/ISSUE_7_BETA_SEND.md).
+
+Correction 0.1.0b4: Supervised preparation requests exactly one new read-only device report through an eligible HA sensor. Old reports are never made artificially fresh; freshness, permissions and device gates remain mandatory. [Evidence and local acceptance](reports/ISSUE_7_STATUS_REFRESH.md).
+
+Beta 0.1.0b5: At the owner’s request, supervised recipe/manual transmission for all six currently reported IDs in the reviewed contract. No general model approval. [Implementation and limits](reports/ISSUE_7_RECIPE_SEND.md), [60-case acceptance](reports/BETA_0_1_0B5_TEST_PLAN.md). Local validation only; no GitHub Actions.
+
+Owner decision: one confirmation for the complete supervised list, then sequential single steps with fresh state checks and stopping. Beta 0.1.0b6 contains at most twelve ordinary test settings across both zones, not automatic cooking. [Implementation and acceptance](reports/ISSUE_7_GUIDED_BATCH.md). No GitHub Actions.
+
+Owner requirement: a supervised stopped test must allow a new attempt without HA restart. Beta 0.1.0b7 permits explicit re-arming only after a fresh idle-state check, invalidating old tokens; no replay. [Implementation and unresolved failure](reports/ISSUE_7_MANUAL_RECOVERY.md). No GitHub Actions.
+
+Beta 0.1.0b8: Integrate owner-identified zone switches to end own prepared settings before program changes. Fresh per-zone checks, turn_off only, no global stop. [Behavior and acceptance](reports/ISSUE_7_ZONE_RESET.md). No GitHub Actions.
+
+Beta 0.1.0b9: Both individual-test buttons use the same form selection; scroll confirmation/errors into view. Limit Dry to 35–95 °C (owner report); sequence uses 55 °C / 360 minutes after successful single tests on both zones. This does not establish a minimum duration. [Correction and acceptance](reports/ISSUE_7_SELECTED_TEST_SETTINGS.md). No GitHub Actions.
+
+Beta 0.1.0b10: Store and display seven owner-reported Turbo Tower temperature ranges separately from adapter capabilities. Supervised sending additionally enforces model limits while retaining reviewed adapter bounds; full ranges and Proof require an upstream change. [Profile and intersection](reports/ISSUE_7_MODEL_TEMPERATURES.md). No GitHub Actions.
+
+Beta 0.1.0b11: Bind recipe/manual confirmations to the websocket; support server revocation before control submission, reject stale UI replies and offline requests. Twelve recipe transmissions simulated through routes/repository/sender with unchanged data. [Implementation and seven focused appliance cases](reports/ISSUE_7_RECIPE_LIFECYCLE.md). New real acceptance pending; dashboard with backend user permissions follows. Proof/wider temperatures deferred. No GitHub Actions.
+
+Beta 0.1.0b12: Recipe editor dropdown uses programs reported by the selected air fryer; save exact identifiers and correct old identifiers only after explicit selection and saving. Custom/no-adapter input remains supported and drafts survive rerenders. [Implementation and repeated recipe acceptance](reports/ISSUE_7_EDITOR_PROGRAM_PICKER.md). This does not authorize sending or add programs. No GitHub Actions.

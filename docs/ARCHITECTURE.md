@@ -2,6 +2,8 @@
 
 [English](ARCHITECTURE.md) | [Deutsch](ARCHITECTURE.de.md)
 
+**b22 storage clarification:** HA Store can log write errors without raising. Application stores now request atomic writes and independently verify the file in HA’s executor before publishing changed state; cache reads are not persistence evidence. No private HA write method or event-loop file I/O is used. [Review](reports/FINAL_REVIEW.md).
+
 **Decision ADR-001 / Requirement 31: Modular Home Assistant custom integration.** Approved 2026-10-24. This document defines the target architecture. Recipe storage, the WebSocket API and the administrator panel are merged through PR #16. Read-only discovery, an administrator-only server-enforced dry-run preview and its administrator-panel view are implemented as parts of Issue #7; device control, dashboard and diagnostics remain planned. See the [upstream contract review](reports/ISSUE_7_DISCOVERY.md).
 
 ## Objectives and deployment
@@ -25,6 +27,8 @@ The domain is `airfryer_recipes`. Home Assistant OS on Proxmox is a target deplo
 | Diagnostics | Export allowlisted technical data; local errors with redaction and review notice | Export passwords, tokens, cookies, IP addresses or user/device identifiers |
 
 ## Frontend/backend contract
+
+Beta b16 adds an authenticated, strictly allowlisted `control` endpoint for ordinary users and admin-only `access_list`/`access_set`. Authorize whole devices per user, never individual zones/programs/menus. Use active HA accounts, fail-closed versioned grant storage and current permissions/revision checks during preparation/final validation; preserve connection-bound single-use confirmations and all device safety gates. Admin legacy/test endpoints stay admin-only. [Implementation and limitations](reports/ISSUE_8_DEVICE_ACCESS.md).
 
 Use **authenticated Home Assistant WebSocket commands** under `airfryer_recipes/*` for recipe lists, mutations, device capabilities, status, dry-run previews and send requests. The names below describe the target protocol. Recipe operations, administrator-only `devices`, and `prepare_send` as a dry-run preview are implemented. `device_state`, `confirm_send`, device preferences and diagnostics remain planned:
 
@@ -52,6 +56,10 @@ All device-control operations are routed through the command coordinator. By def
 The first device for manual verification is the **Cosori Turbo Tower Pro Smart CAF-DC111S-AEU**. Upstream Airfryer Control has already been used to send time and temperature to lower Zone 2. **SYNC and MATCH are upstream actions but their signatures and correct device behavior must be verified before optional dashboard controls are activated** (issue #1).
 
 ## UI and image resources
+
+Beta b15 persists its bundled module in the dashboard resource collection through HA's public collection API, with an explicit Lovelace dependency. It updates the existing manual entry instead of adding another one; YAML/missing/failed resource storage retains the extra-module fallback. No dashboard card instances or other resources are changed. [Implementation and accepted manual loading](reports/ISSUE_8_CARD_RESOURCES.md).
+
+The first dashboard beta (0.1.0b13) loads its local card module through HA's `add_extra_js_url` and shares the panel's connection/token lifecycle. It reuses administrator-only supervised transmission; ordinary-user device ACLs remain planned. Accepted snapshots use a separate versioned HA Store and an admin-only read endpoint, never a command queue. [Implementation and checks](reports/ISSUE_8_DASHBOARD_CARD.md).
 
 Two JavaScript entry points may share TypeScript/Lit components but should ship as locally bundled, versioned assets inside the integration. No runtime CDN dependency. Register frontend resources using supported Home Assistant mechanisms and avoid synchronous file I/O in the event loop. Preset images should be project-owned/licensed illustrations; user-uploaded images are stored locally with safe types, size limits and authenticated access. Store tappable zone hotspot locations in relative coordinates, with a neutral fallback for unknown devices and a button linking to GitHub issues for missing models.
 

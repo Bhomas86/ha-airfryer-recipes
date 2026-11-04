@@ -2,6 +2,8 @@
 
 [Deutsch](ARCHITECTURE.de.md) | [English](ARCHITECTURE.md)
 
+**b22-Speicherpräzisierung:** HA Store kann Schreibfehler nur protokollieren, ohne sie weiterzugeben. Anwendungsspeicher fordern jetzt atomares Schreiben an und prüfen die Datei unabhängig im HA-Executor, bevor Änderungen sichtbar werden; Cache-Lesen ist kein Persistenznachweis. Keine private HA-Schreibmethode oder Dateioperation in der Ereignisschleife verwendet. [Prüfung](reports/FINAL_REVIEW.de.md).
+
 **Architekturentscheidung ADR-001 / Anforderung 31: Modulare Home-Assistant-Integration.** Beschlossen am 24.10.2026. Dieses Dokument beschreibt die Zielarchitektur. Rezeptspeicher, WebSocket-API und Admin-Verwaltung sind über PR #16 gemergt. Lesende Geräteerkennung, eine adminpflichtige serverseitige Testvorschau und ihre Ansicht im Admin-Panel sind als Teile von Issue #7 implementiert; Gerätesteuerung, Dashboard und Diagnose bleiben geplant. Siehe [Prüfung des Upstream-Vertrags](reports/ISSUE_7_DISCOVERY.de.md).
 
 ## Ziel und Bereitstellung
@@ -25,6 +27,8 @@ Die Integrationsdomain lautet `airfryer_recipes`. Home Assistant OS auf Proxmox 
 | Diagnose | Erlaubte technische Daten exportieren, Fehlerdatenschutz und Nutzerhinweis | Passwörter, Tokens, Cookies, IPs oder Benutzer-/Gerätekennungen exportieren |
 
 ## Schnittstelle zwischen Frontend und Backend
+
+Beta b16 ergänzt den authentifizierten, auf feste Operationen beschränkten Endpunkt `control` für normale Benutzer und adminpflichtige `access_list`/`access_set`. Ganze Geräte je Benutzer autorisieren, niemals einzelne Fächer/Programme/Menüs. Aktive HA-Konten, bei Fehlern sperrenden versionierten Freigabespeicher und aktuelle Rechte-/Revisionsprüfungen während Vorbereitung/abschließender Validierung verwenden; verbindungsgebundene einmalige Bestätigungen und sämtliche Geräteprüfungen erhalten. Bisherige Admin-/Test-Endpunkte bleiben adminpflichtig. [Umsetzung und Grenzen](reports/ISSUE_8_DEVICE_ACCESS.de.md).
 
 Für Rezeptlisten, Änderungen, Gerätefähigkeiten, Status, Testmodus-Vorschauen und Sendebefehle verwenden wir **authentifizierte Home-Assistant-WebSocket-Befehle** unter `airfryer_recipes/*`. Die folgenden Namen beschreiben das Zielprotokoll. Rezeptoperationen, adminpflichtiges `devices` und `prepare_send` als Testvorschau sind implementiert. `device_state`, `confirm_send`, Gerätepräferenzen und Diagnose bleiben geplant:
 
@@ -52,6 +56,10 @@ Jeder echte Gerätebefehl läuft über den Befehlskoordinator. Während des Gare
 Erstes reales Testgerät ist die **Cosori Turbo Tower Pro Smart CAF-DC111S-AEU**. Über Airfryer Control wurden Temperatur und Zeit bereits erfolgreich an das untere Fach 2 übertragen. **SYNC und MATCH sind vorhandene Upstream-Aktionen**, müssen vor einer UI-Freigabe aber auf exakte Parameter, Reihenfolge und Geräteverhalten getestet werden (Issue #1).
 
 ## Oberfläche und Bilddateien
+
+Beta b15 hinterlegt ihr mitgeliefertes Modul über HAs öffentliche Sammlungs-API in den Dashboard-Ressourcen, mit ausdrücklicher Lovelace-Abhängigkeit. Sie aktualisiert den vorhandenen manuellen Eintrag statt eines weiteren; bei YAML/fehlendem/fehlerhaftem Ressourcenspeicher bleibt das Laden als Zusatzmodul erhalten. Dashboard-Karteninstanzen und andere Ressourcen werden nicht geändert. [Umsetzung und abgenommenes manuelles Laden](reports/ISSUE_8_CARD_RESOURCES.de.md).
+
+Die erste Dashboard-Beta (0.1.0b13) lädt ihr lokales Card-Modul über HAs `add_extra_js_url` und verwendet den Verbindungs-/Bestätigungsablauf des Panels mit. Sie nutzt die beaufsichtigte Übertragung ausschließlich für Administratoren; Backend-Geräterechte für normale Benutzer bleiben geplant. Angenommene Stände liegen in einem getrennten versionierten HA Store mit adminpflichtigem Lese-Endpunkt, niemals in einer Befehlswarteschlange. [Umsetzung und Prüfungen](reports/ISSUE_8_DASHBOARD_CARD.de.md).
 
 Zwei JavaScript-Einstiegspunkte dürfen gemeinsame TypeScript-/Lit-Komponenten nutzen, werden aber als lokal gebündelte, versionierte Dateien mit der Integration ausgeliefert. Keine CDN-Abhängigkeit zur Laufzeit. Die Registrierung nutzt unterstützte Home-Assistant-Mechanismen und vermeidet synchrone Dateizugriffe im Event-Loop. Mitgelieferte Gerätebilder sind eigene bzw. korrekt lizenzierte Illustrationen. Eigene Uploads werden lokal mit Größen-/Formatkontrolle und authentifiziertem Zugriff gespeichert. Die antippbaren Fachpositionen verwenden relative Koordinaten. Für unbekannte Modelle gibt es eine neutrale Grafik und den GitHub-Link „Modell fehlt?“.
 

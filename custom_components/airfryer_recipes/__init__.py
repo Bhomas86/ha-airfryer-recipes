@@ -1,6 +1,6 @@
 """Airfryer Recipes integration, local recipe persistence and WebSocket API.
 
-Airfryer Control is optional. No network/device control is implemented here.
+Airfryer Control is optional. Supervised beta tests use its public service only.
 """
 
 from __future__ import annotations
@@ -39,8 +39,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await favorites.async_load()
 
     state = hass.data.setdefault(DOMAIN, {})
+    if "device_access" not in state or not state["device_access"].available:
+        from .device_access import create_device_access
+        access = create_device_access(hass)
+        await access.async_load()
+        state["device_access"] = access
+    if "sent_settings" not in state or not state["sent_settings"].available:
+        from .sent_settings import create_sent_settings
+        history = create_sent_settings(hass)
+        await history.async_load()
+        state["sent_settings"] = history
     state["repository"] = recipes
     state["favorites"] = favorites
+    from .beta_send import BetaSender
+
+    state["beta_sender"] = BetaSender(hass)
     if not state.get("websocket_registered", False):
         register_commands(hass)
         state["websocket_registered"] = True
@@ -56,6 +69,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Disable API access when the integration entry is unloaded."""
     state = hass.data.get(DOMAIN)
     if state is not None:
+        sender = state.pop("beta_sender", None)
+        if sender is not None:
+            sender.close()
         state.pop("repository", None)
         state.pop("favorites", None)
         from .panel import async_remove_panel

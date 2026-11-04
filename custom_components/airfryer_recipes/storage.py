@@ -20,10 +20,10 @@ BACKUP_KEY = f"{DOMAIN}.recipes.backup"
 class _Persistence:
     def __init__(self, hass: Any) -> None:
         # The import is deferred so recipe tests work without Home Assistant.
-        from homeassistant.helpers.storage import Store
+        from .verified_storage import VerifiedStore
 
-        self._active = Store(hass, STORAGE_VERSION, STORAGE_KEY)
-        self._backup = Store(hass, STORAGE_VERSION, BACKUP_KEY)
+        self._active = VerifiedStore(hass, STORAGE_VERSION, STORAGE_KEY)
+        self._backup = VerifiedStore(hass, STORAGE_VERSION, BACKUP_KEY)
         self._previous: dict[str, Any] | None = None
 
     async def async_load(self) -> dict[str, Any] | None:

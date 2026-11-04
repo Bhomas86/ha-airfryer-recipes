@@ -1,0 +1,41 @@
+import test from 'node:test';import assert from 'node:assert/strict';import vm from 'node:vm';import {readFileSync} from 'node:fs';
+const source=readFileSync(new URL('../custom_components/airfryer_recipes/frontend/personalization.js',import.meta.url),'utf8');
+function editor(){let Class;const listeners={};const events=[];const context={window:{dispatchEvent:e=>events.push(e)},CustomEvent:class{constructor(type,options){this.type=type;Object.assign(this,options);}},HTMLElement:class{attachShadow(){this.shadowRoot={innerHTML:'',addEventListener:(name,fn)=>listeners[name]=fn,querySelector:()=>null};}},customElements:{get:()=>null,define:(name,c)=>Class=c},structuredClone,FileReader:class{}};vm.runInNewContext(source,context);const e=new Class();e._hass={user:{is_admin:true,id:'admin'},language:'de',callWS:async()=>({})};e.devices=[{device_id:'d',name:'Kitchen'}];e.device='d';return {e,listeners,events};}
+test('designer uses percentages, private data images and bilingual controls',()=>{const {e}=editor();e.render();assert.match(e.shadowRoot.innerHTML,/Airfryer individualisieren/);assert.match(e.shadowRoot.innerHTML,/left:5%;top:8%;width:90%;height:39%/);e._hass.language='en';e.render();assert.match(e.shadowRoot.innerHTML,/Customize Airfryer/);});
+test('drag updates only draft relative to preview dimensions',()=>{const {e,listeners}=editor();const target={dataset:{zone:'1'},parentElement:{getBoundingClientRect:()=>({width:200,height:200})},setPointerCapture(){},style:{}};listeners.pointerdown({target:{closest:()=>target},pointerId:1,clientX:0,clientY:0,preventDefault(){}});listeners.pointermove({target:{closest:()=>target},pointerId:1,clientX:10,clientY:10});assert.equal(e.draft.zones['1'][0],10);assert.equal(e.draft.zones['1'][1],13);assert.equal(e.saved.zones['1'][0],5);});
+test('reset and cancel send nothing; only save persists appearance',async()=>{const {e}=editor();const calls=[];e._hass.callWS=async r=>{calls.push(r);return {saved:true}};e.draft.preset='outline';await e.click({target:{closest:()=>({dataset:{action:'cancel'}})}});assert.equal(e.draft.preset,'stacked');await e.click({target:{closest:()=>({dataset:{action:'reset'}})}});assert.equal(calls.length,0);await e.click({target:{closest:()=>({dataset:{action:'save'}})}});assert.equal(calls[0].type,'airfryer_recipes/appearance_set');});
+test('ordinary users cannot request edits or see private draft',async()=>{const {e}=editor();e.saved.image='private';e.hass={...e._hass,user:{id:'other',is_admin:false}};e.render();assert.equal(e.saved.image,null);assert.match(e.shadowRoot.innerHTML,/Nur Administratoren/);await assert.rejects(e.request('appearance_get',{device_id:'d'}));});
+
+const save=e=>e.click({target:{closest:()=>({dataset:{action:'save'}})}});
+test('save shows progress and notifies cards only after persistence; event contains no image',async()=>{
+ const {e,events}=editor();let resolve;
+ e._hass.callWS=()=>new Promise(done=>{resolve=done;});
+ e.draft.preset='custom';e.draft.image='private-image';
+ const task=save(e);
+ assert.match(e.shadowRoot.innerHTML,/Darstellung wird gespeichert/);
+ assert.match(e.shadowRoot.innerHTML,/data-action="save" disabled/);
+ assert.equal(events.length,0);
+ resolve({saved:true});await task;
+ assert.equal(events.length,1);assert.equal(events[0].type,'airfryer-recipes-appearance-saved');
+ assert.deepEqual(JSON.parse(JSON.stringify(events[0].detail)),{device_id:'d'});
+ assert.equal(e.saved.image,'private-image');
+ assert.ok(e.shadowRoot.innerHTML.indexOf('Darstellung gespeichert.')<e.shadowRoot.innerHTML.indexOf('data-action="save"'));
+ assert.match(e.shadowRoot.innerHTML,/nur für geänderte Kartenoptionen/);
+});
+test('failed save keeps the last saved appearance and never refreshes cards',async()=>{
+ const {e,events}=editor();e.draft.preset='outline';e._hass.callWS=async()=>{throw Error('storage');};
+ await save(e);assert.equal(events.length,0);assert.equal(e.saved.preset,'stacked');
+ assert.match(e.shadowRoot.innerHTML,/konnte nicht geladen\/gespeichert/);assert.equal(e.busy,false);
+});
+test('successful save still notifies cards if HA detached the editor while waiting',async()=>{
+ const {e,events}=editor();let resolve;e._hass.callWS=()=>new Promise(done=>{resolve=done;});
+ const task=save(e);e.disconnectedCallback();resolve({saved:true});await task;
+ assert.equal(events.length,1);
+});
+test('a save reply after an account change exposes no saved appearance or notification',async()=>{
+ const {e,events}=editor();let resolve;e._hass.callWS=()=>new Promise(done=>{resolve=done;});
+ e.draft.preset='custom';e.draft.image='private-image';
+ const task=save(e);e.hass={...e._hass,user:{id:'other',is_admin:false}};
+ resolve({saved:true});await task;assert.equal(events.length,0);assert.equal(e.saved.image,null);
+ assert.doesNotMatch(e.shadowRoot.innerHTML,/private-image/);
+});

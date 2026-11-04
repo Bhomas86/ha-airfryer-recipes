@@ -1,0 +1,50 @@
+const TEXT={
+ de:{title:'Airfryer individualisieren',device:'Gerät',stacked:'Gestapelte Fächer',side_by_side:'Fächer nebeneinander',outline:'Neutrale Kontur',custom:'Eigenes Bild',upload:'Bild auswählen (PNG/JPEG/WebP, max. 1 MB)',save:'Darstellung speichern',reset:'Standard wiederherstellen',cancel:'Entwurf verwerfen',zone:'Fach',help:'Fachbereiche ziehen oder Prozentwerte ändern. Bereiche dürfen sich nicht überlappen. Hier bleiben sie zum Ausrichten sichtbar, auch bei unsichtbarer Fachauswahl im Dashboard. Änderungen senden keine Geräteeinstellungen.',error:'Darstellung konnte nicht geladen/gespeichert werden. Bildtyp, Größe und Fachbereiche prüfen.',saved:'Darstellung gespeichert.',saving:'Darstellung wird gespeichert …',saveNote:'„Darstellung speichern“ übernimmt die Geräteansicht. „Speichern“ unten ist nur für geänderte Kartenoptionen.',missing:'Dein Gerät fehlt?',admin:'Nur Administratoren dürfen die Darstellung ändern.'},
+ en:{title:'Customize Airfryer',device:'Device',stacked:'Stacked zones',side_by_side:'Side-by-side zones',outline:'Neutral outline',custom:'Own image',upload:'Choose image (PNG/JPEG/WebP, max. 1 MB)',save:'Save appearance',reset:'Restore defaults',cancel:'Discard draft',zone:'Zone',help:'Drag zone boxes or edit percentages. Boxes must not overlap. They stay visible here for positioning, even with invisible zone selection on the dashboard. Changes send no appliance settings.',error:'Could not load/save appearance. Check image type, size and zone boxes.',saved:'Appearance saved.',saving:'Saving appearance …',saveNote:'Save appearance applies the device artwork. Save below is only for changed card options.',missing:'Missing your model?',admin:'Only administrators may customize the device.'}
+};
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const defaults=(preset='stacked')=>({preset,image:null,zones:preset==='side_by_side'?{'1':[4,15,43,75],'2':[53,15,43,75]}:{'1':[5,8,90,39],'2':[5,53,90,39]}});
+class Designer extends HTMLElement{
+ constructor(){super();this.attachShadow({mode:'open'});this.devices=[];this.device='';this.draft=defaults();this.saved=defaults();this.busy=false;this.epoch=0;this.message='';
+ this.shadowRoot.addEventListener('click',e=>this.click(e));this.shadowRoot.addEventListener('change',e=>this.change(e));
+ this.shadowRoot.addEventListener('pointerdown',e=>{const b=e.target.closest?.('[data-zone]');if(!b||this.busy)return;this.drag={zone:b.dataset.zone,pointer:e.pointerId,box:[...this.draft.zones[b.dataset.zone]],x:e.clientX,y:e.clientY,rect:b.parentElement.getBoundingClientRect()};b.setPointerCapture?.(e.pointerId);e.preventDefault();});
+ this.shadowRoot.addEventListener('pointermove',e=>{const d=this.drag;if(!d||d.pointer!==e.pointerId)return;const b=this.draft.zones[d.zone];b[0]=Math.round(Math.max(0,Math.min(100-b[2],d.box[0]+100*(e.clientX-d.x)/d.rect.width)));b[1]=Math.round(Math.max(0,Math.min(100-b[3],d.box[1]+100*(e.clientY-d.y)/d.rect.height)));const el=e.target.closest?.('[data-zone]');if(el){el.style.left=b[0]+'%';el.style.top=b[1]+'%';}});
+ for(const name of ['pointerup','pointercancel'])this.shadowRoot.addEventListener(name,()=>{if(this.drag){this.drag=null;this.render();}});
+ }
+ get t(){return TEXT[this._hass?.language?.startsWith('de')?'de':'en'];}
+ set hass(v){const old=this._hass;this._hass=v;if(old&&(old.user?.id!==v?.user?.id||old.user?.is_admin!==v?.user?.is_admin)){this.epoch++;this.devices=[];this.device='';this.draft=defaults();this.saved=defaults();this.started=false;}if(!this.started&&v?.user?.is_admin){this.started=true;this.loadDevices();}if(!old||old.language!==v?.language||old.user?.id!==v?.user?.id||old.user?.is_admin!==v?.user?.is_admin)this.render();}
+ disconnectedCallback(){this.epoch++;}
+ async request(name,params={}){if(!this._hass?.user?.is_admin||this._hass.connection?.connected===false)throw Error();return this._hass.callWS({type:'airfryer_recipes/'+name,...params});}
+ async loadDevices(){const n=++this.epoch;this.busy=true;try{const r=await this.request('devices');if(n!==this.epoch)return;this.devices=r.devices||[];this.device=this.devices.find(d=>d.device_id===this.preferredDevice)?.device_id||this.devices[0]?.device_id||'';if(this.device)await this.load();}catch{if(n===this.epoch)this.message=this.t.error;}finally{this.busy=false;this.render();}}
+ async load(){const n=++this.epoch;this.busy=true;this.message='';try{const r=await this.request('appearance_get',{device_id:this.device});if(n===this.epoch){this.saved=structuredClone(r);this.draft=structuredClone(r);}}catch{if(n===this.epoch)this.message=this.t.error;}finally{this.busy=false;this.render();}}
+ async change(e){if(this.busy)return;const el=e.target;if(el.name==='device'){this.device=el.value;return this.load();}if(el.name==='preset'){this.draft=defaults(el.value);this.render();return;}if(el.dataset.zoneInput){this.draft.zones[el.dataset.zoneInput][Number(el.dataset.index)]=Number(el.value);const b=this.draft.zones[el.dataset.zoneInput],target=this.shadowRoot.querySelector?.('[data-zone="'+el.dataset.zoneInput+'"]');if(target){['left','top','width','height'].forEach((key,i)=>target.style[key]=b[i]+'%');}return;}
+ if(el.name==='image'&&el.files?.[0]){const f=el.files[0];if(f.size>1000000){this.message=this.t.error;this.render();return;}const n=++this.epoch;this.busy=true;try{const data=await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=reject;r.readAsDataURL(f);});const r=await this.request('appearance_upload',{image:String(data).split(',')[1]});if(n===this.epoch){this.draft=defaults('custom');this.draft.image=r.image;}}catch{if(n===this.epoch)this.message=this.t.error;}finally{this.busy=false;this.render();}}}
+ async click(e){
+ const a=e.target.closest?.('[data-action]')?.dataset.action;
+ if(!a||this.busy)return;
+ if(a==='cancel'){this.draft=structuredClone(this.saved);this.message='';this.render();return;}
+ if(a==='reset'){this.draft=defaults();this.message='';this.render();return;}
+ if(a!=='save'||!this.device)return;
+ const n=++this.epoch,device_id=this.device,user_id=this._hass.user.id,appearance=structuredClone(this.draft);
+ this.busy=true;this.message=this.t.saving;this.render();
+ try{
+  await this.request('appearance_set',{device_id,appearance});
+  // Notify connected cards even if HA detached this editor during the save.
+  // Only an identifier leaves the editor; cards read through their authorized API.
+  if(this._hass?.user?.id===user_id&&this._hass.user.is_admin)
+   window.dispatchEvent(new CustomEvent('airfryer-recipes-appearance-saved',{detail:{device_id}}));
+  if(n===this.epoch){this.saved=appearance;this.message=this.t.saved;}
+ }catch{if(n===this.epoch)this.message=this.t.error;}
+ finally{this.busy=false;this.render();}
+ }
+ render(){if(!this.shadowRoot)return;const t=this.t;if(!this._hass?.user?.is_admin){this.shadowRoot.innerHTML='<p>'+t.admin+'</p>';return;}const d=this.draft;
+ this.shadowRoot.innerHTML=`<style>:host{display:block}*{box-sizing:border-box}button,input,select{font:inherit;color:var(--primary-text-color);background:var(--card-background-color);border:1px solid var(--divider-color);padding:8px;border-radius:6px;min-height:40px}label{display:block;margin:10px 0}select{width:100%}.canvas{position:relative;width:100%;max-width:360px;aspect-ratio:1;background:linear-gradient(120deg,#536372,#17232e);border-radius:22px;overflow:hidden}.outline{background:transparent;border:3px solid #8f9eaa}.canvas img{position:absolute;width:100%;height:100%;object-fit:contain}.canvas button{position:absolute;touch-action:none;background:#667f9388;border:2px solid #becbd5;color:white;cursor:grab}.coords{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}.coords input{width:100%;min-width:0}p{line-height:1.4}a{color:var(--primary-color)}</style><h3>${t.title}</h3><p>${t.help}</p>
+ <label>${t.device}<select name="device" ${this.busy?'disabled':''}>${this.devices.map(x=>`<option value="${esc(x.device_id)}" ${x.device_id===this.device?'selected':''}>${esc(x.name)}</option>`).join('')}</select></label>
+ <label><select name="preset" ${this.busy?'disabled':''}>${['stacked','side_by_side','outline',...(d.image?['custom']:[])].map(p=>`<option value="${p}" ${p===d.preset?'selected':''}>${t[p]}</option>`).join('')}</select></label><label>${t.upload}<input type="file" name="image" accept="image/png,image/jpeg,image/webp" ${this.busy?'disabled':''}></label>
+ <div class="canvas ${d.preset==='outline'?'outline':''}">${d.image?`<img src="${esc(d.image)}" alt="">`:''}${Object.entries(d.zones).map(([z,b])=>`<button type="button" data-zone="${z}" style="left:${b[0]}%;top:${b[1]}%;width:${b[2]}%;height:${b[3]}%" ${this.busy?'disabled':''}>${t.zone} ${z}</button>`).join('')}</div>
+ ${Object.entries(d.zones).map(([z,b])=>`<label>${t.zone} ${z} · x / y / w / h (%)<span class="coords">${b.map((v,i)=>`<input aria-label="${t.zone} ${z} ${['x','y','w','h'][i]} (%)" data-zone-input="${z}" data-index="${i}" type="number" min="0" max="100" value="${v}" ${this.busy?'disabled':''}>`).join('')}</span></label>`).join('')}
+ <p role="status" aria-live="polite">${esc(this.message)}</p><p>${t.saveNote}</p>
+ ${['save','reset','cancel'].map(a=>`<button type="button" data-action="${a}" ${this.busy||!this.device?'disabled':''}>${t[a]}</button>`).join('')}<a target="_blank" rel="noopener noreferrer" href="https://github.com/Bhomas86/ha-airfryer-recipes/issues/new">${t.missing}</a>`;
+ }
+}
+if(!customElements.get('airfryer-device-designer'))customElements.define('airfryer-device-designer',Designer);

@@ -128,7 +128,11 @@ Action: Confirm current model before implementation; do not claim to switch it.
 9. Record decisions in `docs/REQUIREMENTS.md` and staged work in
    `docs/ROADMAP.md`. Do not label planned features as implemented.
 
+**Current owner instruction (2026-10-30): Do not trigger GitHub Actions for further updates until instructed otherwise; validate locally only. This overrides the general budget rules below. Suppress automatic PR/push runs when publishing (for example, `[skip ci]` in the commit); do not manually dispatch workflows.**
+
 ## GitHub Actions budget (effective 2026-10-30)
+
+**Owner instruction (2026-11-02): Keep only the current beta published. After publishing a new beta, verify its release/tag point to the tested commit, then set older published beta releases to draft (`draft: true`). Preserve their tags, commits and assets; do not delete them or change stable releases. If publishing/verification fails, leave the previous beta active. Verify the final release list. This applies to this repository and requires no repeated permission request.**
 
 - Use GitHub Actions sparingly; the available allowance is limited.
 - During development, run targeted local checks first, batch changes and use only small, relevant automatic jobs.
@@ -136,6 +140,7 @@ Action: Confirm current model before implementation; do not claim to switch it.
 - Run the full Python matrix and comprehensive validation at the end of a larger section or before release. Do not repeat unchanged checks without a new reason.
 - Avoid duplicate automatic checks for the same state on a PR and its subsequent merge. Required safety and release checks remain mandatory; plan their scope around the section.
 - Full offline validation: manually run “Offline unit tests” with `full_suite=true`. Run HACS/Hassfest for relevant metadata changes or through the manual “Home Assistant and HACS validation” workflow.
+- A completed section may request the full matrix in its single PR run using `[full-ci]` in the PR title. This avoids a separate duplicate run before a beta release; do not use the marker for intermediate work.
 
 ## Helpful references
 

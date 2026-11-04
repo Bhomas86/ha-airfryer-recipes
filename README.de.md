@@ -2,9 +2,49 @@
 
 [English](README.md) | [Deutsch](README.de.md)
 
+**[b23: Klare Programmnamen](docs/releases/0.1.0b23.de.md).** Herkunfts-/Prüfzusätze in den Programm-Dropdowns von Dashboard, Rezepteditor und Vorschau entfernt. Fehlende Programme bleiben gekennzeichnet. Eigentümer bestätigt den b22-Speicher-/Neustarttest.
+
+**[b22: Abschlussprüfung und geprüfte Speicherung](docs/releases/0.1.0b22.de.md).** Favoritenansammlung und falsche Speicherbestätigung bei stillen HA-Store-Fehlern korrigiert. Python-3.12-/3.14- und Frontend-Prüfungen bestanden. [Prüfung, Abnahme und offene Nachweise](docs/reports/FINAL_REVIEW.de.md).
+
+**[b21: Controller-Beta, volle Temperaturen und Gären](docs/releases/0.1.0b21.de.md).** Beaufsichtigtes Senden verlangt exakt Airfryer Control 1.0.3-beta.3. Der große Lauf prüft jetzt 44 Einstellungen samt allen Temperaturgrenzen und Gären 30/31 °C. B steht im Karteneditor zuerst/als Standard; vorhandene Auswahlen bleiben erhalten.
+
+**[b20: A oder B wählen](docs/releases/0.1.0b20.de.md).** Karteneditor → Fachauswahl auf dem Bild: dezente Markierung oder unsichtbare Touchbereiche. Bei B bleiben die gespeicherten Fächer auf dem Foto antippbar; Rechtecke zum Positionieren bleiben im Bildeditor sichtbar.
+
+**[b19: Darstellung direkt aktualisieren](docs/releases/0.1.0b19.de.md).** Nach Darstellung speichern laden Karten auf derselben Seite die gespeicherte Grafik ohne Seitenneuladen nach. Speichern unter b18 ist nach Neuladen bestätigt; die neue native Aktualisierungsabnahme bleibt offen.
+
+**[b18: Gerätebilder](docs/releases/0.1.0b18.de.md).** Admin-Karteneditor → Airfryer individualisieren: neutrale Galerie, private Bilder und relative Fachbereiche.
+
+**[b17: Darstellungsoptionen](docs/releases/0.1.0b17.de.md).** Kartengröße, Grafikgröße und Status-/Historienanzeige im grafischen Editor. Drei lokale Freigabeprüfungen bestanden.
+
+**[b16: Ganze Geräte freigeben](docs/reports/ISSUE_8_DEVICE_ACCESS.de.md).** Admins geben einem normalen HA-Benutzer ausdrücklich ein ganzes Gerät mit allen Fächern und verfügbaren Programmen frei. Standardmäßig keine Freigaben; Rezept-/Sicherheitsverwaltung bleibt adminpflichtig. Nur die aktuelle Beta bleibt veröffentlicht.
+
 Benutzerdefinierte Home-Assistant-Integration zur Verwaltung wiederverwendbarer Heißluftfritteusen-Rezepte. Die gespeicherten Einstellungen sollen über bestehende Home-Assistant-Integrationen an unterstützte Geräte übertragen werden.
 
-> **Projektstatus: Beta 0.1.0b2 (Stand 29.10.2026).** Rezeptverwaltung, lokale Speicherung, authentifizierte API und lesende Geräte-Testvorschau sind gemergt. Die Handy-Abnahme der Testvorschau war am 25.10.2026 erfolgreich. Echte Geräteübertragung bleibt gesperrt; Dashboard-Karte und SYNC/MATCH folgen später.
+> **Projektstatus: Test-Beta 0.1.0b23.** Grundlegendes Card-Senden beider Fächer, Wiederverwendung nach physischem Zurücksetzen, Fachhistorie und Erhalt über Neustart sind vom Eigentümer bestätigt. Ganzgerätefreigaben für Benutzer sind samt Backend-Prüfung umgesetzt; drei lokale Freigabeprüfungen bestanden; beide Gerätebildvarianten sind bestätigt; 44-Schritt-Rückmeldungsfolge und Gären-Rezeptablauf sind bestätigt. Neue Cards beginnen im Testmodus; echtes Senden bleibt beaufsichtigte Beta. Der gezielte b22-Speicher-/Neustarttest ist bestätigt; vor einem Kandidaten bleibt die offizielle HACS-/Hassfest-Prüfung offen.
+
+**[Dashboard-Card hinzufügen](docs/reports/ISSUE_8_DASHBOARD_CARD.de.md):** Nach dem Update HA neu starten, App vollständig neu öffnen, dann Dashboard → Bearbeiten → Karte hinzufügen → Airfryer Recipes. Kein Dashboard wird automatisch geändert. Zuerst den Testmodus aktiviert lassen.
+
+**[Lokale Abnahme: sechs Programme, beide Fächer bestanden](docs/reports/ISSUE_7_LOCAL_ACCEPTANCE.de.md).** Nachweis für die dokumentierten Beispielwerte; keine allgemeine Freigabe aller Grenzen.
+
+**Neue Test-Beta 0.1.0b5:** Separater beaufsichtigter Gerätetest mit gewählten Rezept-/manuellen Werten für CAF-DC111S-AEU und exakt Airfryer Control 1.0.2-beta.1. Nur nach ausdrücklicher Bestätigung wird einmalig übertragen; normale Gerätesteuerung bleibt gesperrt. [Installation und Test](docs/releases/0.1.0b5.de.md).
+
+Die Testvorbereitung fordert jetzt selbst einen neuen Statusbericht an. [Korrektur der Aktualitätssperre](docs/releases/0.1.0b5.de.md).
+
+Neu: gewählte Rezepte/manuelle Werte für alle sechs gemeldeten Programme beaufsichtigt testen. [Große Testliste](docs/reports/BETA_0_1_0B5_TEST_PLAN.de.md). Keine GitHub Actions für dieses Update.
+
+**Neu: [Geführter Testlauf mit einer Bestätigung](docs/releases/0.1.0b6.de.md).** 132 Python-/29 Frontend-Tests lokal bestanden; keine GitHub Actions.
+
+**[Neu: Test nach manuellem Zurücksetzen wieder freigeben](docs/releases/0.1.0b7.de.md).** 138 Python-/31 Frontend-Tests lokal bestanden; keine GitHub Actions.
+
+**[Neu: Fach-Einstellungen vor Programmwechsel gezielt beenden](docs/releases/0.1.0b8.de.md).** 145 Python-/32 Frontend-Tests lokal bestanden; keine GitHub Actions.
+
+**[Neu: Gewählte Einzeltest-Werte übernehmen und Dörrtest korrigieren](docs/releases/0.1.0b9.de.md).** 147 Python-/36 Frontend-Tests lokal bestanden; keine GitHub Actions.
+
+**[Neu: Turbo-Tower-Temperaturprofil und Adaptervergleich](docs/releases/0.1.0b10.de.md).** 150 Python-/38 Frontend-Tests lokal bestanden; keine GitHub Actions.
+
+**[Neu: Rezeptbestätigung und Verbindungswechsel](docs/releases/0.1.0b11.de.md).** 163 Python-/50 Frontend-Tests lokal bestanden; keine GitHub Actions. [Sieben gezielte Geräteprüfungen](docs/reports/ISSUE_7_RECIPE_LIFECYCLE.de.md).
+
+**[Neu: Programmauswahl im Rezepteditor](docs/releases/0.1.0b12.de.md).** 164 Python-/59 Frontend-Tests lokal bestanden; keine GitHub Actions. [Vorhandenes Rezept ausdrücklich korrigieren](docs/reports/ISSUE_7_EDITOR_PROGRAM_PICKER.de.md).
 
 ## Ziele
 
@@ -42,18 +82,18 @@ Als erstes Zielgerät dient die **Cosori Turbo Tower Pro Smart (CAF-DC111S-AEU)*
 - [x] Deutsche und englische Oberfläche
 - [x] HACS-Vorabversion 0.1.0b2 und dokumentierte Handy-Abnahme
 - [ ] Verifizierte Modellgrenzen und sichere echte Übertragung
-- [ ] Lovelace-Dashboard-Karte und Karteneditor
+- [x] Erste Lovelace-Dashboard-Card mit grafischem Editor (beaufsichtigte Beta; normale Benutzer benötigen Ganzgerätefreigaben)
 - [ ] SYNC/MATCH und stabile Veröffentlichung
 
-Zuletzt dokumentiert: 78 Python-Offline-Tests und 15 Frontend-Tests bestanden; HACS, Hassfest und Python 3.12/3.14 bestanden in PR #19. Siehe [Abnahmebericht](docs/reports/ISSUE_7_DRY_RUN_UI.de.md).
+Aktuelle Beta: 212 Python-Tests und 104 Frontend-Tests lokal bestanden. Keine GitHub Actions, HACS-/Hassfest- oder Python-3.14-Läufe für dieses Update. Grundlegendes Card-Senden/Historie/Neustart lokal abgenommen; neue native Rechteabnahme offen. [Dashboard-Verhalten und Prüfungen](docs/reports/ISSUE_8_DASHBOARD_CARD.de.md). Ganzgerätefreigaben sind umgesetzt; Personalisierung bleibt geplant.
 
 ## Installation
 
-**Vorabversion, kein stabiler Release.** Vorher ein Home-Assistant-Backup erstellen. Dieses Repository als benutzerdefiniertes HACS-Integrationsrepository hinzufügen, Vorabversionen anzeigen und über „Neu herunterladen“ `v0.1.0b2` auswählen. Home Assistant neu starten und die Companion-App vollständig neu öffnen.
+**Vorabversion, kein stabiler Release.** Vorher ein Home-Assistant-Backup erstellen. Dieses Repository als benutzerdefiniertes HACS-Integrationsrepository hinzufügen, Vorabversionen anzeigen und über „Neu herunterladen“ `v0.1.0b23` auswählen. Home Assistant neu starten und die Companion-App vollständig neu öffnen.
 
-Die Rezeptverwaltung funktioniert ohne Airfryer Control und benötigt keine Cloud-Zugangsdaten. Für die erweiterte Geräte-Testvorschau Airfryer Control `1.0.2-beta.1` oder neuer installieren. Sie führt keine Steuerbefehle aus. Für CAF-DC111S-AEU sind die sechs gemeldeten Programme und Grenzen noch geschätzt/ungeprüft; `proof` fehlt im Upstream-Vertrag. Echte Übertragung bleibt gesperrt.
+Die Rezeptverwaltung funktioniert ohne Airfryer Control und benötigt keine Cloud-Zugangsdaten. Für die erweiterte Geräte-Testvorschau Airfryer Control `1.0.2-beta.1` oder neuer installieren. Sie führt keine Steuerbefehle aus. Für CAF-DC111S-AEU sind die sechs gemeldeten Programme und Grenzen noch geschätzt/ungeprüft; `proof` fehlt im Upstream-Vertrag. Normale Übertragung bleibt gesperrt; der separate beaufsichtigte Beta-Test benötigt exakt Airfryer Control 1.0.2-beta.1.
 
-Details: [Release Notes](docs/releases/0.1.0b2.de.md), [lokale Testcheckliste](docs/LOCAL_TEST_CHECKLIST.de.md) und [Roadmap](docs/ROADMAP.de.md).
+Details: [Release Notes](docs/releases/0.1.0b23.de.md), [Dashboard-Einrichtung/-Prüfungen](docs/reports/ISSUE_8_DASHBOARD_CARD.de.md), [lokale Testcheckliste](docs/LOCAL_TEST_CHECKLIST.de.md) und [Roadmap](docs/ROADMAP.de.md).
 
 ## Sicherheit und Datenschutz
 
