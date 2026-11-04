@@ -389,7 +389,7 @@ class WebsocketTests(unittest.IsolatedAsyncioTestCase):
     async def test_saved_recipes_through_real_routes_and_sender_preserve_library_on_both_zones(self):
         sender = self.real_beta_sender()
         from custom_components.airfryer_recipes.beta_batch import SAMPLES
-        recipes = [await self.repo.async_create(create_recipe(program, program=program,
+        recipes = [await self.repo.async_create(create_recipe(f"{program} {temp}", program=program,
                     temperature_c=temp, duration_minutes=minutes)) for program, temp, minutes in SAMPLES]
         before = await self.repo.async_export_json()
         for recipe in recipes:
@@ -406,7 +406,7 @@ class WebsocketTests(unittest.IsolatedAsyncioTestCase):
                 self.assertEqual((sent["zone"], sent["programm"], sent["temperatur"], sent["minuten"]),
                                  (zone, phase.program, phase.temperature_c, phase.duration_minutes))
                 self.assertFalse(self.admin.subscriptions)
-        self.assertEqual(self.hass.services.async_call.await_count, 12)
+        self.assertEqual(self.hass.services.async_call.await_count, 44)
         self.assertFalse(sender.pending)
         self.assertEqual(await self.repo.async_export_json(), before)
 

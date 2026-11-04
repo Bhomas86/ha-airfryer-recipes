@@ -2,6 +2,8 @@
 
 [Deutsch](ISSUE_7_LOCAL_ACCEPTANCE.de.md) | [English](ISSUE_7_LOCAL_ACCEPTANCE.md)
 
+**Update b21 (2026-11-04):** The reviewed adapter and large run below describe earlier releases. Controller 1.0.3-beta.3 now supports the owner temperature ranges and Proof; the new guided run contains 44 settings. Prior nominal acceptance is preserved; new endpoints/Proof are pending. [Current review, ranges and acceptance](ISSUE_7_CONTROLLER_BETA3.md).
+
 ## Saved recipe on both zones — 2026-11-01
 
 The owner confirmed: “Test hat für Fach 1 und 2 geklappt” (“The test worked for zones 1 and 2”). This follows the program-picker correction and instructions to save the reported `airfry` program and test the saved recipe at 180 °C / 7 minutes. **R1 and R2: PASS for owner-reported saved-recipe transmission.** No additional screenshot, exact installed version or separate per-observation checklist was supplied with this confirmation.

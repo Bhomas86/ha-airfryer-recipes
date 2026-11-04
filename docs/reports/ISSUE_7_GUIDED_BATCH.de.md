@@ -2,6 +2,8 @@
 
 [Deutsch](ISSUE_7_GUIDED_BATCH.de.md) | [English](ISSUE_7_GUIDED_BATCH.md)
 
+**Update b21 (04.11.2026):** Der unten geprüfte Adapter und große Lauf beschreiben frühere Releases. Controller 1.0.3-beta.3 unterstützt jetzt die Eigentümer-Temperaturbereiche und Gären; der neue geführte Lauf umfasst 44 Einstellungen. Bisherige übliche Abnahmen bleiben erhalten; neue Grenzwerte/Gären sind offen. [Aktuelle Prüfung, Bereiche und Abnahme](ISSUE_7_CONTROLLER_BETA3.de.md).
+
 ## Bedienung in 0.1.0b6
 
 Der Eigentümer bestätigt, dass der Auswahlbutton von 0.1.0b5 funktioniert, fordert aber weniger Bedienaufwand und eine einzige Bestätigung für eine Folge. Der neue Bereich „Geführter Gerätetest“ steht über der bisherigen Vorschau. Gerät wählen, **„Testfolge anzeigen“**, Liste prüfen und einmal **„Angezeigte Testfolge bestätigen und starten“** drücken. Keine zusätzlichen Dialoge pro Schritt. Vor dem ersten Start müssen beide Fächer geschlossen, bereit/aus und ohne Programm sein; Celsius, SYNC/MATCH aus, Gerät leer und beaufsichtigt. Nicht auf Start drücken.

@@ -2,6 +2,8 @@
 
 [Deutsch](ISSUE_7_MODEL_TEMPERATURES.de.md) | [English](ISSUE_7_MODEL_TEMPERATURES.md)
 
+**Update b21 (04.11.2026):** Der unten geprüfte Adapter und große Lauf beschreiben frühere Releases. Controller 1.0.3-beta.3 unterstützt jetzt die Eigentümer-Temperaturbereiche und Gären; der neue geführte Lauf umfasst 44 Einstellungen. Bisherige übliche Abnahmen bleiben erhalten; neue Grenzwerte/Gären sind offen. [Aktuelle Prüfung, Bereiche und Abnahme](ISSUE_7_CONTROLLER_BETA3.de.md).
+
 Am 01.11.2026 nannte der Eigentümer Temperaturbereiche für CAF-DC111S-AEU. „Repeat“ wird als Reheat/Aufwärmen und „Proof“ als Gären verstanden. Der Dörrbereich wurde unmittelbar davor genannt. Nur für Gären wurden ausdrücklich 1-°C-Schritte angegeben; für andere Programme wird keine Schrittweite abgeleitet. Dies sind vom Eigentümer gemeldete Gerätegrenzen, getrennt von Nachweisen erfolgreicher Übertragungen und von Zeitgrenzen.
 
 | Programm | Gerätebereich laut Eigentümer | Bereich des festgelegten Adapters | Beaufsichtigte Temperatur-Schnittmenge |

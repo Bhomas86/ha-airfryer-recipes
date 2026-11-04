@@ -21,18 +21,20 @@ from .recipe_repository import RecipeNotFoundError
 
 UPSTREAM = "airfryer_control"
 MODEL = TURBO_TOWER_MODEL
-VERSION = "1.0.2-beta.1"
+VERSION = "1.0.3-beta.3"
+REVIEWED_COMMIT = "a9fc49e37c3d2698d21bfb361192717ff790eb6e"
 TTL_SECONDS = 15
 MAX_REPORT_AGE = 15
-MODE_NAMES = {"airfry": "airfry", "roast": "roast", "bake": "bake", "grill": "grill", "reheat": "reheat", "dry": "dry"}
+MODE_NAMES = {"airfry": "airfry", "roast": "roast", "bake": "bake", "grill": "grill", "reheat": "reheat", "dry": "dry", "proof": "proof"}
 
 TEST_SETTINGS = {"program": "airfry", "temperature_c": 170, "duration_minutes": 1}
 # Reviewed upstream contract bounds, NOT verified CAF-DC111S-AEU capabilities.
 # Recipe schema v1 caps duration at 1440 minutes, including manual beta input.
 REVIEWED_PROGRAM_LIMITS = {
-    "airfry": (120, 205, 60), "roast": (120, 205, 240),
-    "bake": (80, 205, 240), "grill": (205, 240, 30),
-    "reheat": (40, 205, 60), "dry": (34, 95, 1440),
+    "airfry": (120, 230, 60), "roast": (175, 230, 240),
+    "bake": (80, 205, 240), "grill": (160, 230, 30),
+    "reheat": (40, 205, 60), "dry": (35, 95, 1440),
+    "proof": (30, 45, 720),
 }
 # Owner-reported model bounds apply in addition to the upstream contract.
 # This does not mark sending or duration bounds as model-confirmed.
@@ -181,13 +183,15 @@ async def read_target(
     statuses = tuple((z, state.zones[z].status) for z in (1, 2))
     require(safe_zones(), "zones")
     program = next((p for p in caps["programs"] if p["id"] == phase.program), None)
-    require(program is not None and program["limits_status"] in ("confirmed", "estimated")
+    require(program is not None and program["limits_status"] in ("confirmed", "estimated", "owner_reported")
             and program["send_status"] in ("confirmed", "unverified"), "capabilities")
+    if phase.program == "proof":
+        require(program.get("temperature_step_c") == 1, "capabilities")
     require(program["temperature_c"]["min"] <= phase.temperature_c <= program["temperature_c"]["max"]
             and program["duration_minutes"]["min"] <= phase.duration_minutes <= program["duration_minutes"]["max"], "capabilities")
     programs = tuple((p["id"], p["temperature_c"]["min"], p["temperature_c"]["max"],
                       p["duration_minutes"]["min"], p["duration_minutes"]["max"],
-                      p["limits_status"], p["send_status"]) for p in caps["programs"])
+                      p["limits_status"], p["send_status"], p.get("temperature_step_c")) for p in caps["programs"])
 
     def unchanged() -> bool:
         current = dr.async_get(hass).async_get(device_id)

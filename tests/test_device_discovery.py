@@ -1,6 +1,7 @@
 """Offline discovery safety: no import of upstream code and no control calls."""
 
 import json
+from pathlib import Path
 import sys
 import types
 import unittest
@@ -15,6 +16,15 @@ from custom_components.airfryer_recipes.device_discovery import (
 
 
 class DiscoveryTests(unittest.IsolatedAsyncioTestCase):
+    def test_reviewed_owner_profile_preserves_unverified_provenance_and_proof_one_degree_step(self):
+        fixture=json.loads((Path(__file__).parent/'fixtures/airfryer_control_1_0_3_beta_3.json').read_text())
+        programs={p['id']:p for p in normalize_capabilities(fixture['capabilities'])['programs']}
+        self.assertEqual(len(programs),7)
+        self.assertTrue(all(p['limits_status']=='owner_reported' and p['send_status']=='unverified' for p in programs.values()))
+        self.assertEqual(programs['proof']['temperature_c'],{'min':30,'max':45})
+        self.assertEqual(programs['proof']['temperature_step_c'],1)
+        self.assertEqual(programs['dry']['duration_minutes']['max'],2880)
+
     def setUp(self):
         self.device = NS(id="ha-device", name="Kitchen", name_by_user=None,
                          model="CAF-DC111S-AEU", disabled_by=None,
@@ -146,7 +156,7 @@ class DiscoveryTests(unittest.IsolatedAsyncioTestCase):
         self.assertNotIn("proof", [p["id"] for p in device["programs"]])
         self.assertEqual(device["programs"], [{
             "id": "airfry", "temperature_c": {"min": 120, "max": 205},
-            "duration_minutes": {"min": 1, "max": 60},
+            "duration_minutes": {"min": 1, "max": 60}, "temperature_step_c": None,
             "suggested": {"temperature_c": 195, "duration_minutes": 15},
             "limits_status": "estimated", "send_status": "unverified",
         }])

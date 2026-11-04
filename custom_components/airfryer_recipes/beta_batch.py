@@ -11,8 +11,17 @@ from .beta_send import BetaSender, BetaTestBlocked, Target, require
 from .recipe_model import CookingPhase
 from .zone_reset import zone_switch
 
-SAMPLES = (("airfry", 180, 7), ("roast", 190, 10), ("bake", 180, 6),
-           ("grill", 205, 1), ("reheat", 70, 5), ("dry", 55, 360))
+# Lower / nominal / upper temperature on each zone; Proof also exercises 1 °C.
+# Durations are sample settings, not a duration-boundary acceptance test.
+SAMPLES = (
+    ("airfry", 120, 7), ("airfry", 180, 7), ("airfry", 230, 7),
+    ("roast", 175, 10), ("roast", 190, 10), ("roast", 230, 10),
+    ("bake", 80, 6), ("bake", 180, 6), ("bake", 205, 6),
+    ("grill", 160, 1), ("grill", 205, 1), ("grill", 230, 1),
+    ("reheat", 40, 5), ("reheat", 70, 5), ("reheat", 205, 5),
+    ("dry", 35, 360), ("dry", 55, 360), ("dry", 95, 360),
+    ("proof", 30, 60), ("proof", 31, 60), ("proof", 35, 60), ("proof", 45, 60),
+)
 
 
 def identity(target: Target) -> tuple:
@@ -73,24 +82,29 @@ class BatchRunner:
             await self.sender._authorized(user)
             metadata = {p[0]: p for p in target.fingerprint[6]}
             steps, skipped = [], []
-            for program, temp, minutes in SAMPLES:
+            for program in dict.fromkeys(sample[0] for sample in SAMPLES):
                 p = metadata.get(program)
-                if (p is None or p[5] not in ("estimated", "confirmed")
+                samples = [sample for sample in SAMPLES if sample[0] == program]
+                if (p is None or p[5] not in ("estimated", "confirmed", "owner_reported")
                         or p[6] not in ("unverified", "confirmed")
-                        or not (p[1] <= temp <= p[2] and p[3] <= minutes <= p[4])):
+                        or (program == "proof" and (len(p) < 8 or p[7] != 1))
+                        or any(not (p[1] <= temp <= p[2] and p[3] <= minutes <= p[4])
+                               for _, temp, minutes in samples)):
                     skipped.append(program)
                     continue
-                steps.extend((zone, CookingPhase(program, temp, minutes)) for zone in (1, 2))
+                for _, temp, minutes in samples:
+                    steps.extend((zone, CookingPhase(program, temp, minutes)) for zone in (1, 2))
             require(bool(steps), "capabilities")
             token = secrets.token_urlsafe(32)
             # Verify reset controls before offering a sequence that needs them.
-            resets = len({p.program for _, p in steps}) > 1
+            resets = len({(p.program, p.temperature_c, p.duration_minutes) for _, p in steps}) > 1
             if resets:
                 for zone in (1, 2):
                     zone_switch(self.sender.hass, device, target.fingerprint[0], zone)
             self.runs[token] = Run(token, user, owner, device, target.name, identity(target),
                                    tuple(steps), tuple(skipped), time.monotonic() + 60)
-            return {"resets_between_programs": resets, "token": token, "device_name": target.name, "expires_seconds": 60,
+            return {"resets_between_programs": len({p.program for _, p in steps}) > 1,
+                    "resets_between_settings": resets, "token": token, "device_name": target.name, "expires_seconds": 60,
                     "steps": [{"zone_id": z, "settings": asdict(p)} for z, p in steps],
                     "skipped": skipped, "transmitted": False}
         finally:
@@ -138,7 +152,7 @@ class BatchRunner:
             await self.sender._authorized(user)
             require(not run.stopped and time.monotonic() < run.expires, "confirmation")
             require(identity(target) == run.signature and target.unchanged(), "state_changed")
-            if run.index and phase.program != run.steps[run.index - 1][1].program:
+            if run.index and phase != run.steps[run.index - 1][1]:
                 # Only end exactly the prepared values owned by this run. Each
                 # turn_off has its own fresh check and readback; never toggle.
                 for prepared_zone in sorted(run.expected):

@@ -327,7 +327,7 @@ test("card/editor registration, English fallback and escaping use no copied imag
   assert.equal(context.window.customCards[0].type, "airfryer-recipes-card");
   assert.equal(card.constructor.getStubConfig().dry_run, true);
   assert.equal(card.constructor.getConfigElement() instanceof elements.get("airfryer-recipes-card-editor"), true);
-  assert.match(cardSource, /\.\/panel\.js\?v=0\.1\.0b20/);
+  assert.match(cardSource, /\.\/panel\.js\?v=0\.1\.0b21/);
 });
 
 test("visual editor uses safe defaults and emits dashboard configuration only", () => {
@@ -619,9 +619,9 @@ test('failed appearance refresh falls back without changing settings or resendin
 const hotspots = card => [...card.shadowRoot.innerHTML.matchAll(/<button[^>]*class="hotspot"[^>]*>[\s\S]*?<\/button>/g)].map(match => match[0]);
 function setArtwork(card) {card.appearanceDevice='appliance';card.appearance=structuredClone(artwork);card.render();}
 
-test('old card configurations default to A; unknown zone styles are rejected', () => {
-  const {card}=makeCard();card.setConfig({});assert.equal(card.config.zone_style,'outline');
-  card.setConfig({zone_style:undefined});assert.equal(card.config.zone_style,'outline');
+test('omitted zone styles default to B; unknown zone styles are rejected', () => {
+  const {card}=makeCard();card.setConfig({});assert.equal(card.config.zone_style,'invisible');
+  card.setConfig({zone_style:undefined});assert.equal(card.config.zone_style,'invisible');
   for(const zone_style of ['filled','outline;display:none',false,null,{}])assert.throws(()=>card.setConfig({zone_style}));
 });
 
@@ -688,6 +688,8 @@ test('editor saves A/B as card configuration in both languages without changing 
   assert.match(editor.shadowRoot.innerHTML,/A – Dezente Markierung/);
   assert.match(editor.shadowRoot.innerHTML,/B – Unsichtbare Touchbereiche/);
   assert.match(editor.shadowRoot.innerHTML,/name="zone_style"/);
+  assert.ok(editor.shadowRoot.innerHTML.indexOf('B – Unsichtbare Touchbereiche')<editor.shadowRoot.innerHTML.indexOf('A – Dezente Markierung'));
+  assert.match(editor.shadowRoot.innerHTML,/value="invisible" selected/);
   editor.shadowRoot.listeners.get('change')({target:{name:'zone_style',value:'invisible'}});
   assert.equal(events.at(-1).type,'config-changed');assert.equal(events.at(-1).detail.config.zone_style,'invisible');
   assert.equal(events.at(-1).detail.config.graphic_size,'large');assert.equal(events.at(-1).detail.config.dry_run,true);

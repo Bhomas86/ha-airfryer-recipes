@@ -586,6 +586,28 @@ test("guided plan displays zone-ending actions before the single start consent",
   assert.match(panel.shadowRoot.innerHTML, /<li value="2">/);
 });
 
+test("temperature batch lists resets before a same-program temperature change", async () => {
+  const plan={...batchPlan,resets_between_programs:false,resets_between_settings:true,steps:[
+    {zone_id:1,settings:{program:'proof',temperature_c:30,duration_minutes:60}},
+    {zone_id:2,settings:{program:'proof',temperature_c:30,duration_minutes:60}},
+    {zone_id:1,settings:{program:'proof',temperature_c:31,duration_minutes:60}},
+    {zone_id:2,settings:{program:'proof',temperature_c:31,duration_minutes:60}},
+  ]};
+  const panel=betaPanel(async()=>plan);await panel.prepareBatch();
+  assert.match(panel.shadowRoot.innerHTML,/class="muted">Vor Wertewechsel:[\s\S]*?<li value="3">/);
+  assert.match(panel.shadowRoot.innerHTML,/Gären · 31 °C/);
+  assert.match(panel.shadowRoot.innerHTML,/Bis zu 44 Einstellungen/);
+  assert.equal(panel.batchNeedsReset(plan,1),false);assert.equal(panel.batchNeedsReset(plan,2),true);
+});
+
+test("owner-reported Proof appears without claiming confirmed limits or transmission", () => {
+  const panel=betaPanel();
+  const program={id:'proof',limits_status:'owner_reported',send_status:'unverified',temperature_step_c:1};
+  assert.match(panel.programOption(program),/Gären · Besitzerangabe · Grenzen ungeprüft · Senden ungeprüft/);
+  panel._hass.language='en';
+  assert.match(panel.programOption(program),/Proof · owner-reported · limits unverified · sending unverified/);
+});
+
 test("navigation remains available during loading and uses the HA sidebar event", async () => {
   const panel = panelWith(async () => ({ recipes: [] }));
   panel.busy = true;

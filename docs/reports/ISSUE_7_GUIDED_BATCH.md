@@ -2,6 +2,8 @@
 
 [Deutsch](ISSUE_7_GUIDED_BATCH.de.md) | [English](ISSUE_7_GUIDED_BATCH.md)
 
+**Update b21 (2026-11-04):** The reviewed adapter and large run below describe earlier releases. Controller 1.0.3-beta.3 now supports the owner temperature ranges and Proof; the new guided run contains 44 settings. Prior nominal acceptance is preserved; new endpoints/Proof are pending. [Current review, ranges and acceptance](ISSUE_7_CONTROLLER_BETA3.md).
+
 ## Controls in 0.1.0b6
 
 The owner confirms that the 0.1.0b5 selection button works but requests less interaction and one confirmation for a sequence. The new guided test section appears above the previous preview. Select device, **“Show test sequence”**, inspect the list and click **“Confirm displayed sequence and start”** once. No per-step dialogs. Initially both zones must be closed, idle/off and without prepared programs; Celsius, SYNC/MATCH off, empty appliance supervised. Do not press Start.

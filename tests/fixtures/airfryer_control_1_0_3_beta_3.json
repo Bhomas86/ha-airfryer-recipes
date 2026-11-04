@@ -1,0 +1,138 @@
+{
+  "adapter_version": "1.0.3-beta.3",
+  "reviewed_commit": "a9fc49e37c3d2698d21bfb361192717ff790eb6e",
+  "capabilities": {
+    "geraet": "Fixture",
+    "modell": "CAF-DC111S-AEU",
+    "modell_bekannt": true,
+    "modellfamilie": "turbotower",
+    "zonen": [
+      1,
+      2
+    ],
+    "programme": {
+      "airfry": {
+        "temperatur": [
+          120,
+          230
+        ],
+        "temperatur_schritt": 5,
+        "minuten": [
+          1,
+          60
+        ],
+        "vorschlag": {
+          "temperatur": 200,
+          "minuten": 20
+        },
+        "grenzen": "besitzer",
+        "senden": "ungeprueft"
+      },
+      "roast": {
+        "temperatur": [
+          175,
+          230
+        ],
+        "temperatur_schritt": 5,
+        "minuten": [
+          1,
+          240
+        ],
+        "vorschlag": {
+          "temperatur": 190,
+          "minuten": 30
+        },
+        "grenzen": "besitzer",
+        "senden": "ungeprueft"
+      },
+      "bake": {
+        "temperatur": [
+          80,
+          205
+        ],
+        "temperatur_schritt": 5,
+        "minuten": [
+          1,
+          240
+        ],
+        "vorschlag": {
+          "temperatur": 180,
+          "minuten": 6
+        },
+        "grenzen": "besitzer",
+        "senden": "ungeprueft"
+      },
+      "grill": {
+        "temperatur": [
+          160,
+          230
+        ],
+        "temperatur_schritt": 5,
+        "minuten": [
+          1,
+          30
+        ],
+        "vorschlag": {
+          "temperatur": 230,
+          "minuten": 5
+        },
+        "grenzen": "besitzer",
+        "senden": "ungeprueft"
+      },
+      "reheat": {
+        "temperatur": [
+          40,
+          205
+        ],
+        "temperatur_schritt": 5,
+        "minuten": [
+          1,
+          60
+        ],
+        "vorschlag": {
+          "temperatur": 70,
+          "minuten": 60
+        },
+        "grenzen": "besitzer",
+        "senden": "ungeprueft"
+      },
+      "dry": {
+        "temperatur": [
+          35,
+          95
+        ],
+        "temperatur_schritt": 5,
+        "minuten": [
+          1,
+          2880
+        ],
+        "vorschlag": {
+          "temperatur": 55,
+          "minuten": 360
+        },
+        "grenzen": "besitzer",
+        "senden": "ungeprueft"
+      },
+      "proof": {
+        "temperatur": [
+          30,
+          45
+        ],
+        "temperatur_schritt": 1,
+        "minuten": [
+          1,
+          720
+        ],
+        "vorschlag": {
+          "temperatur": 35,
+          "minuten": 60
+        },
+        "grenzen": "besitzer",
+        "senden": "ungeprueft"
+      }
+    },
+    "verbindung": "ok",
+    "letzte_meldung": "2026-11-04T00:00:00+00:00",
+    "revision": 1
+  }
+}

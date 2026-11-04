@@ -2,6 +2,8 @@
 
 [Deutsch](ISSUE_7_MODEL_TEMPERATURES.de.md) | [English](ISSUE_7_MODEL_TEMPERATURES.md)
 
+**Update b21 (2026-11-04):** The reviewed adapter and large run below describe earlier releases. Controller 1.0.3-beta.3 now supports the owner temperature ranges and Proof; the new guided run contains 44 settings. Prior nominal acceptance is preserved; new endpoints/Proof are pending. [Current review, ranges and acceptance](ISSUE_7_CONTROLLER_BETA3.md).
+
 On 2026-11-01 the owner supplied temperature ranges for CAF-DC111S-AEU. “Repeat” is interpreted as Reheat and “Proof” as the proofing program. The Dry range was supplied immediately beforehand. Only Proof's 1 °C increment was explicitly reported; no increment is inferred for other programs. These are owner-reported appliance limits, separate from successful transmission evidence and from duration bounds.
 
 | Program | Owner-reported appliance range | Pinned adapter range | Supervised temperature intersection |

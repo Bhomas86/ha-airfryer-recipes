@@ -1,10 +1,13 @@
 """Simulated guided runs: no appliance/network access."""
 import unittest
+import json
+from pathlib import Path
 from types import SimpleNamespace as NS
 from unittest.mock import AsyncMock, patch
 from custom_components.airfryer_recipes.beta_send import BetaSender, BetaTestBlocked, Target, REVIEWED_PROGRAM_LIMITS
 from custom_components.airfryer_recipes.beta_batch import BatchRunner
 from custom_components.airfryer_recipes.const import DOMAIN
+from custom_components.airfryer_recipes.device_discovery import normalize_capabilities
 
 
 class BatchTests(unittest.IsolatedAsyncioTestCase):
@@ -12,7 +15,11 @@ class BatchTests(unittest.IsolatedAsyncioTestCase):
         self.hass = NS(services=NS(async_call=AsyncMock()), data={DOMAIN: {}}, auth=NS(async_get_user=AsyncMock(return_value=NS(is_admin=True,is_active=True))))
         self.sender = BetaSender(self.hass)
         self.hass.data[DOMAIN]['beta_sender'] = self.sender
-        metadata = tuple((p,lo,hi,1,minutes,'estimated','unverified') for p,(lo,hi,minutes) in REVIEWED_PROGRAM_LIMITS.items())
+        payload = json.loads((Path(__file__).parent/'fixtures/airfryer_control_1_0_3_beta_3.json').read_text())['capabilities']
+        programs = normalize_capabilities(payload)['programs']
+        metadata = tuple((p['id'],p['temperature_c']['min'],p['temperature_c']['max'],
+                          p['duration_minutes']['min'],p['duration_minutes']['max'],
+                          p['limits_status'],p['send_status'],p['temperature_step_c']) for p in programs)
         self.target = Target('Fixture', ('entry',1,2,'time',1,((1,'idle'),(2,'idle')),metadata,'model','version'))
         self.sender._read = AsyncMock(return_value=self.target)
         self.sender.send_once = AsyncMock(return_value={'outcome':'accepted'})
@@ -32,38 +39,70 @@ class BatchTests(unittest.IsolatedAsyncioTestCase):
         run['next_token'] = result['next_token']
         return result
 
-    async def test_full_twelve_step_run_is_preconfirmed_and_one_attempt_per_step(self):
+    async def test_full_44_step_run_covers_temperature_bounds_and_proof_without_start(self):
         run = await self.start()
-        self.assertEqual(len(self.plan['steps']),12)
+        self.assertEqual(len(self.plan['steps']),44)
         self.assertEqual([step for step in self.plan['steps'] if step['settings']['program'] == 'dry'],
-                         [{'zone_id': zone, 'settings': {'program': 'dry', 'temperature_c': 55,
-                                                        'duration_minutes': 360}} for zone in (1, 2)])
+                         [{'zone_id': zone, 'settings': {'program': 'dry', 'temperature_c': temp,
+                                                        'duration_minutes': 360}} for temp in (35,55,95) for zone in (1, 2)])
         self.sender.send_once.assert_not_awaited()
-        for i in range(12):
+        for i in range(44):
             result = await self.step(run)
             self.assertEqual(result['completed'],i+1)
-            self.assertEqual(result['done'],i==11)
+            self.assertEqual(result['done'],i==43)
             self.assertTrue(result['reported_values_match'])
-        self.assertEqual(self.sender.send_once.await_count,12)
-        actual=[(c.args[1],c.args[2].program) for c in self.sender.send_once.await_args_list]
-        self.assertEqual(len(set(actual)),12)
+        self.assertEqual(self.sender.send_once.await_count,44)
+        actual=[(c.args[1],c.args[2].program,c.args[2].temperature_c) for c in self.sender.send_once.await_args_list]
+        self.assertEqual(len(set(actual)),44)
+        for program,(low,high,_) in REVIEWED_PROGRAM_LIMITS.items():
+            for zone in (1,2):
+                self.assertIn((zone,program,low),actual)
+                self.assertIn((zone,program,high),actual)
+        for zone in (1,2): self.assertIn((zone,'proof',31),actual)
         self.assertNotIn('device',self.sender.batch_devices)
-        self.assertEqual(self.sender._read.await_count,35)
+        self.assertEqual(self.sender._read.await_count,131)
         calls = self.hass.services.async_call.await_args_list
-        self.assertEqual(len(calls), 10)  # Two ends before each of five program changes.
+        self.assertEqual(len(calls), 42)  # End both zones before each of 21 setting changes.
         self.assertEqual([c.args[2]["entity_id"] for c in calls],
-                         ["switch.fixture_zone_1", "switch.fixture_zone_2"] * 5)
+                         ["switch.fixture_zone_1", "switch.fixture_zone_2"] * 21)
         self.assertTrue(all(c.args[:2] == ("switch", "turn_off") for c in calls))
         self.assertEqual([(c.args[1], c.args[2].temperature_c, c.args[2].duration_minutes)
                           for c in self.sender.send_once.await_args_list if c.args[2].program == 'dry'],
-                         [(1, 55, 360), (2, 55, 360)])
+                         [(z, t, 360) for t in (35,55,95) for z in (1,2)])
 
     async def test_missing_program_is_explicitly_skipped_without_substitution(self):
         f=list(self.target.fingerprint);f[6]=tuple(p for p in f[6] if p[0]!='dry')
         self.sender._read.return_value=Target('Fixture',tuple(f))
         run=await self.start()
-        self.assertEqual(run['total'],10)
+        self.assertEqual(run['total'],38)
         self.assertEqual(self.plan['skipped'],['dry'])
+
+    async def test_old_temperature_report_skips_whole_program_not_just_its_new_upper_bound(self):
+        f=list(self.target.fingerprint)
+        f[6]=tuple((p[:2]+(205,)+p[3:]) if p[0]=='airfry' else p for p in f[6])
+        self.sender._read.return_value=Target('Fixture',tuple(f))
+        run=await self.start()
+        self.assertEqual(run['total'],38)
+        self.assertEqual(self.plan['skipped'],['airfry'])
+        self.assertFalse(any(s['settings']['program']=='airfry' for s in self.plan['steps']))
+
+    async def test_proof_only_plan_still_requires_resets_between_temperature_pairs(self):
+        f=list(self.target.fingerprint);f[6]=tuple(p for p in f[6] if p[0]=='proof')
+        self.sender._read.return_value=Target('Fixture',tuple(f))
+        run=await self.start()
+        self.assertEqual(run['total'],8)
+        self.assertTrue(self.plan['resets_between_settings'])
+        self.assertFalse(self.plan['resets_between_programs'])
+        await self.step(run);await self.step(run);await self.step(run)
+        self.assertEqual(self.hass.services.async_call.await_count,2)
+        self.assertEqual(self.sender.send_once.await_args.args[2].temperature_c,31)
+
+    async def test_proof_missing_one_degree_metadata_is_explicitly_skipped(self):
+        f=list(self.target.fingerprint);f[6]=tuple(p[:7]+(5,) if p[0]=='proof' else p for p in f[6])
+        self.sender._read.return_value=Target('Fixture',tuple(f))
+        run=await self.start()
+        self.assertEqual(run['total'],36)
+        self.assertEqual(self.plan['skipped'],['proof'])
 
     async def test_false_ack_replay_and_other_connection_cannot_start_or_resume(self):
         plan=await self.batch.prepare('u',self.owner,'device','context')
@@ -143,7 +182,8 @@ class BatchTests(unittest.IsolatedAsyncioTestCase):
         result = await self.step(run)
         self.assertTrue(result['stopped'])
         self.assertEqual(result['failed_step'], 3)
-        self.assertEqual(result['settings']['program'], 'roast')
+        self.assertEqual(result['settings']['program'], 'airfry')
+        self.assertEqual(result['settings']['temperature_c'], 180)
         self.assertEqual(result['zone_id'], 1)
         self.assertEqual(result['error_code'], 11912000)
         self.assertEqual(self.sender.send_once.await_count, 3)

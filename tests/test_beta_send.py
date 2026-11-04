@@ -1,6 +1,8 @@
 """Commissioning safety tests; fake public services only, no appliance access."""
 
 import asyncio
+import json
+from pathlib import Path
 from datetime import datetime, timedelta, timezone
 from types import SimpleNamespace as NS, ModuleType
 import sys
@@ -415,7 +417,7 @@ class SenderTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_program_and_test_envelope_are_not_silently_adapted(self):
         for program, temp, minutes in (("proof", 170, 1), ("unknown", 180, 7),
-                                       ("airfry", 119, 1), ("airfry", 206, 1), ("airfry", 180, 61)):
+                                       ("airfry", 119, 1), ("airfry", 231, 1), ("airfry", 180, 61)):
             with self.assertRaises(BetaTestBlocked):
                 await self.selected({"settings": {"program": program, "temperature_c": temp, "duration_minutes": minutes}})
         self.read.assert_not_awaited()
@@ -439,24 +441,24 @@ class SenderTests(unittest.IsolatedAsyncioTestCase):
         self.hass.services.async_call.assert_not_awaited()
 
     async def test_model_and_upstream_temperature_intersection_blocks_before_device_read(self):
-        for program, temperatures in (("airfry", (119, 206, 230)), ("roast", (120, 174, 206, 230)),
-                                      ("bake", (79, 206)), ("grill", (160, 204, 231, 240)),
+        for program, temperatures in (("airfry", (119, 231)), ("roast", (120, 174, 231)),
+                                      ("bake", (79, 206)), ("grill", (159, 231, 240)),
                                       ("reheat", (39, 206))):
             for temperature in temperatures:
                 with self.subTest(program=program, temperature=temperature):
                     with self.assertRaisesRegex(BetaTestBlocked, "test_range"):
                         await self.selected({"settings": {"program": program, "temperature_c": temperature,
                                                            "duration_minutes": 1}})
-        for temperature in (30, 35, 45):
-            with self.assertRaisesRegex(BetaTestBlocked, "program_unsupported"):
+        for temperature in (29, 46):
+            with self.assertRaisesRegex(BetaTestBlocked, "test_range"):
                 await self.selected({"settings": {"program": "proof", "temperature_c": temperature,
                                                    "duration_minutes": 1}})
         self.read.assert_not_awaited()
         self.hass.services.async_call.assert_not_awaited()
 
     async def test_model_and_upstream_common_temperature_endpoints_allow_preparation_only(self):
-        for program, temperatures in (("airfry", (120, 205)), ("roast", (175, 205)),
-                                      ("bake", (80, 205)), ("grill", (205, 230)), ("reheat", (40, 205))):
+        for program, temperatures in (("airfry", (120, 230)), ("roast", (175, 230)),
+                                      ("bake", (80, 205)), ("grill", (160, 230)), ("reheat", (40, 205)), ("proof", (30, 31, 45))):
             for temperature in temperatures:
                 with self.subTest(program=program, temperature=temperature):
                     prepared = await self.selected({"settings": {"program": program, "temperature_c": temperature,
@@ -475,11 +477,11 @@ class SenderTests(unittest.IsolatedAsyncioTestCase):
             await self.selected({"recipe_id": recipe.id})
         self.read.assert_not_awaited()
 
-    async def test_all_six_programs_on_both_zones_use_the_same_single_attempt_contract(self):
+    async def test_all_seven_programs_on_both_zones_use_the_same_single_attempt_contract(self):
         for zone in (1, 2):
             for program, temp, minutes in (("airfry", 180, 7), ("roast", 190, 30),
                                            ("bake", 180, 6), ("grill", 205, 1),
-                                           ("reheat", 70, 10), ("dry", 55, 10)):
+                                           ("reheat", 70, 10), ("dry", 55, 10), ("proof", 35, 60)):
                 with self.subTest(zone=zone, program=program):
                     prepared = await self.selected({"settings": {"program": program,
                         "temperature_c": temp, "duration_minutes": minutes}}, zone=zone)
@@ -491,7 +493,7 @@ class SenderTests(unittest.IsolatedAsyncioTestCase):
                                      (program, zone, temp, minutes))
                     self.assertTrue(sent["einmal"])
                     self.assertFalse(sent["bestaetigen"])
-        self.assertEqual(self.hass.services.async_call.await_count, 12)
+        self.assertEqual(self.hass.services.async_call.await_count, 14)
 
     async def test_recipe_write_in_progress_blocks_confirmation_without_waiting_for_write(self):
         entered, finish = asyncio.Event(), asyncio.Event()
@@ -582,7 +584,7 @@ class AdapterTests(unittest.IsolatedAsyncioTestCase):
                          model=self.fryer.model, disabled_by=None,
                          identifiers={("airfryer_control", "cloud-private")}, config_entries={"entry"})
         self.registry = NS(async_get=Mock(return_value=self.device))
-        self.integration = NS(version="1.0.2-beta.1")
+        self.integration = NS(version="1.0.3-beta.3")
         self.payload = {"programme": {"airfry": {"temperatur": [120, 205], "minuten": [1, 60],
                         "grenzen": "geschaetzt", "senden": "ungeprueft"}}, "verbindung": "ok",
                         "letzte_meldung": self.reported.isoformat(), "revision": 7}
@@ -612,6 +614,72 @@ class AdapterTests(unittest.IsolatedAsyncioTestCase):
     async def read(self, zone=1):
         return await read_target(self.hass, "ha-device", zone)
 
+    async def test_reviewed_beta_owner_limits_and_proof_step_require_exact_current_report(self):
+        from custom_components.airfryer_recipes.beta_send import VERSION, REVIEWED_COMMIT
+        fixture=json.loads((Path(__file__).parent/'fixtures/airfryer_control_1_0_3_beta_3.json').read_text())
+        self.assertEqual(fixture['adapter_version'],VERSION)
+        self.assertEqual(fixture['reviewed_commit'],REVIEWED_COMMIT)
+        self.payload.update(fixture['capabilities'],letzte_meldung=self.reported.isoformat(),revision=7)
+        for zone in (1,2):
+            for program,temp in [('airfry',230),('roast',230),('grill',160),('grill',230),('proof',30),('proof',31),('proof',45)]:
+                target=await read_target(self.hass,'ha-device',zone,settings=CookingPhase(program,temp,1))
+                self.assertTrue(target.unchanged())
+        for step in [None,True,5]:
+            self.payload['programme']['proof']['temperatur_schritt']=step
+            with self.assertRaisesRegex(BetaTestBlocked,'capabilities'):
+                await read_target(self.hass,'ha-device',1,settings=CookingPhase('proof',31,1))
+        self.assertTrue(all(c.args[1]=='faehigkeiten' for c in self.hass.services.async_call.await_args_list))
+
+    async def test_unreviewed_adapter_releases_are_blocked_before_any_service_call(self):
+        for version in ['1.0.2-beta.1','1.0.2','1.0.3-beta.1','1.0.3-beta.2','1.0.3','1.0.4-beta.1']:
+            self.integration.version=version
+            with self.assertRaisesRegex(BetaTestBlocked,'adapter_version'):await self.read()
+        self.hass.services.async_call.assert_not_awaited()
+
+    async def test_complete_temperature_batch_uses_real_sender_and_fresh_state_validation(self):
+        from custom_components.airfryer_recipes.beta_batch import BatchRunner
+        fixture=json.loads((Path(__file__).parent/'fixtures/airfryer_control_1_0_3_beta_3.json').read_text())
+        self.payload.update(fixture['capabilities'],letzte_meldung=self.reported.isoformat(),revision=7)
+        self.hass.auth=NS(async_get_user=AsyncMock(return_value=NS(is_admin=True,is_active=True)))
+        self.hass.data={DOMAIN:{}}
+        transmitted=[]
+        async def call(domain,service,data,**kwargs):
+            if (domain,service)==('homeassistant','update_entity'):
+                self.fryer.last_report=datetime.now(timezone.utc)
+                self.fryer.revision+=1
+                self.payload.update(letzte_meldung=self.fryer.last_report.isoformat(),revision=self.fryer.revision)
+            elif (domain,service)==('airfryer_control','faehigkeiten'):
+                return self.payload
+            elif (domain,service)==('switch','turn_off'):
+                zone=int(data['entity_id'][-1]);self.zones[zone].status='bereit'
+                self.fryer.state.status='wartet_auf_start' if any(z.status=='wartet_auf_start' for z in self.zones.values()) else 'bereit'
+            elif (domain,service)==('airfryer_control','programm_senden'):
+                self.assertTrue(data['einmal']);self.assertTrue(data['streng'])
+                self.assertFalse(data['bestaetigen']);self.assertEqual(data['variante'],'multi_app')
+                transmitted.append((data['zone'],data['programm'],data['temperatur']))
+                zone=self.zones[data['zone']];zone.status='wartet_auf_start'
+                zone.mode=data['programm'].capitalize();zone.set_temp=data['temperatur'];zone.set_time_s=data['minuten']*60
+                self.fryer.state.status='wartet_auf_start'
+                return {'ok':True,'ergebnis':'angenommen','versuche':1,'variante':'multi_app',
+                        'gesendet':{k:data[k] for k in ['programm','temperatur','minuten','zone']}}
+            else:self.fail('Unexpected service')
+        self.hass.services.async_call=AsyncMock(side_effect=call)
+        sender=BetaSender(self.hass);self.hass.data[DOMAIN]['beta_sender']=sender
+        batch=BatchRunner(sender);owner=object()
+        with patch('custom_components.airfryer_recipes.beta_batch.zone_switch',side_effect=lambda h,d,e,z:f'switch.zone{z}'):
+            plan=await batch.prepare('admin',owner,'ha-device','context')
+            self.assertFalse(transmitted)
+            run=await batch.start('admin',owner,plan['token'],True)
+            nonce=run['next_token']
+            while nonce:
+                result=await batch.next('admin',owner,run['run_id'],nonce,'context')
+                nonce=result['next_token']
+        self.assertEqual(len(transmitted),44)
+        self.assertIn((1,'proof',31),transmitted);self.assertIn((2,'grill',160),transmitted)
+        self.assertEqual(result['completed'],44);self.assertTrue(result['reported_values_match'])
+        self.assertFalse(sender.uncertain)
+        self.assertTrue(all(z.active is False for z in self.zones.values()))
+
     async def test_both_zones_and_no_control_calls(self):
         for zone in (1, 2):
             target = await self.read(zone)
@@ -632,7 +700,7 @@ class AdapterTests(unittest.IsolatedAsyncioTestCase):
         self.integration.version = "1.0.1"
         with self.assertRaisesRegex(BetaTestBlocked, "adapter_version"):
             await self.read()
-        self.integration.version = "1.0.2-beta.1"
+        self.integration.version = "1.0.3-beta.3"
         self.device.model = "Other"
         with self.assertRaisesRegex(BetaTestBlocked, "model"):
             await self.read()
@@ -742,7 +810,7 @@ class AdapterTests(unittest.IsolatedAsyncioTestCase):
         from custom_components.airfryer_recipes.beta_send import REVIEWED_PROGRAM_LIMITS, MODEL_TEMPERATURE_LIMITS
         for program, (low, high, minutes) in REVIEWED_PROGRAM_LIMITS.items():
             self.payload["programme"] = {program: {"temperatur": [low, high], "minuten": [1, minutes],
-                "grenzen": "geschaetzt", "senden": "ungeprueft"}}
+                "grenzen": "besitzer", "senden": "ungeprueft", "temperatur_schritt": 1 if program == "proof" else 5}}
             model_low, model_high = MODEL_TEMPERATURE_LIMITS[program]
             allowed_low, allowed_high = max(low, model_low), min(high, model_high)
             for zone in (1, 2):

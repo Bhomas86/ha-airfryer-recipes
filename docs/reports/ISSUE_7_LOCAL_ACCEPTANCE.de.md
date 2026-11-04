@@ -2,6 +2,8 @@
 
 [Deutsch](ISSUE_7_LOCAL_ACCEPTANCE.de.md) | [English](ISSUE_7_LOCAL_ACCEPTANCE.md)
 
+**Update b21 (04.11.2026):** Der unten geprüfte Adapter und große Lauf beschreiben frühere Releases. Controller 1.0.3-beta.3 unterstützt jetzt die Eigentümer-Temperaturbereiche und Gären; der neue geführte Lauf umfasst 44 Einstellungen. Bisherige übliche Abnahmen bleiben erhalten; neue Grenzwerte/Gären sind offen. [Aktuelle Prüfung, Bereiche und Abnahme](ISSUE_7_CONTROLLER_BETA3.de.md).
+
 ## Gespeichertes Rezept auf beiden Fächern — 01.11.2026
 
 Der Eigentümer bestätigte: „Test hat für Fach 1 und 2 geklappt“. Dies folgt auf die Programmauswahl-Korrektur und die Anleitung, das gemeldete Programm `airfry` zu speichern und das gespeicherte Rezept mit 180 °C / 7 Minuten zu prüfen. **R1 und R2: BESTANDEN für die vom Eigentümer bestätigte Rezeptübertragung.** Mit dieser Bestätigung wurden kein zusätzlicher Screenshot, keine genaue installierte Version und keine separate Liste einzelner Beobachtungen geliefert.

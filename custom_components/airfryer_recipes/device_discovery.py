@@ -80,6 +80,7 @@ def normalize_capabilities(payload: Any) -> dict[str, Any] | None:
         limits = {
             "vesync_app": "confirmed",
             "geschaetzt": "estimated",
+            "besitzer": "owner_reported",
         }.get(raw.get("grenzen"), "unknown")
         send = {
             "bestaetigt": "confirmed",
@@ -89,6 +90,7 @@ def normalize_capabilities(payload: Any) -> dict[str, Any] | None:
             "id": program_id,
             "temperature_c": temperature,
             "duration_minutes": duration,
+            "temperature_step_c": _bounded_int(raw.get("temperatur_schritt"), 1, 100),
             "suggested": {
                 "temperature_c": suggested_temperature,
                 "duration_minutes": suggested_duration,

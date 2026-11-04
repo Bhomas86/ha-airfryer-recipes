@@ -47,6 +47,16 @@ class PreviewTests(unittest.IsolatedAsyncioTestCase):
         self.assertFalse((await self.preview())["live_send_enabled"])
         self.assertEqual(self.hass.services.mock_calls, [])
 
+    async def test_owner_reported_proof_remains_a_server_enforced_dry_run(self):
+        device=self.discovery['devices'][0]
+        device['programs']=[{'id':'proof','limits_status':'owner_reported','send_status':'unverified',
+                             'temperature_step_c':1}]
+        result=await prepare_preview(self.hass,device_id='ha-device',zone_id=1,
+            settings={'program':'proof','temperature_c':31,'duration_minutes':60})
+        self.assertIn('program_limits_unverified',result['blocking_reasons'])
+        self.assertFalse(result['transmitted']);self.assertFalse(result['live_send_enabled'])
+        self.assertEqual(self.hass.services.mock_calls,[])
+
     async def test_active_paused_unknown_and_offline_zones_remain_blocked(self):
         for status in ("cooking", "preheating", "paused", "drawer_open", "unknown", "offline"):
             self.discovery["devices"][0]["zones"][0]["status"] = status

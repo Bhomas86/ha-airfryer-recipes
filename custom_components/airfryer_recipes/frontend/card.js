@@ -1,5 +1,5 @@
 // Bundled locally; share the panel's transport, localization and token lifecycle.
-import { AirfryerRecipesPanel } from "./panel.js?v=0.1.0b20";
+import { AirfryerRecipesPanel } from "./panel.js?v=0.1.0b21";
 
 const CARD_TEXT = {
   en: {
@@ -47,7 +47,7 @@ const html = (value) => String(value ?? "").replace(/[&<>"']/g, (c) => ({
   "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
 }[c]));
 const textFor = (hass) => CARD_TEXT[hass?.language?.toLowerCase().startsWith("de") ? "de" : "en"];
-const displayConfig = (config) => ({ size: "normal", graphic_size: "normal", show_status: true, show_last_sent: true, ...config, zone_style: config.zone_style ?? "outline" });
+const displayConfig = (config) => ({ size: "normal", graphic_size: "normal", show_status: true, show_last_sent: true, ...config, zone_style: config.zone_style ?? "invisible" });
 const validDisplay = (config) => [undefined, "compact", "normal", "large"].includes(config.size) &&
   [undefined, "small", "normal", "large"].includes(config.graphic_size) &&
   [undefined, "outline", "invisible"].includes(config.zone_style) &&
@@ -459,7 +459,7 @@ class AirfryerRecipesCardEditor extends HTMLElement {
     this.attachShadow({ mode: "open" });
     this.shadowRoot.addEventListener("click", async (event) => {
       if(event.target.dataset?.customize!=="true"||!this._hass?.user?.is_admin)return;
-      await import("./personalization.js?v=0.1.0b20");this.customize=true;this.render();
+      await import("./personalization.js?v=0.1.0b21");this.customize=true;this.render();
     });
     this.shadowRoot.addEventListener("change", (event) => {
       const target = event.target;
@@ -477,7 +477,7 @@ class AirfryerRecipesCardEditor extends HTMLElement {
       <label>${t.configTitle}<input name="title" type="text" value="${html(this.config.title || "")}"></label>
       <label>${t.configDevice}<input name="device_id" type="text" value="${html(this.config.device_id || "")}"></label>
       ${[["size", t.size, ["compact", "normal", "large"]], ["graphic_size", t.graphicSize, ["small", "normal", "large"]]].map(([key, label, values]) => `<label>${label}<select name="${key}">${values.map((value) => `<option value="${value}" ${this.config[key] === value ? "selected" : ""}>${t[value]}</option>`).join("")}</select></label>`).join("")}
-      <label>${t.zoneStyle}<select name="zone_style">${[["outline", t.zoneOutline], ["invisible", t.zoneInvisible]].map(([value, label]) => `<option value="${value}" ${this.config.zone_style === value ? "selected" : ""}>${label}</option>`).join("")}</select></label><p>${t.zoneStyleHelp}</p>
+      <label>${t.zoneStyle}<select name="zone_style">${[["invisible", t.zoneInvisible], ["outline", t.zoneOutline]].map(([value, label]) => `<option value="${value}" ${this.config.zone_style === value ? "selected" : ""}>${label}</option>`).join("")}</select></label><p>${t.zoneStyleHelp}</p>
       ${[["show_status", t.showStatus], ["show_last_sent", t.showHistory]].map(([key, label]) => `<label><input name="${key}" type="checkbox" ${this.config[key] ? "checked" : ""}> ${label}</label>`).join("")}
       <label><input name="dry_run" type="checkbox" ${this.config.dry_run ? "checked" : ""}> ${t.configTest}</label><p>${t.configHelp}</p>${this._hass?.user?.is_admin ? `<button type="button" data-customize="true">${this._hass.language?.startsWith("de")?"Airfryer individualisieren":"Customize Airfryer"}</button>`:""}${this.customize?"<airfryer-device-designer></airfryer-device-designer>":""}`;
     const designer=this.shadowRoot.querySelector?.("airfryer-device-designer");if(designer){designer.preferredDevice=this.config.device_id||"";designer.hass=this._hass;}
