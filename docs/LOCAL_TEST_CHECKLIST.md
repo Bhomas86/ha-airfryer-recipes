@@ -2,7 +2,7 @@
 
 [Deutsch](LOCAL_TEST_CHECKLIST.de.md) | [English](LOCAL_TEST_CHECKLIST.md)
 
-Current: **b22**, exactly **Airfryer Control 1.0.3-beta.3** for supervised settings on CAF-DC111S-AEU. The dashboard, recipe manager, whole-device grants, private artwork and supervised sender are implemented. [Current review and evidence](reports/FINAL_REVIEW.md). Real HA/appliance checks are performed only by the owner; cloud Codex and Actions have no LAN/appliance access.
+Current: **b23**, exactly **Airfryer Control 1.0.3-beta.3** for supervised settings on CAF-DC111S-AEU. The dashboard, recipe manager, whole-device grants, private artwork and supervised sender are implemented. [Current review and evidence](reports/FINAL_REVIEW.md). Real HA/appliance checks are performed only by the owner; cloud Codex and Actions have no LAN/appliance access.
 
 ## Focused b22 save/restart check
 
@@ -12,7 +12,7 @@ This checks the corrected persistence path and requires no appliance transmissio
 2. Save a harmless recipe edit (for example its description), change a personal favorite and confirm both changes succeeded. If a spare recipe is available, mark it as a favorite, delete it as admin, then change another favorite; no stale deleted reference should prevent saving. There is no need to create 501 favorites manually.
 3. Note the current Proof recipe, device photo/zone positions, selected A/B style, device grants and separate last-sent values for both zones.
 4. Restart HA and fully reopen the app. Check the recipe edit/favorite and noted settings are retained; the granted ordinary user still sees the intended device. No old confirmation or automatic settings transmission may resume.
-5. Report PASS / FAIL / NOT TESTED with installed versions and the specific observation. This b22 restart check remains pending until explicitly reported.
+5. Report PASS / FAIL / NOT TESTED with installed versions and the specific observation. The owner has now reported this b22 save/restart check passed. The b23 label-only change does not require repeating the storage or 44-step appliance tests.
 
 ## Permissions and failure regression, when relevant
 

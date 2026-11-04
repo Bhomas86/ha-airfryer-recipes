@@ -73,8 +73,7 @@ const WORDS = {
     capabilitiesError: "Airfryer Control did not return usable device programs.",
     offline: "Offline", unknown: "Unknown", unverifiedFreshness: "Status freshness is not verified.",
     reportedFreshness: "Airfryer Control supplied a report time; freshness is not yet used for sending.",
-    ownerReportedProgram: "owner-reported · limits unverified", estimatedProgram: "estimated", confirmedProgram: "confirmed", unknownProgram: "not reported by this device",
-    sendUnverified: "sending unverified", sendConfirmed: "sending confirmed",
+    unknownProgram: "not reported by this device",
     dryRunResult: "Test preview result", noTransmission: "Nothing was transmitted to the appliance.",
     desiredSettings: "Requested settings", blockingReasons: "Live transmission remains blocked for these reasons",
     targetMissing: "The selected device or reported zone is no longer available. Refresh the device list.",
@@ -159,8 +158,7 @@ const WORDS = {
     capabilitiesError: "Airfryer Control hat keine verwendbaren Geräteprogramme geliefert.",
     offline: "Offline", unknown: "Unbekannt", unverifiedFreshness: "Die Aktualität des Zustands ist nicht bestätigt.",
     reportedFreshness: "Airfryer Control hat eine Meldezeit geliefert; sie wird noch nicht zum Senden verwendet.",
-    ownerReportedProgram: "Besitzerangabe · Grenzen ungeprüft", estimatedProgram: "geschätzt", confirmedProgram: "bestätigt", unknownProgram: "von diesem Gerät nicht gemeldet",
-    sendUnverified: "Senden ungeprüft", sendConfirmed: "Senden bestätigt",
+    unknownProgram: "von diesem Gerät nicht gemeldet",
     dryRunResult: "Ergebnis der Testvorschau", noTransmission: "Es wurde nichts an das Gerät übertragen.",
     desiredSettings: "Gewünschte Werte", blockingReasons: "Echte Übertragung bleibt aus diesen Gründen gesperrt",
     targetMissing: "Das gewählte Gerät oder das gemeldete Fach ist nicht mehr verfügbar. Bitte Geräteliste aktualisieren.",
@@ -382,11 +380,7 @@ export class AirfryerRecipesPanel extends HTMLElement {
   }
 
   programOption(program) {
-    const limits = program.limits_status === "confirmed" ? this.words.confirmedProgram
-      : program.limits_status === "estimated" ? this.words.estimatedProgram
-      : program.limits_status === "owner_reported" ? this.words.ownerReportedProgram : this.words.unknown;
-    const send = program.send_status === "confirmed" ? this.words.sendConfirmed : this.words.sendUnverified;
-    return `${this.programName(program.id)} · ${limits} · ${send}`;
+    return this.programName(program.id);
   }
 
   renderModelTemperatures(device) {

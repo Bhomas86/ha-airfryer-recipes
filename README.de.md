@@ -2,6 +2,8 @@
 
 [English](README.md) | [Deutsch](README.de.md)
 
+**[b23: Klare Programmnamen](docs/releases/0.1.0b23.de.md).** Herkunfts-/Prüfzusätze in den Programm-Dropdowns von Dashboard, Rezepteditor und Vorschau entfernt. Fehlende Programme bleiben gekennzeichnet. Eigentümer bestätigt den b22-Speicher-/Neustarttest.
+
 **[b22: Abschlussprüfung und geprüfte Speicherung](docs/releases/0.1.0b22.de.md).** Favoritenansammlung und falsche Speicherbestätigung bei stillen HA-Store-Fehlern korrigiert. Python-3.12-/3.14- und Frontend-Prüfungen bestanden. [Prüfung, Abnahme und offene Nachweise](docs/reports/FINAL_REVIEW.de.md).
 
 **[b21: Controller-Beta, volle Temperaturen und Gären](docs/releases/0.1.0b21.de.md).** Beaufsichtigtes Senden verlangt exakt Airfryer Control 1.0.3-beta.3. Der große Lauf prüft jetzt 44 Einstellungen samt allen Temperaturgrenzen und Gären 30/31 °C. B steht im Karteneditor zuerst/als Standard; vorhandene Auswahlen bleiben erhalten.
@@ -18,7 +20,7 @@
 
 Benutzerdefinierte Home-Assistant-Integration zur Verwaltung wiederverwendbarer Heißluftfritteusen-Rezepte. Die gespeicherten Einstellungen sollen über bestehende Home-Assistant-Integrationen an unterstützte Geräte übertragen werden.
 
-> **Projektstatus: Test-Beta 0.1.0b22.** Grundlegendes Card-Senden beider Fächer, Wiederverwendung nach physischem Zurücksetzen, Fachhistorie und Erhalt über Neustart sind vom Eigentümer bestätigt. Ganzgerätefreigaben für Benutzer sind samt Backend-Prüfung umgesetzt; drei lokale Freigabeprüfungen bestanden; beide Gerätebildvarianten sind bestätigt; 44-Schritt-Rückmeldungsfolge und Gären-Rezeptablauf sind bestätigt. Neue Cards beginnen im Testmodus; echtes Senden bleibt beaufsichtigte Beta. Der korrigierte b22-Speicher-/Neustartweg benötigt noch native Abnahme; Release-Kandidat bleibt ausstehend.
+> **Projektstatus: Test-Beta 0.1.0b23.** Grundlegendes Card-Senden beider Fächer, Wiederverwendung nach physischem Zurücksetzen, Fachhistorie und Erhalt über Neustart sind vom Eigentümer bestätigt. Ganzgerätefreigaben für Benutzer sind samt Backend-Prüfung umgesetzt; drei lokale Freigabeprüfungen bestanden; beide Gerätebildvarianten sind bestätigt; 44-Schritt-Rückmeldungsfolge und Gären-Rezeptablauf sind bestätigt. Neue Cards beginnen im Testmodus; echtes Senden bleibt beaufsichtigte Beta. Der gezielte b22-Speicher-/Neustarttest ist bestätigt; vor einem Kandidaten bleibt die offizielle HACS-/Hassfest-Prüfung offen.
 
 **[Dashboard-Card hinzufügen](docs/reports/ISSUE_8_DASHBOARD_CARD.de.md):** Nach dem Update HA neu starten, App vollständig neu öffnen, dann Dashboard → Bearbeiten → Karte hinzufügen → Airfryer Recipes. Kein Dashboard wird automatisch geändert. Zuerst den Testmodus aktiviert lassen.
 
@@ -87,11 +89,11 @@ Aktuelle Beta: 212 Python-Tests und 104 Frontend-Tests lokal bestanden. Keine Gi
 
 ## Installation
 
-**Vorabversion, kein stabiler Release.** Vorher ein Home-Assistant-Backup erstellen. Dieses Repository als benutzerdefiniertes HACS-Integrationsrepository hinzufügen, Vorabversionen anzeigen und über „Neu herunterladen“ `v0.1.0b22` auswählen. Home Assistant neu starten und die Companion-App vollständig neu öffnen.
+**Vorabversion, kein stabiler Release.** Vorher ein Home-Assistant-Backup erstellen. Dieses Repository als benutzerdefiniertes HACS-Integrationsrepository hinzufügen, Vorabversionen anzeigen und über „Neu herunterladen“ `v0.1.0b23` auswählen. Home Assistant neu starten und die Companion-App vollständig neu öffnen.
 
 Die Rezeptverwaltung funktioniert ohne Airfryer Control und benötigt keine Cloud-Zugangsdaten. Für die erweiterte Geräte-Testvorschau Airfryer Control `1.0.2-beta.1` oder neuer installieren. Sie führt keine Steuerbefehle aus. Für CAF-DC111S-AEU sind die sechs gemeldeten Programme und Grenzen noch geschätzt/ungeprüft; `proof` fehlt im Upstream-Vertrag. Normale Übertragung bleibt gesperrt; der separate beaufsichtigte Beta-Test benötigt exakt Airfryer Control 1.0.2-beta.1.
 
-Details: [Release Notes](docs/releases/0.1.0b22.de.md), [Dashboard-Einrichtung/-Prüfungen](docs/reports/ISSUE_8_DASHBOARD_CARD.de.md), [lokale Testcheckliste](docs/LOCAL_TEST_CHECKLIST.de.md) und [Roadmap](docs/ROADMAP.de.md).
+Details: [Release Notes](docs/releases/0.1.0b23.de.md), [Dashboard-Einrichtung/-Prüfungen](docs/reports/ISSUE_8_DASHBOARD_CARD.de.md), [lokale Testcheckliste](docs/LOCAL_TEST_CHECKLIST.de.md) und [Roadmap](docs/ROADMAP.de.md).
 
 ## Sicherheit und Datenschutz
 

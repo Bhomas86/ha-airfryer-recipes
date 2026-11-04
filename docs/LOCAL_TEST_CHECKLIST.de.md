@@ -2,7 +2,7 @@
 
 [Deutsch](LOCAL_TEST_CHECKLIST.de.md) | [English](LOCAL_TEST_CHECKLIST.md)
 
-Aktuell: **b22**, für beaufsichtigte Einstellungen an CAF-DC111S-AEU exakt **Airfryer Control 1.0.3-beta.3**. Dashboard, Rezeptverwaltung, Ganzgerätefreigaben, private Gerätebilder und beaufsichtigter Sendeweg sind umgesetzt. [Aktuelle Prüfung und Nachweise](reports/FINAL_REVIEW.de.md). Reale HA-/Gerätetests führt nur der Eigentümer aus; Cloud Codex und Actions haben keinen LAN-/Gerätezugriff.
+Aktuell: **b23**, für beaufsichtigte Einstellungen an CAF-DC111S-AEU exakt **Airfryer Control 1.0.3-beta.3**. Dashboard, Rezeptverwaltung, Ganzgerätefreigaben, private Gerätebilder und beaufsichtigter Sendeweg sind umgesetzt. [Aktuelle Prüfung und Nachweise](reports/FINAL_REVIEW.de.md). Reale HA-/Gerätetests führt nur der Eigentümer aus; Cloud Codex und Actions haben keinen LAN-/Gerätezugriff.
 
 ## Gezielter b22-Speicher-/Neustarttest
 
@@ -12,7 +12,7 @@ Dieser Test prüft den korrigierten Speicherweg und benötigt keine Geräteüber
 2. Harmlose Rezeptänderung (etwa Beschreibung) speichern, einen persönlichen Favoriten ändern und erfolgreiche Speicherung prüfen. Falls ein entbehrliches Rezept vorhanden ist: als Favorit markieren, als Admin löschen, dann einen anderen Favoriten ändern; ein alter gelöschter Verweis darf das Speichern nicht verhindern. Keine 501 Favoriten von Hand anlegen.
 3. Aktuelles Gären-Rezept, Gerätefoto/Fachpositionen, gewählten A/B-Stil, Gerätefreigaben und getrennte zuletzt gesendete Werte beider Fächer notieren.
 4. HA neu starten und App vollständig neu öffnen. Rezeptänderung/Favorit und notierte Einstellungen müssen erhalten sein; der freigegebene normale Benutzer sieht weiterhin das vorgesehene Gerät. Keine alte Bestätigung oder automatische Einstellungsübertragung darf fortgesetzt werden.
-5. BESTANDEN / FEHLGESCHLAGEN / NICHT GETESTET mit installierten Versionen und konkreter Beobachtung melden. Dieser b22-Neustarttest bleibt bis zur ausdrücklichen Meldung offen.
+5. BESTANDEN / FEHLGESCHLAGEN / NICHT GETESTET mit installierten Versionen und konkreter Beobachtung melden. Der Eigentümer hat diesen b22-Speicher-/Neustarttest inzwischen als bestanden gemeldet. Die reine b23-Beschriftungsänderung benötigt keine Wiederholung der Speicher- oder 44-Schritt-Gerätetests.
 
 ## Berechtigungs- und Fehlerregression, wenn relevant
 
