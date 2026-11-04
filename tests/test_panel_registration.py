@@ -72,5 +72,5 @@ class PanelRegistrationTests(unittest.TestCase):
         self.assertTrue(Path(card.path).is_file())
         self.assertEqual(card.url_path, f"/api/{DOMAIN}/card.js")
         self.assertFalse(card.cache_headers)
-        self.assertEqual([call[1] for call in calls if call[0] == "card"], [f"/api/{DOMAIN}/card.js?v=0.1.0b21"])
-        self.assertEqual(panels[0]["module_url"], f"{MODULE_URL}?v=0.1.0b21")
+        self.assertEqual([call[1] for call in calls if call[0] == "card"], [f"/api/{DOMAIN}/card.js?v=0.1.0b22"])
+        self.assertEqual(panels[0]["module_url"], f"{MODULE_URL}?v=0.1.0b22")

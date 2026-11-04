@@ -2,6 +2,8 @@
 
 [Deutsch](ROADMAP.de.md) | [English](ROADMAP.md)
 
+**b22-Abschlussprüfung (04.11.2026):** Eigentümer bestätigt abgeschlossene 44-Schritt-Rückmeldungsfolge, Karte und Gären-Rezeptablauf. Favoritenkapazität/gelöschte Verweise korrigiert und native Store-Dateien nach Schreiben geprüft. 232 Python-Tests je 3.12/3.14 plus 125 Frontend-Tests bestanden. Aktueller nativer Speicher-/Neustarttest und offizielle HACS-/Hassfest-Nachweise bleiben vor einem Kandidaten offen. [Prüfung und Umfang](reports/FINAL_REVIEW.de.md).
+
 **b21 (04.11.2026):** Eigentümer bestätigt beide b20-Varianten; B wird zuerst/Standard ohne eigenes UI-Update. Controller 1.0.3-beta.3 geprüft/gepinnt, Modelltemperaturen und Gären mit ungeprüfter Herkunft übernommen und beaufsichtigten Lauf auf 44 Einstellungen beider Fächer erweitert. Native Grenzwert-/Gären-Abnahme offen. [Prüfung und Testtabelle](reports/ISSUE_7_CONTROLLER_BETA3.de.md).
 
 **b20 (04.11.2026):** Eigentümer wünscht beide Gerätebild-Entwürfe als Karteneinstellung. A nutzt eine dünne aktive Kontur und kleine Markierungen; B nutzt unsichtbare, antippbare eingerichtete Bildbereiche mit sichtbarer Fachauswahl neben dem Foto. Bildeditor-Rechtecke bleiben zum Positionieren sichtbar. Umgesetzt; native Abnahme offen. [Einstellungen und Prüfungen](releases/0.1.0b20.de.md).

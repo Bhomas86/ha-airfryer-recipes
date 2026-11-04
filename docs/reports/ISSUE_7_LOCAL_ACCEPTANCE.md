@@ -2,6 +2,8 @@
 
 [Deutsch](ISSUE_7_LOCAL_ACCEPTANCE.de.md) | [English](ISSUE_7_LOCAL_ACCEPTANCE.md)
 
+**Current acceptance/review (b22, 2026-11-04):** Owner confirms card behavior, completion of all 44 reported-value steps and the subsequent Proof recipe test. Historical pending statements below describe their release-time evidence. Current b22 native restart and official metadata checks are still pending. [Exact evidence, fixes and release decision](FINAL_REVIEW.md).
+
 **Update b21 (2026-11-04):** The reviewed adapter and large run below describe earlier releases. Controller 1.0.3-beta.3 now supports the owner temperature ranges and Proof; the new guided run contains 44 settings. Prior nominal acceptance is preserved; new endpoints/Proof are pending. [Current review, ranges and acceptance](ISSUE_7_CONTROLLER_BETA3.md).
 
 ## Saved recipe on both zones — 2026-11-01

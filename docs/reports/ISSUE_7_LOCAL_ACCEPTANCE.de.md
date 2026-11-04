@@ -2,6 +2,8 @@
 
 [Deutsch](ISSUE_7_LOCAL_ACCEPTANCE.de.md) | [English](ISSUE_7_LOCAL_ACCEPTANCE.md)
 
+**Aktuelle Abnahme/Prüfung (b22, 04.11.2026):** Eigentümer bestätigt Kartenverhalten, Abschluss aller 44 Rückmeldeschritte und anschließenden Gären-Rezepttest. Historische offene Angaben unten beschreiben den damaligen Veröffentlichungsstand. Aktueller nativer b22-Neustart und offizielle Metadatenprüfungen bleiben offen. [Exakte Nachweise, Korrekturen und Release-Entscheidung](FINAL_REVIEW.de.md).
+
 **Update b21 (04.11.2026):** Der unten geprüfte Adapter und große Lauf beschreiben frühere Releases. Controller 1.0.3-beta.3 unterstützt jetzt die Eigentümer-Temperaturbereiche und Gären; der neue geführte Lauf umfasst 44 Einstellungen. Bisherige übliche Abnahmen bleiben erhalten; neue Grenzwerte/Gären sind offen. [Aktuelle Prüfung, Bereiche und Abnahme](ISSUE_7_CONTROLLER_BETA3.de.md).
 
 ## Gespeichertes Rezept auf beiden Fächern — 01.11.2026

@@ -285,6 +285,32 @@ class WebsocketTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual((await self.call("favorites", another))[2], {"recipe_ids": []})
         self.assertEqual((await self.call("set_favorite", another, recipe_id="missing", favorite=True))[2], "not_found")
 
+    async def test_deleted_favorites_are_pruned_on_own_changes_and_survive_reload(self):
+        old=await self.repo.async_create(make_recipe('Old'))
+        current=await self.repo.async_create(make_recipe('Current'))
+        another=FakeConnection();another.user.id='other-user'
+        await self.call('set_favorite',self.user,recipe_id=old.id,favorite=True)
+        await self.call('set_favorite',another,recipe_id=current.id,favorite=True)
+        await self.repo.async_delete(old.id)
+        before=await self.repo.async_export_json()
+        result=await self.call('set_favorite',self.user,recipe_id=current.id,favorite=True)
+        self.assertEqual(result[0],'result')
+        fresh=FavoriteRepository(self.favorites._store);await fresh.async_load()
+        self.assertEqual(await fresh.async_get(self.user.user.id),[current.id])
+        self.assertEqual(await fresh.async_get(another.user.id),[current.id])
+        self.assertEqual(await self.repo.async_export_json(),before)
+
+    async def test_user_can_clear_a_deleted_favorite_without_touching_another_user(self):
+        recipe=await self.repo.async_create(make_recipe())
+        another=FakeConnection();another.user.id='other-user'
+        for user in (self.user,another):
+            await self.call('set_favorite',user,recipe_id=recipe.id,favorite=True)
+        await self.repo.async_delete(recipe.id)
+        result=await self.call('set_favorite',self.user,recipe_id=recipe.id,favorite=False)
+        self.assertEqual(result[0],'result')
+        self.assertEqual(await self.favorites.async_get(self.user.user.id),[])
+        self.assertEqual(await self.favorites.async_get(another.user.id),[recipe.id])
+
     async def test_device_discovery_is_admin_only_and_requires_loaded_recipes(self):
         with patch("custom_components.airfryer_recipes.device_discovery.discover_devices",
                    return_value={"devices": [], "live_send_enabled": False}) as discover:

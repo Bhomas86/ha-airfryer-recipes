@@ -2,6 +2,8 @@
 
 [English](REQUIREMENTS.md) | [Deutsch](REQUIREMENTS.de.md)
 
+**b22 final review (2026-11-04):** Owner confirms the completed 44-step reported-value sequence, card and Proof recipe workflow. Fix favorite capacity/deleted-reference accumulation and verify native Store files after writes. 232 Python tests per 3.12/3.14 plus 125 frontend tests passed. Current native save/restart and official HACS/Hassfest evidence remain pending before a candidate. [Review and scope](reports/FINAL_REVIEW.md).
+
 **b21 (2026-11-04):** Owner confirms both b20 styles; B becomes first/default without a standalone UI release. Review/pin controller 1.0.3-beta.3, enable model-specific temperatures and Proof with unverified provenance, and expand the supervised run to 44 settings on both zones. Native endpoint/Proof acceptance pending. [Review and test table](reports/ISSUE_7_CONTROLLER_BETA3.md).
 
 **b20 (2026-11-04):** Owner requests both approved artwork designs as a card setting. A uses a thin active outline and small markers; B uses invisible but tappable configured image zones, with visible selection beside the photo. Designer rectangles stay visible for positioning. Implemented; native acceptance pending. [Settings and checks](releases/0.1.0b20.md).

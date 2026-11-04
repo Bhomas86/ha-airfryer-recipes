@@ -1,69 +1,38 @@
-# Lokale Testcheckliste – Gerätetests
+# Lokale Abnahmecheckliste
 
 [Deutsch](LOCAL_TEST_CHECKLIST.de.md) | [English](LOCAL_TEST_CHECKLIST.md)
 
-**Dieses Projekt enthält lesende Geräteerkennung, aber noch keinen Sendeadapter und kein Dashboard.**
-Die folgenden Tests erst durchführen, wenn die jeweilige Funktion implementiert
-und eine manuell installierbare Beta verfügbar ist. Reale Tests erfolgen
-ausschließlich im eigenen Home Assistant; Cloud Codex und GitHub Actions
-erhalten keinen Zugriff auf Heimnetz oder echte VeSync-Geräte.
+Aktuell: **b22**, für beaufsichtigte Einstellungen an CAF-DC111S-AEU exakt **Airfryer Control 1.0.3-beta.3**. Dashboard, Rezeptverwaltung, Ganzgerätefreigaben, private Gerätebilder und beaufsichtigter Sendeweg sind umgesetzt. [Aktuelle Prüfung und Nachweise](reports/FINAL_REVIEW.de.md). Reale HA-/Gerätetests führt nur der Eigentümer aus; Cloud Codex und Actions haben keinen LAN-/Gerätezugriff.
 
-Für v0.1.0b3 gilt ausschließlich der separate [beaufsichtigte Ersttest](reports/ISSUE_7_BETA_SEND.de.md#lokale-gerateabnahme). Die allgemeinen Live-/Dashboard-Prüfungen unten bleiben bis zu ihrer Implementierung ausstehend.
+## Gezielter b22-Speicher-/Neustarttest
 
-## Vor jedem realen Gerätetest
+Dieser Test prüft den korrigierten Speicherweg und benötigt keine Geräteübertragung. Karte, Ganzgerätefreigaben, abgeschlossene 44-Schritt-Rückmeldungsfolge und Gären-Rezepttest sind vom Eigentümer bestätigt; wegen dieser Speicherkorrekturen nicht automatisch alle Geräteeinstellungen wiederholen.
 
-- [ ] Home-Assistant-, HACS- und Adapter-Versionen notieren.
-- [ ] Backup und funktionierende Airfryer-Control-Integration überprüfen.
-- [ ] Gerät leer, frei und unter Aufsicht betreiben.
-- [ ] Testmodus prüfen: **kein echter Gerätebefehl**.
-- [ ] Live-Modus erfordert ausdrücklich „Senden“.
-- [ ] Aktuellen Zustand jedes Fachs prüfen; veraltete Daten sind kein Nachweis für Bereitschaft.
-- [ ] Manuellen Start am Gerät und keine unerwartete Heizungsaktivierung bestätigen.
+1. b22 installieren, HA neu starten und App neu öffnen. Karte im Testmodus lassen.
+2. Harmlose Rezeptänderung (etwa Beschreibung) speichern, einen persönlichen Favoriten ändern und erfolgreiche Speicherung prüfen. Falls ein entbehrliches Rezept vorhanden ist: als Favorit markieren, als Admin löschen, dann einen anderen Favoriten ändern; ein alter gelöschter Verweis darf das Speichern nicht verhindern. Keine 501 Favoriten von Hand anlegen.
+3. Aktuelles Gären-Rezept, Gerätefoto/Fachpositionen, gewählten A/B-Stil, Gerätefreigaben und getrennte zuletzt gesendete Werte beider Fächer notieren.
+4. HA neu starten und App vollständig neu öffnen. Rezeptänderung/Favorit und notierte Einstellungen müssen erhalten sein; der freigegebene normale Benutzer sieht weiterhin das vorgesehene Gerät. Keine alte Bestätigung oder automatische Einstellungsübertragung darf fortgesetzt werden.
+5. BESTANDEN / FEHLGESCHLAGEN / NICHT GETESTET mit installierten Versionen und konkreter Beobachtung melden. Dieser b22-Neustarttest bleibt bis zur ausdrücklichen Meldung offen.
 
-## Unabhängige Fächer prüfen
+## Berechtigungs- und Fehlerregression, wenn relevant
 
-- [ ] Im Admin-Panel gemeldetes Gerät/Fach wählen; Testvorschau zeigt ausdrücklich, dass nichts übertragen wurde.
-- [ ] Mit Airfryer Control `1.0.2-beta.1` oder neuer prüfen, dass das Programm-Dropdown `faehigkeiten` entspricht; geschätzte/ungeprüfte Einträge sind sichtbar gekennzeichnet und ein nicht gemeldetes Programm aus einem gespeicherten Rezept wird nicht still ersetzt.
-- [ ] Gespeichertes Rezept und manuelle Werte getrennt in der Testvorschau prüfen; Wunschwerte bleiben unverändert.
-- [ ] Geräteabfrage ohne/mit fehlerhaftem Airfryer Control beeinträchtigt die Rezeptverwaltung nicht.
-- [ ] Testvorschau auf Deutsch und Englisch sowie mit °C/°F-Benutzereinstellung prüfen.
-- [ ] Testmodus an Fach 1: keine echte Übertragung.
-- [ ] Testmodus an Fach 2: keine echte Übertragung.
-- [ ] Unterstützte Werte an das ruhende Fach 1 senden und am Gerät prüfen.
-- [ ] Unterstützte Werte an das ruhende Fach 2 senden und am Gerät prüfen.
-- [ ] Das jeweils andere Fach darf nicht unbeabsichtigt verändert werden.
-- [ ] Programm, Solltemperatur und Zeit einzeln prüfen, sofern unterstützt.
-- [ ] Während des Garens muss die Standardsperre greifen.
-- [ ] Nach Admin-Freigabe: Bestätigung und Geräteunterstützung vor Änderung prüfen.
-- [ ] Es darf kein automatischer Heizstart erfolgen.
-- [ ] Offline-/Unbekannt-Zustand: Senden gesperrt und Bild ausgegraut.
-- [ ] Verbindung unterbrechen/wiederherstellen: keine automatischen Wiederholungen.
-- [ ] Airfryer-Control-Integration deaktivieren: Rezeptverwaltung funktioniert weiter.
+- [ ] Neuer normaler Benutzer sieht standardmäßig kein Gerät. Ganzgerätefreigabe gibt beide Fächer und alle gemeldeten Programme frei; Entzug sperrt nach Aktualisieren neue Lese-/Sendezugriffe. Keine Fach-/Programm-/Menüfreigaben.
+- [ ] Normale Benutzer können Admin-Rezeptänderungen/Import/Export, Bildschreiben, Freigabeverwaltung und Testfolgen auch über direkte WebSocket-Aufrufe nicht nutzen. Persönliche Favoriten gehören nur zum authentifizierten Benutzer.
+- [ ] Testmodus sendet keinen Steuerbefehl. Unbekannt/offline/gart sperren Einstellungen; Verbindungsabbruch/Wiederverbindung wiederholen keinen alten Befehl.
+- [ ] Fehlendes/defektes Airfryer Control lässt die Rezeptverwaltung nutzbar. Eine andere Controller-Version besteht den gepinnten beaufsichtigten Vertrag nicht.
+- [ ] Ungültiger Import/zukünftiges Schema verändern keine Originaldaten. Sicherungswiederherstellung nur an entbehrlicher Testkopie prüfen; für Schema 1 wird keine Migration behauptet.
+- [ ] Bei natürlich auftretendem Speicherfehler darf die UI Speichern nicht fälschlich bestätigen. Eine angenommene Geräteübertragung bei Historienfehler muss angenommen bleiben und darf nicht nur zum Speichern wiederholt werden. Produktivspeicher nicht zur Fehlersimulation beschädigen; automatisierte Tests decken simulierte Fehler ab.
 
-## Daten und Übersetzung
+## Vorhandene Benutzerabläufe
 
-- [ ] Ohne Airfryer Control die Admin-Seitenleiste „Airfryer Recipes“ auf dem Handy öffnen; keine horizontale Überläufe.
-- [ ] Rezept anlegen, bearbeiten, kopieren und nach Bestätigung löschen; nach HA-Neustart bleiben gespeicherte Rezepte erhalten.
-- [ ] Im Rezepteditor vorhandene Kategorie wählen; „Neue Kategorie hinzufügen“ steht zuletzt und übernimmt bei abweichender Groß-/Kleinschreibung den vorhandenen Namen.
-- [ ] Gemeinsame und persönliche Favoriten getrennt prüfen; persönliche Favoriten eines zweiten Benutzers bleiben unabhängig.
-- [ ] JSON-Importvorschau mit gleichen Namen/IDs prüfen und erst nach bewusster Auswahl übernehmen; Export mit dem Dateinamen `Airfryer-Rezepte-Home-Assistant.json` prüfen.
-- [ ] Mit normalem Benutzer: Admin-Panel nicht öffnen und Schreib-WebSocket-Befehle nicht ausführen können.
-- [ ] Erstellen, Bearbeiten, Löschen, Duplizieren, Exportieren und Importieren in beiden Sprachen.
-- [ ] Ungültiges JSON und zukünftige Schemanummer importieren: Daten unverändert.
-- [ ] Migration inklusive Sicherung und Rückfall anhand einer Testkopie prüfen.
-- [ ] Normale Benutzer dürfen Rezepte/Sicherheitseinstellungen nicht ändern.
-- [ ] Darstellung °C/°F, gerätespezifische Grenzwerte und Warnungen prüfen.
-- [ ] Diagnosevorschau auf Geheimnisse prüfen, bevor etwas geteilt wird.
-- [ ] Deutsche und englische Berichte und Release Notes inhaltlich abgleichen.
+- [ ] Rezept erstellen/bearbeiten/kopieren/nach Bestätigung löschen, Kategorien, Tags, Suche und gemeinsame/persönliche Favoriten; doppelte Namen/Großschreibung behandeln.
+- [ ] Versionierter JSON-Import mit Vorschau und bewusster Konfliktwahl; authentifizierter benannter Export enthält keine Gerätebilder, Freigaben oder Kontodaten.
+- [ ] Rezept-/Manuell-Quelle, fachbezogene Entwürfe/Historie, beide Fächer ohne Senden auswählbar, korrekt gemeldete Programme einschließlich Gären und ungeprüfter Herkunft.
+- [ ] A zeigt dünne aktive Kontur/kleine Markierungen; B lässt eingerichtete Fotobereiche unsichtbar und antippbar. Bildeditor-Rechtecke bleiben sichtbar, skalieren mit dem Bild und bleiben nach Darstellung speichern erhalten. A/B-Kartenwahl nutzt den getrennten HA-Speichern-Knopf.
+- [ ] Deutsche/englische UI und °C/°F-Anzeige; gespeicherte Temperaturen bleiben Celsius. Nicht ausdrücklich gemeldete native Tastatur-/Barrierefreiheits-/Mobilvarianten bleiben getrennte Prüfungen.
 
-## Später: SYNC / MATCH (nicht Bestandteil des MVP)
+Für den großen beaufsichtigten Temperaturlauf die [exakte Tabelle/Anleitung](reports/ISSUE_7_CONTROLLER_BETA3.de.md) nutzen. Enthalten sind 44 Einstellungen beider Fächer, keine Gar-/Zeitgrenzenabnahme. Am leeren Gerät bleiben, nicht Start drücken und letzte Vorbereitungen am Gerät abbrechen.
 
-- [ ] Exakte Home-Assistant-Aktionen und erforderliche Reihenfolge prüfen.
-- [ ] Beide Fächer mit unterschiedlichen Zeiten konfigurieren.
-- [ ] SYNC nur bei gültigem, unterstütztem Gerätezustand ausführen.
-- [ ] Geräteanzeige und manuellen Start prüfen.
-- [ ] MATCH getrennt testen und identische Facheinstellungen prüfen.
-- [ ] Bei nicht unterstütztem Modell beide Schaltflächen ausblenden/sperren.
+## Release-Stand und spätere Arbeit
 
-Jeden Test als **BESTANDEN / FEHLGESCHLAGEN / NICHT GETESTET** mit
-nachvollziehbaren Beobachtungen dokumentieren.
+Vor Kandidat/stabiler Veröffentlichung gezieltes natives Neustartergebnis und offizielle HACS-/Hassfest-Validierung nachweisen. Lokale Simulationen/Metadatenprüfungen werden getrennt dokumentiert; ohne geänderte Eigentümeranweisung keine Actions starten. Diagnoseexport, geführte Ersteinrichtung, Benachrichtigungen, Änderungen aktiver Fächer und SYNC/MATCH sind getrennt geplant und dürfen hier nicht als umgesetzt erscheinen. Reale Prüfungen als BESTANDEN / FEHLGESCHLAGEN / NICHT GETESTET mit Version, Soll-/Ist-Ergebnis und ohne Zugangsdaten, Cloudkennungen oder rohe Diagnosedumps dokumentieren.

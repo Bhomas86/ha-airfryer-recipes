@@ -70,5 +70,5 @@ class SentSettings:
 
 
 def create_sent_settings(hass: Any) -> SentSettings:
-    from homeassistant.helpers.storage import Store
-    return SentSettings(Store(hass, 1, f"{DOMAIN}.sent_settings"))
+    from .verified_storage import VerifiedStore
+    return SentSettings(VerifiedStore(hass, 1, f"{DOMAIN}.sent_settings"))

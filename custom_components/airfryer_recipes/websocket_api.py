@@ -3,7 +3,8 @@
 Read access: authenticated HA users.
 Shared recipe mutations and imports: administrators only, enforced by Home
 Assistant's built-in require_admin decorator. Each authenticated user may
-change only their own personal favorites. Supervised beta sends are admin-only.
+change only their own personal favorites. Dashboard sends require a current
+whole-device grant; batch tools and management endpoints remain admin-only.
 """
 
 from __future__ import annotations
@@ -243,11 +244,15 @@ async def ws_favorites(hass: Any, connection: Any, msg: dict[str, Any]) -> None:
 })
 @websocket_api.async_response
 async def ws_set_favorite(hass: Any, connection: Any, msg: dict[str, Any]) -> None:
-    """Update only the authenticated user's preference for an existing recipe."""
+    """Change own favorites; clearing also accepts a deleted recipe reference."""
     async def run(repo: RecipeRepository) -> dict[str, Any]:
-        await repo.async_get(msg["recipe_id"])
+        if msg["favorite"]:
+            await repo.async_get(msg["recipe_id"])
         favorites = hass.data[DOMAIN]["favorites"]
-        await favorites.async_set(connection.user.id, msg["recipe_id"], msg["favorite"])
+        async def live_recipe_ids() -> set[str]:
+            return {recipe.id for recipe in await repo.async_list()}
+        await favorites.async_set(connection.user.id, msg["recipe_id"], msg["favorite"],
+                                  live_recipe_ids=live_recipe_ids)
         return {"recipe_id": msg["recipe_id"], "favorite": msg["favorite"]}
     await _respond(hass, connection, msg, run)
 
@@ -269,7 +274,7 @@ async def ws_sent_settings(hass: Any, connection: Any, msg: dict[str, Any]) -> N
 @websocket_api.websocket_command({voluptuous.Required("type"): f"{DOMAIN}/devices"})
 @websocket_api.async_response
 async def ws_devices(hass: Any, connection: Any, msg: dict[str, Any]) -> None:
-    """Read optional adapter discovery (admin-only until device ACLs are added)."""
+    """Administrator discovery; ordinary users use the device-scoped control API."""
     from .device_discovery import discover_devices
 
     async def run(repo: RecipeRepository) -> dict[str, Any]:

@@ -112,5 +112,5 @@ async def authorize_device(hass: Any, uid: str, device: str) -> Any:
 
 
 def create_device_access(hass: Any) -> DeviceAccess:
-    from homeassistant.helpers.storage import Store
-    return DeviceAccess(Store(hass, 1, f"{DOMAIN}.device_access"))
+    from .verified_storage import VerifiedStore
+    return DeviceAccess(VerifiedStore(hass, 1, f"{DOMAIN}.device_access"))

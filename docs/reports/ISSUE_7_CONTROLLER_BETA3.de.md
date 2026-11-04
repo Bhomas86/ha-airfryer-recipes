@@ -2,6 +2,8 @@
 
 [Deutsch](ISSUE_7_CONTROLLER_BETA3.de.md) | [English](ISSUE_7_CONTROLLER_BETA3.md)
 
+**Aktuelle Abnahme/Prüfung (b22, 04.11.2026):** Eigentümer bestätigt Kartenverhalten, Abschluss aller 44 Rückmeldeschritte und anschließenden Gären-Rezepttest. Historische offene Angaben unten beschreiben den damaligen Veröffentlichungsstand. Aktueller nativer b22-Neustart und offizielle Metadatenprüfungen bleiben offen. [Exakte Nachweise, Korrekturen und Release-Entscheidung](FINAL_REVIEW.de.md).
+
 Der Eigentümer bestätigt beide b20-Gerätebildvarianten und wünscht B im Editor zuerst/als Standard, ohne eigene Veröffentlichung. Diese Präferenz wird mit den Controller-Änderungen in b21 gebündelt. Bestehende ausdrückliche A/B-Auswahlen bleiben erhalten. Am 04.11.2026 meldet der Eigentümer die Temperatur-/Proof-Umsetzung des Upstream-Entwicklers und beauftragt Prüfung, Integration und Abdeckung im großen beaufsichtigten Lauf. Dies autorisiert Vorbereitung und Umsetzung; die Geräteabnahme erfolgt weiterhin durch den Eigentümer.
 
 ## Geprüfter Quellstand und erhaltener Transport

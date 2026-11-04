@@ -106,7 +106,7 @@ async def repository(hass):
     state=hass.data[DOMAIN]
     async with state.setdefault('appearance_load_lock',asyncio.Lock()):
         if 'appearance' not in state:
-            from homeassistant.helpers.storage import Store
-            repo=AppearanceStore(Store(hass,1,f'{DOMAIN}.appearance'))
+            from .verified_storage import VerifiedStore
+            repo=AppearanceStore(VerifiedStore(hass,1,f'{DOMAIN}.appearance'))
             await repo.load();state['appearance']=repo
         return state['appearance']

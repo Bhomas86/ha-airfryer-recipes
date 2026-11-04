@@ -2,6 +2,8 @@
 
 [Deutsch](ISSUE_7_CONTROLLER_BETA3.de.md) | [English](ISSUE_7_CONTROLLER_BETA3.md)
 
+**Current acceptance/review (b22, 2026-11-04):** Owner confirms card behavior, completion of all 44 reported-value steps and the subsequent Proof recipe test. Historical pending statements below describe their release-time evidence. Current b22 native restart and official metadata checks are still pending. [Exact evidence, fixes and release decision](FINAL_REVIEW.md).
+
 The owner confirmed both b20 artwork styles and requested B first/default in the editor, without a standalone release. That preference is included with the controller work in b21. Existing explicit A/B choices remain unchanged. On 2026-11-04 the owner reported the upstream developer's temperature/Proof implementation and requested its review, integration and coverage in the large supervised run. This authorizes test preparation and implementation; appliance acceptance is still performed by the owner.
 
 ## Reviewed source and preserved transport

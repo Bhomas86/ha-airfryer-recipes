@@ -2,6 +2,8 @@
 
 [Deutsch](ARCHITECTURE.de.md) | [English](ARCHITECTURE.md)
 
+**b22-Speicherpräzisierung:** HA Store kann Schreibfehler nur protokollieren, ohne sie weiterzugeben. Anwendungsspeicher fordern jetzt atomares Schreiben an und prüfen die Datei unabhängig im HA-Executor, bevor Änderungen sichtbar werden; Cache-Lesen ist kein Persistenznachweis. Keine private HA-Schreibmethode oder Dateioperation in der Ereignisschleife verwendet. [Prüfung](reports/FINAL_REVIEW.de.md).
+
 **Architekturentscheidung ADR-001 / Anforderung 31: Modulare Home-Assistant-Integration.** Beschlossen am 24.10.2026. Dieses Dokument beschreibt die Zielarchitektur. Rezeptspeicher, WebSocket-API und Admin-Verwaltung sind über PR #16 gemergt. Lesende Geräteerkennung, eine adminpflichtige serverseitige Testvorschau und ihre Ansicht im Admin-Panel sind als Teile von Issue #7 implementiert; Gerätesteuerung, Dashboard und Diagnose bleiben geplant. Siehe [Prüfung des Upstream-Vertrags](reports/ISSUE_7_DISCOVERY.de.md).
 
 ## Ziel und Bereitstellung

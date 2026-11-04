@@ -2,6 +2,8 @@
 
 [Deutsch](BACKEND_REVIEW.de.md) | [English](BACKEND_REVIEW.md)
 
+**Aktuelle Abnahme/Prüfung (b22, 04.11.2026):** Eigentümer bestätigt Kartenverhalten, Abschluss aller 44 Rückmeldeschritte und anschließenden Gären-Rezepttest. Historische offene Angaben unten beschreiben den damaligen Veröffentlichungsstand. Aktueller nativer b22-Neustart und offizielle Metadatenprüfungen bleiben offen. [Exakte Nachweise, Korrekturen und Release-Entscheidung](FINAL_REVIEW.de.md).
+
 Stand: 25.10.2026. Prüfung der GitHub-PR-Refs `a9137a6` (#13) und `bfe4f6d` (#14). Die beiden nachgewiesenen Fehler wurden anschließend mit Commit `5b3bfdc` direkt im Feature-Branch von PR #13 behoben.
 
 ## Projektstand
