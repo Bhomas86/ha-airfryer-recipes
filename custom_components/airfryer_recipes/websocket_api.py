@@ -628,7 +628,20 @@ async def ws_notification_set(hass, connection, msg):
     await _respond(hass, connection, msg, run)
 
 
+@websocket_api.require_admin
+@websocket_api.websocket_command({voluptuous.Required("type"): f"{DOMAIN}/multi_preview", voluptuous.Required("device_id"): str, voluptuous.Required("mode"): str, voluptuous.Required("sources"): dict})
+@websocket_api.async_response
+async def ws_multi_preview(hass, connection, msg):
+    async def run(repo):
+        from .multi_zone import preview
+        if set(msg) != {"id", "type", "device_id", "mode", "sources"}:
+            raise RecipeValidationError("Unexpected multi-zone parameter")
+        return await preview(hass, connection, msg["device_id"], msg["mode"], msg["sources"])
+    await _respond(hass, connection, msg, run)
+
+
 COMMANDS = (
+    ws_multi_preview,
     ws_diagnostics_preview, ws_notification_settings, ws_notification_set,
     ws_list,
     ws_get,

@@ -2,6 +2,8 @@
 
 [English](ROADMAP.md) | [Deutsch](ROADMAP.de.md)
 
+**Issue #1 (2026-11-05):** PR #47 merged with owner authorization. b25 development adds separate, server-validated SYNC/MATCH previews; no combined device sends. Reviewed controller beta.3 and current beta.4 still lack explicit strict one-shot values and safe prepared-zone handling. Live #1 remains blocked pending a public upstream contract and native acceptance. [Evidence and exact requirements](reports/ISSUE_1_SYNC_MATCH.md).
+
 **Issue #10 (2026-11-05):** b24 development implements administrator-only allowlisted diagnostic preview/download and opt-in Companion completion notices. Default-off, fresh cooking→finished reports only; no replay or retry. Native acceptance remains pending. PR #46 b23 Actions passed. [Scope and checks](reports/ISSUE_10_SUPPORT.md).
 
 **b23 (2026-11-04):** Owner confirms the focused b22 save/restart check and requests removal of unverified limit/send comments. Program selections now display only localized names; missing-program warnings and backend capability data/checks remain. Official HACS/Hassfest evidence is still separate. [Change and checks](releases/0.1.0b23.md).

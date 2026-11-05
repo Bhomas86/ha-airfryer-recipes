@@ -2,6 +2,8 @@
 
 [Deutsch](ROADMAP.de.md) | [English](ROADMAP.md)
 
+**Issue #1 (2026-11-05):** PR #47 mit Eigentümerfreigabe zusammengeführt. b25-Entwicklung ergänzt getrennte, servergeprüfte SYNC-/MATCH-Vorschauen; keine kombinierten Geräteübertragungen. Geprüfte Controller-beta.3 und aktuelle beta.4 bieten weiterhin keine expliziten strikten Einmal-Werte und sichere Behandlung vorbereiteter Fächer. Echte Übertragung für #1 bleibt bis zu öffentlichem Controller-Vertrag und nativer Abnahme blockiert. [Nachweise und konkrete Anforderungen](reports/ISSUE_1_SYNC_MATCH.de.md).
+
 **Issue #10 (2026-11-05):** b24-Entwicklung enthält Diagnosevorschau/-download mit Positivliste nur für Administratoren und optionale Companion-Fertigmeldungen. Standardmäßig aus, nur frische Meldungen gart→fertig; kein Nachholen oder Wiederholen. Native Abnahme steht aus. Actions für PR #46/b23 bestanden. [Umfang und Prüfungen](reports/ISSUE_10_SUPPORT.de.md).
 
 **b23 (04.11.2026):** Eigentümer bestätigt gezielten b22-Speicher-/Neustarttest und wünscht Entfernung der Kommentare zu ungeprüften Grenzen/Senden. Programmauswahlen zeigen nur lokalisierte Namen; Hinweise auf fehlende Programme und Backend-Fähigkeitsdaten/-Prüfungen bleiben erhalten. Offizielle HACS-/Hassfest-Nachweise bleiben getrennt. [Änderung und Prüfungen](releases/0.1.0b23.de.md).
