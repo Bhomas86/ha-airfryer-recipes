@@ -556,11 +556,11 @@ class WebsocketTests(unittest.IsolatedAsyncioTestCase):
         ws.registered.clear()
         self.api.register_commands(self.hass)
         commands = {handler._ws_command for handler in ws.registered}
-        self.assertEqual(len(commands), 31)
+        self.assertEqual(len(commands), 32)
         self.assertEqual(
             commands,
             {f"{DOMAIN}/{name}" for name in (
-                "diagnostics_preview", "notification_settings", "notification_set",
+                "multi_preview", "diagnostics_preview", "notification_settings", "notification_set",
                 "list", "get", "create", "update", "duplicate", "delete",
                 "import_preview", "import_confirm", "export", "favorites", "set_favorite",
                 "devices", "sent_settings", "control", "access_list", "access_set", "appearance_get", "appearance_set", "appearance_upload",
@@ -568,6 +568,23 @@ class WebsocketTests(unittest.IsolatedAsyncioTestCase):
                 "batch_prepare", "batch_start", "batch_next", "batch_stop", "beta_recover",
             )},
         )
+
+    async def test_multi_preview_routes_are_read_only_and_reject_live_fields(self):
+        await self.access_setup()
+        params = {"device_id": "d", "mode": "match", "sources": {"1": {"settings": {"program": "airfry", "temperature_c": 180, "duration_minutes": 7}}}}
+        with patch("custom_components.airfryer_recipes.multi_zone.preview", new=AsyncMock(return_value={"mode": "dry_run", "transmitted": False})) as planner:
+            result = await self.call("multi_preview", self.user, **params)
+            self.assertEqual(result[2], "unauthorized")
+            result = await self.call("control", self.user, action="multi_preview", parameters=params)
+            self.assertEqual(result[0], "result")
+            self.assertFalse(result[2]["transmitted"])
+            result = await self.call("multi_preview", self.admin, **params, live=True)
+            self.assertEqual(result[2], "invalid_format")
+            result = await self.call("control", self.user, action="multi_preview", parameters={**params, "live": True})
+            self.assertEqual(result[2], "invalid_format")
+            result = await self.call("control", self.user, action="sync_senden", parameters={"device_id": "d"})
+            self.assertEqual(result[2], "invalid_format")
+            planner.assert_awaited_once()
 
     async def test_support_commands_enforce_current_admin_and_strict_payloads(self):
         await self.access_setup()
