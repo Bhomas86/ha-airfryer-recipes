@@ -2,6 +2,8 @@
 
 [English](README.md) | [Deutsch](README.de.md)
 
+**Issue #10 in Entwicklung (b24):** Diagnosevorschau/-download nur für Administratoren und optionale Companion-Fertigmeldungen sind umgesetzt; die native Abnahme steht aus. [Einrichtung, Datenschutz und Tests](docs/reports/ISSUE_10_SUPPORT.de.md). Dies kündigt keine veröffentlichte Beta an.
+
 **[b23: Klare Programmnamen](docs/releases/0.1.0b23.de.md).** Herkunfts-/Prüfzusätze in den Programm-Dropdowns von Dashboard, Rezepteditor und Vorschau entfernt. Fehlende Programme bleiben gekennzeichnet. Eigentümer bestätigt den b22-Speicher-/Neustarttest.
 
 **[b22: Abschlussprüfung und geprüfte Speicherung](docs/releases/0.1.0b22.de.md).** Favoritenansammlung und falsche Speicherbestätigung bei stillen HA-Store-Fehlern korrigiert. Python-3.12-/3.14- und Frontend-Prüfungen bestanden. [Prüfung, Abnahme und offene Nachweise](docs/reports/FINAL_REVIEW.de.md).

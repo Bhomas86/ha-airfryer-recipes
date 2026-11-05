@@ -32,7 +32,7 @@ Die Modellnamen stammen aus der Auswahl des Projektverantwortlichen. Ein Agent d
 
 1. Umfang, Schwierigkeit, Sicherheitsrisiken und Unsicherheiten bewerten.
 2. Kurz **Modellprüfung** ausgeben: empfohlene Stufe, Begründung und tatsächlich ausgewähltes Modell **nur, wenn zuverlässig bekannt**.
-3. Wenn das aktuelle Modell nicht sichtbar ist, vor substanziellen Codeänderungen eine Bestätigung einholen.
+3. Wenn das aktuelle Modell nicht sichtbar ist, vor substanziellen Codeänderungen eine Bestätigung einholen. Eigentümerpräzisierung (2026-11-05): Bei jedem neuen Aufgabenpaket nach aktuellem Modell **und Denkstufe** fragen, wenn diese nicht auslesbar sind; nicht aus einer älteren Aufgabe ableiten. Nach Bestätigung innerhalb desselben Pakets weiterarbeiten.
 4. Passt das gewählte Modell nicht, **vor Bearbeitung stoppen** und die kostengünstigste passende Stufe vorschlagen. Nicht stillschweigend umstellen oder weiterarbeiten.
 5. Für jede Aufgabe **GPT-6.1 Sol** verwenden. Für einfache Aufgaben niedrig, für normale Entwicklung mittel und für komplexe oder sicherheitskritische Arbeiten hoch empfehlen.
 6. Die empfohlene Stufe kurz begründen. Hoch ist eine zugelassene Aufwandsstufe und keine Ausnahme, die ein anderes Modell erfordert. Nie behaupten, die ausgewählte Stufe automatisch umzustellen.

@@ -588,7 +588,48 @@ async def ws_appearance_upload(hass, connection, msg):
     await _respond(hass, connection, msg, run)
 
 
+@websocket_api.require_admin
+@websocket_api.websocket_command({voluptuous.Required("type"): f"{DOMAIN}/diagnostics_preview"})
+@websocket_api.async_response
+async def ws_diagnostics_preview(hass, connection, msg):
+    async def run(repo):
+        from .support import diagnostics
+        if set(msg) != {"id", "type"}:
+            raise RecipeValidationError("Unexpected diagnostic parameter")
+        await _access_admin(hass, connection)
+        return {"diagnostics": diagnostics(hass)}
+    await _respond(hass, connection, msg, run)
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command({voluptuous.Required("type"): f"{DOMAIN}/notification_settings"})
+@websocket_api.async_response
+async def ws_notification_settings(hass, connection, msg):
+    async def run(repo):
+        if set(msg) != {"id", "type"}:
+            raise RecipeValidationError("Unexpected notification parameter")
+        await _access_admin(hass, connection)
+        result = await hass.data[DOMAIN]["support"].settings()
+        await _access_admin(hass, connection)
+        return result
+    await _respond(hass, connection, msg, run)
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command({voluptuous.Required("type"): f"{DOMAIN}/notification_set", voluptuous.Required("entity_id"): str, voluptuous.Required("target"): str, voluptuous.Required("language"): str})
+@websocket_api.async_response
+async def ws_notification_set(hass, connection, msg):
+    async def run(repo):
+        if set(msg) != {"id", "type", "entity_id", "target", "language"} or msg["language"] not in ("de", "en") or not valid_id(msg["entity_id"]):
+            raise RecipeValidationError("Invalid notification settings")
+        await _access_admin(hass, connection)
+        await hass.data[DOMAIN]["support"].configure(connection, msg["entity_id"], msg["target"], msg["language"])
+        return {"saved": True}
+    await _respond(hass, connection, msg, run)
+
+
 COMMANDS = (
+    ws_diagnostics_preview, ws_notification_settings, ws_notification_set,
     ws_list,
     ws_get,
     ws_create,

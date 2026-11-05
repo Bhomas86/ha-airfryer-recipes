@@ -1,4 +1,8 @@
 // Local Home Assistant custom panel. All mutations go through the authenticated API.
+const SUPPORT_TEXT = {
+  en: { title: "Diagnostics and completion notices", preview: "Preview diagnostics", warning: "Passwords, tokens, cookies, network addresses, personal and device IDs, names, recipes and images are excluded. Review the preview before sharing. Downloading sends nothing to GitHub.", download: "Download reviewed diagnostics", notifications: "Load completion notice settings", info: "Off by default. Choose a reported zone status sensor and a Companion mobile notification service. Only a fresh cooking → finished report triggers one notice. No notice after restart, offline gaps, cancellation or an uncertain state; no retry. Requires Airfryer Control 1.0.3-beta.3. Each zone is configured separately.", source: "Zone status sensor", target: "Mobile notification service", save: "Enable for selected zone", remove: "Disable", empty: "No completion notices enabled.", saved: "Settings saved", unavailable: "Notification settings unavailable; existing data preserved." },
+  de: { title: "Diagnose und Fertigmeldungen", preview: "Diagnosevorschau anzeigen", warning: "Passwörter, Tokens, Cookies, Netzwerkadressen, persönliche und Gerätekennungen, Namen, Rezepte und Bilder sind ausgeschlossen. Prüfe die Vorschau vor dem Teilen. Der Download sendet nichts an GitHub.", download: "Geprüfte Diagnose herunterladen", notifications: "Einstellungen für Fertigmeldungen laden", info: "Standardmäßig aus. Wähle einen gemeldeten Fach-Statussensor und einen mobilen Benachrichtigungsdienst der Companion-App. Nur eine frische Meldung gart → fertig löst eine Nachricht aus. Keine Nachricht nach Neustart, Offline-Lücken, Abbruch oder unklarem Zustand; keine Wiederholung. Benötigt Airfryer Control 1.0.3-beta.3. Jedes Fach wird separat eingestellt.", source: "Fach-Statussensor", target: "Mobiler Benachrichtigungsdienst", save: "Für gewähltes Fach aktivieren", remove: "Deaktivieren", empty: "Keine Fertigmeldungen aktiviert.", saved: "Einstellungen gespeichert", unavailable: "Benachrichtigungseinstellungen nicht verfügbar; bestehende Daten bleiben erhalten." },
+};
 const WORDS = {
   en: {
     chooseProgram: "Choose a program…", customProgram: "Enter a custom program", reportedPrograms: "Use reported programs",
@@ -246,6 +250,9 @@ export class AirfryerRecipesPanel extends HTMLElement {
     const oldUnit = this._hass?.config?.unit_system?.temperature;
     const oldConnection = this._hass?.connection;
     if (this._hass && (this._hass.user?.id !== value?.user?.id || oldAdmin !== value?.user?.is_admin)) {
+      this.supportData = null;
+      this.diagnosticPreview = null;
+      this.supportMessage = "";
       this.accessData = null;
       this.accessMessage = "";
     }
@@ -508,6 +515,48 @@ export class AirfryerRecipesPanel extends HTMLElement {
     }];
   }
 
+  get supportWords() { return SUPPORT_TEXT[this._hass?.language?.toLowerCase().startsWith("de") ? "de" : "en"]; }
+
+  renderSupport() {
+    if (!this.admin) return "";
+    const t = this.supportWords, data = this.supportData;
+    return `<details class="support" ${this.supportOpen ? "open" : ""}><summary>${t.title}</summary><p>${t.warning}</p>
+      <button data-action="diagnostics-preview">${t.preview}</button>
+      ${this.diagnosticPreview ? `<pre style="white-space:pre-wrap;overflow-wrap:anywhere">${escapeHtml(JSON.stringify(this.diagnosticPreview, null, 2))}</pre><button data-action="diagnostics-download">${t.download}</button>` : ""}
+      <p>${t.info}</p><button data-action="notifications-load">${t.notifications}</button>
+      ${data ? (data.available ? `<p>${this.supportMessage ? escapeHtml(this.supportMessage) : ""}</p><form id="notifications-form"><label>${t.source}<select name="source" aria-label="${t.source}">${data.sources.map(x => `<option value="${escapeHtml(x)}">${escapeHtml(x)}</option>`).join("")}</select></label>
+      <label>${t.target}<select name="target" aria-label="${t.target}">${data.targets.map(x => `<option value="${escapeHtml(x)}">${escapeHtml(x)}</option>`).join("")}</select></label><button type="button" data-action="notifications-save" ${!data.sources.length || !data.targets.length ? "disabled" : ""}>${t.save}</button></form>
+      ${data.rules.length ? data.rules.map(r => `<p>${escapeHtml(r.entity_id)} → ${escapeHtml(r.target)} <button data-action="notifications-remove" data-id="${escapeHtml(r.entity_id)}">${t.remove}</button></p>`).join("") : `<p>${t.empty}</p>`}` : `<p>${t.unavailable}</p>`) : ""}</details>`;
+  }
+
+  async supportAction(type, button) {
+    const revision = this.controlRevision;
+    const userId = this._hass?.user?.id;
+    const current = () => this.admin && this.controlRevision === revision && this._hass?.user?.id === userId;
+    this.busy = true;
+    try {
+      if (type === "diagnostics-preview") {
+        const result = await this.request("diagnostics_preview");
+        if (current()) this.diagnosticPreview = result.diagnostics;
+      } else if (type === "diagnostics-download" && this.diagnosticPreview) {
+        const url = URL.createObjectURL(new Blob([JSON.stringify(this.diagnosticPreview, null, 2)], { type: "application/json" }));
+        const link = document.createElement("a");
+        link.href = url; link.download = "airfryer-recipes-diagnostics.json"; link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      } else {
+        if (type !== "notifications-load") {
+          const form = new FormData(this.shadowRoot.getElementById("notifications-form"));
+          await this.request("notification_set", { entity_id: type === "notifications-remove" ? button.dataset.id : String(form.get("source") || ""), target: type === "notifications-remove" ? "" : String(form.get("target") || ""), language: this._hass?.language?.toLowerCase().startsWith("de") ? "de" : "en" });
+          if (!current()) return;
+          this.supportMessage = this.supportWords.saved;
+        }
+        const data = await this.request("notification_settings");
+        if (current()) this.supportData = data;
+      }
+    } catch (error) { if (current()) this.showError(error); }
+    finally { this.busy = false; this.render(); }
+  }
+
   get accessWords() { return ACCESS_TEXT[this._hass?.language?.toLowerCase().startsWith("de") ? "de" : "en"]; }
 
   renderAccess() {
@@ -539,6 +588,7 @@ export class AirfryerRecipesPanel extends HTMLElement {
 
   render() {
     if (!this.shadowRoot) return;
+    this.supportOpen = this.shadowRoot.querySelector?.("details.support")?.open ?? this.supportOpen;
     this.captureEditorDraft();
     if (this.editor !== this.renderedEditor) {
       this.editorCustomProgram = false;
@@ -599,6 +649,7 @@ export class AirfryerRecipesPanel extends HTMLElement {
         ${this.error ? `<p class="message error" role="alert">${this.error}</p>` : ""}
         ${this.notice ? `<p class="message" role="status">${escapeHtml(this.notice)}</p>` : ""}
         ${this.renderAccess()}
+        ${this.renderSupport()}
         <div class="toolbar">
           <input id="search" type="search" aria-label="${t.search}" placeholder="${t.search}" value="${escapeHtml(this.query)}">
           <select id="category" aria-label="${t.category}"><option value="">${t.all}</option>${categories.map((name) => `<option value="${escapeHtml(name)}" ${this.category === name ? "selected" : ""}>${escapeHtml(name)}</option>`).join("")}</select>
@@ -808,6 +859,7 @@ export class AirfryerRecipesPanel extends HTMLElement {
     const t = this.words;
     if (type === "refresh") return this.load();
     if (!this.admin) return;
+    if (type.startsWith("diagnostics-") || type.startsWith("notifications-")) return this.supportAction(type, button);
     if (type === "access-load") return this.manageAccess();
     if (type === "access-grant") {
       const element = this.shadowRoot.getElementById("device-access-form");
@@ -880,6 +932,7 @@ export class AirfryerRecipesPanel extends HTMLElement {
   }
 
   onSubmit(event) {
+    if (event.target.id === "notifications-form") { event.preventDefault(); return; }
     if (event.target.id === "device-access-form") { event.preventDefault(); return; }
     if (this.batchRunning) { event.preventDefault(); return; }
     if (event.target.id === "device-preview-form") {

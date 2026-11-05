@@ -65,7 +65,10 @@ class TestIntegrationLifecycle(unittest.TestCase):
                     calls.append("favorites_loaded")
 
             favorites_stub.create_favorites = lambda hass: Favorites()
+            support_stub = types.ModuleType("custom_components.airfryer_recipes.support")
+            support_stub.async_setup_support = AsyncMock()
             with patch.dict(sys.modules, {
+                "custom_components.airfryer_recipes.support": support_stub,
                 "custom_components.airfryer_recipes.websocket_api": api_stub,
                 "custom_components.airfryer_recipes.http": http_stub,
                 "custom_components.airfryer_recipes.panel": panel_stub,

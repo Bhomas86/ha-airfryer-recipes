@@ -329,7 +329,7 @@ test("card/editor registration, English fallback and escaping use no copied imag
   assert.equal(context.window.customCards[0].type, "airfryer-recipes-card");
   assert.equal(card.constructor.getStubConfig().dry_run, true);
   assert.equal(card.constructor.getConfigElement() instanceof elements.get("airfryer-recipes-card-editor"), true);
-  assert.match(cardSource, /\.\/panel\.js\?v=0\.1\.0b23/);
+  assert.match(cardSource, /\.\/panel\.js\?v=0\.1\.0b24/);
 });
 
 test("visual editor uses safe defaults and emits dashboard configuration only", () => {

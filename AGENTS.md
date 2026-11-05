@@ -48,7 +48,10 @@ an agent can inspect or change ChatGPT/Codex's model selector.
    exact table above, (b) why, (c) the actual current selected configuration
    **only if reliably provided by the environment or the owner**.
 3. **Never pretend to know the selected model.** If it is not visible, ask the
-   owner to confirm it before substantive code changes.
+   owner to confirm it before substantive code changes. Owner clarification
+   (2026-11-05): ask for the current model **and reasoning effort** at each new
+   task package when they cannot be read; do not infer them from an older task.
+   Continue within the same package after the owner confirms them.
 4. If the selected configuration is not suitable, **STOP BEFORE EDITING,
    IMPLEMENTING OR RUNNING A LONG REASONING TASK**. Explain why and propose the
    least-expensive suitable configuration; request that the owner switch it.

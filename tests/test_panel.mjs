@@ -31,7 +31,10 @@ function panelWith(api, admin = true, confirmDialog = () => true) {
     confirm: confirmDialog,
     prompt: () => "Copy",
     setTimeout,
-    URL,
+    URL: class extends URL {
+      static createObjectURL() { return "blob:diagnostic-preview"; }
+      static revokeObjectURL() {}
+    },
     Blob,
     document: { createElement: () => {
       const element = { clicked: false, click() { this.clicked = true; } };
@@ -1103,4 +1106,47 @@ test("ordinary panel cannot manage permissions and stale admin replies stay hidd
   await task;
   assert.equal(adminPanel.accessData, null);
   assert.doesNotMatch(adminPanel.shadowRoot.innerHTML, /secret/);
+});
+
+test("support preview is explicit, private tools stay hidden from ordinary users", async () => {
+  const calls = [];
+  const panel = panelWith(async req => { calls.push(req); return { diagnostics: { schema_version: 1, library_loaded: true } }; });
+  panel.render();
+  assert.equal(calls.length, 0);
+  assert.match(panel.shadowRoot.innerHTML, /Passwörter, Tokens/);
+  assert.doesNotMatch(panel.shadowRoot.innerHTML, /data-action="diagnostics-download"/);
+  await panel.supportAction("diagnostics-preview", {});
+  assert.equal(calls[0].type, "airfryer_recipes/diagnostics_preview");
+  assert.match(panel.shadowRoot.innerHTML, /data-action="diagnostics-download"/);
+  assert.match(panel.shadowRoot.innerHTML, /library_loaded/);
+  panel._hass.user.is_admin = false;
+  panel.render();
+  assert.doesNotMatch(panel.shadowRoot.innerHTML, /library_loaded|diagnostics-preview|notifications-load/);
+});
+
+test("notification settings escape labels and disabling sends only the chosen sensor", async () => {
+  const calls = [];
+  const panel = panelWith(async req => { calls.push(req); return { available: true, sources: ['sensor.zone1'], targets: ['mobile_app_phone'], rules: [] }; });
+  panel.supportData = { available: true, sources: ['<private>'], targets: ['mobile_app_phone'], rules: [] };
+  panel.render();
+  assert.match(panel.shadowRoot.innerHTML, /&lt;private&gt;/);
+  panel.shadowRoot.getElementById = () => ({ values: {} });
+  await panel.supportAction("notifications-remove", { dataset: { id: "sensor.zone1" } });
+  assert.equal(calls[0].type, "airfryer_recipes/notification_set");
+  assert.equal(calls[0].entity_id, "sensor.zone1");
+  assert.equal(calls[0].target, "");
+  assert.equal(calls[1].type, "airfryer_recipes/notification_settings");
+});
+
+
+test("diagnostic download uses the displayed snapshot without another backend request", async () => {
+  let calls = 0;
+  const panel = panelWith(async () => { calls++; return {}; });
+  panel.diagnosticPreview = { schema_version: 1, library_loaded: true };
+  await panel.supportAction("diagnostics-download", {});
+  assert.equal(calls, 0);
+  assert.equal(panel.createdElements.length, 1);
+  assert.equal(panel.createdElements[0].download, "airfryer-recipes-diagnostics.json");
+  assert.equal(panel.createdElements[0].href, "blob:diagnostic-preview");
+  assert.equal(panel.createdElements[0].clicked, true);
 });
