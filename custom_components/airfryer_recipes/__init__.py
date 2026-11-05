@@ -61,6 +61,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await async_register_panel(hass)
 
+    from .support import async_setup_support
+    await async_setup_support(hass)
+
     entry.runtime_data = AirfryerRecipesRuntime(recipes=recipes, favorites=favorites)
     return True
 
@@ -69,6 +72,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Disable API access when the integration entry is unloaded."""
     state = hass.data.get(DOMAIN)
     if state is not None:
+        support = state.pop("support", None)
+        if support is not None:
+            support.close()
         sender = state.pop("beta_sender", None)
         if sender is not None:
             sender.close()

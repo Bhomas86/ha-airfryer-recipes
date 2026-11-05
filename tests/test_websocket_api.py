@@ -556,10 +556,11 @@ class WebsocketTests(unittest.IsolatedAsyncioTestCase):
         ws.registered.clear()
         self.api.register_commands(self.hass)
         commands = {handler._ws_command for handler in ws.registered}
-        self.assertEqual(len(commands), 28)
+        self.assertEqual(len(commands), 31)
         self.assertEqual(
             commands,
             {f"{DOMAIN}/{name}" for name in (
+                "diagnostics_preview", "notification_settings", "notification_set",
                 "list", "get", "create", "update", "duplicate", "delete",
                 "import_preview", "import_confirm", "export", "favorites", "set_favorite",
                 "devices", "sent_settings", "control", "access_list", "access_set", "appearance_get", "appearance_set", "appearance_upload",
@@ -567,6 +568,27 @@ class WebsocketTests(unittest.IsolatedAsyncioTestCase):
                 "batch_prepare", "batch_start", "batch_next", "batch_stop", "beta_recover",
             )},
         )
+
+    async def test_support_commands_enforce_current_admin_and_strict_payloads(self):
+        await self.access_setup()
+        support = SimpleNamespace(settings=AsyncMock(return_value={"available": True, "sources": [], "targets": [], "rules": []}), configure=AsyncMock())
+        self.hass.data[DOMAIN]["support"] = support
+        for command, params in (("diagnostics_preview", {}), ("notification_settings", {}),
+                                ("notification_set", {"entity_id": "sensor.zone1", "target": "mobile_app_phone", "language": "de"})):
+            for user in (self.user, FakeConnection(authenticated=False)):
+                result = await self.call(command, user, **params)
+                self.assertEqual(result[2], "unauthorized")
+            result = await self.call(command, self.admin, **params, unexpected="private")
+            self.assertEqual(result[2], "invalid_format")
+        support.configure.assert_not_called()
+        support.settings.assert_not_called()
+        result = await self.call("diagnostics_preview", self.admin)
+        self.assertEqual(result[0], "result")
+        self.assertNotIn("users", str(result[2]))
+        self.hass.auth.async_get_user.return_value = None
+        self.hass.auth.async_get_user.side_effect = lambda uid: SimpleNamespace(id=uid, is_active=True, is_admin=False)
+        result = await self.call("diagnostics_preview", self.admin)
+        self.assertEqual(result[2], "unauthorized")
 
     async def test_sent_settings_is_admin_only_read_only_and_rejects_extra_fields(self):
         history = SimpleNamespace(get=Mock(return_value={"available": True, "zones": {}}))

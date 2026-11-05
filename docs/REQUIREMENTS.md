@@ -2,6 +2,8 @@
 
 [English](REQUIREMENTS.md) | [Deutsch](REQUIREMENTS.de.md)
 
+**Issue #10 (2026-11-05):** b24 development implements administrator-only allowlisted diagnostic preview/download and opt-in Companion completion notices. Default-off, fresh cooking→finished reports only; no replay or retry. Native acceptance remains pending. PR #46 b23 Actions passed. [Scope and checks](reports/ISSUE_10_SUPPORT.md).
+
 **b23 (2026-11-04):** Owner confirms the focused b22 save/restart check and requests removal of unverified limit/send comments. Program selections now display only localized names; missing-program warnings and backend capability data/checks remain. Official HACS/Hassfest evidence is still separate. [Change and checks](releases/0.1.0b23.md).
 
 **b22 final review (2026-11-04):** Owner confirms the completed 44-step reported-value sequence, card and Proof recipe workflow. Fix favorite capacity/deleted-reference accumulation and verify native Store files after writes. 232 Python tests per 3.12/3.14 plus 125 frontend tests passed. Current native save/restart and official HACS/Hassfest evidence remain pending before a candidate. [Review and scope](reports/FINAL_REVIEW.md).

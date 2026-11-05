@@ -2,6 +2,8 @@
 
 [Deutsch](ROADMAP.de.md) | [English](ROADMAP.md)
 
+**Issue #10 (2026-11-05):** b24-Entwicklung enthält Diagnosevorschau/-download mit Positivliste nur für Administratoren und optionale Companion-Fertigmeldungen. Standardmäßig aus, nur frische Meldungen gart→fertig; kein Nachholen oder Wiederholen. Native Abnahme steht aus. Actions für PR #46/b23 bestanden. [Umfang und Prüfungen](reports/ISSUE_10_SUPPORT.de.md).
+
 **b23 (04.11.2026):** Eigentümer bestätigt gezielten b22-Speicher-/Neustarttest und wünscht Entfernung der Kommentare zu ungeprüften Grenzen/Senden. Programmauswahlen zeigen nur lokalisierte Namen; Hinweise auf fehlende Programme und Backend-Fähigkeitsdaten/-Prüfungen bleiben erhalten. Offizielle HACS-/Hassfest-Nachweise bleiben getrennt. [Änderung und Prüfungen](releases/0.1.0b23.de.md).
 
 **b22-Abschlussprüfung (04.11.2026):** Eigentümer bestätigt abgeschlossene 44-Schritt-Rückmeldungsfolge, Karte und Gären-Rezeptablauf. Favoritenkapazität/gelöschte Verweise korrigiert und native Store-Dateien nach Schreiben geprüft. 232 Python-Tests je 3.12/3.14 plus 125 Frontend-Tests bestanden. Aktueller nativer Speicher-/Neustarttest und offizielle HACS-/Hassfest-Nachweise bleiben vor einem Kandidaten offen. [Prüfung und Umfang](reports/FINAL_REVIEW.de.md).

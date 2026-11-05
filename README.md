@@ -2,6 +2,8 @@
 
 [English](README.md) | [Deutsch](README.de.md)
 
+**Issue #10 development (b24):** Administrator-only diagnostic preview/download and optional Companion completion notices are implemented; native acceptance is pending. [Setup, privacy and tests](docs/reports/ISSUE_10_SUPPORT.md). This does not announce a published beta.
+
 **[b23: Clear program names](docs/releases/0.1.0b23.md).** Remove the program-dropdown provenance/verification suffixes in the dashboard, recipe editor and preview. Missing programs remain marked. Owner confirms the b22 save/restart check.
 
 **[b22: Final review and verified storage](docs/releases/0.1.0b22.md).** Fix favorite accumulation and false save acknowledgements after silent HA Store failures. Python 3.12/3.14 and frontend checks passed. [Review, acceptance and remaining checks](docs/reports/FINAL_REVIEW.md).
