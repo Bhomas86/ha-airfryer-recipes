@@ -2,6 +2,8 @@
 
 [English](ISSUE_1_SYNC_MATCH.md) | [Deutsch](ISSUE_1_SYNC_MATCH.de.md)
 
+**Follow-up 2026-11-08:** Several blockers below are fixed in controller 1.0.3. A missing/unknown-zone write remains reproducible. [Current review](ISSUE_1_CONTROLLER_103.md). Earlier owner-reported successful SYNC/MATCH tests remain valid.
+
 Issue #1 remains **blocked for live transmission**. b25 development implements only the separate read-only dashboard previews and backend validation. PR #47 was merged with the owner's authorization; its native diagnostic/push acceptance is still not claimed. No new beta is published by this work.
 
 ## Current dashboard behavior

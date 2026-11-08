@@ -2,6 +2,8 @@
 
 [English](ROADMAP.md) | [Deutsch](ROADMAP.de.md)
 
+**Controller review (2026-11-08):** Stable 1.0.3 and beta 1.0.4-beta.1 now provide explicit values, strict/once/reset options and structured SYNC/MATCH results. The busy-return defect is fixed. Twelve isolated real-function/mock-API cases still reproduce sending with a missing/unknown zone. Live #1 remains blocked; existing owner-reported successful action tests remain valid. [Evidence and focused correction](reports/ISSUE_1_CONTROLLER_103.md).
+
 **Issue #1 (2026-11-05):** PR #47 merged with owner authorization. b25 development adds separate, server-validated SYNC/MATCH previews; no combined device sends. Reviewed controller beta.3 and current beta.4 still lack explicit strict one-shot values and safe prepared-zone handling. Live #1 remains blocked pending a public upstream contract and native acceptance. [Evidence and exact requirements](reports/ISSUE_1_SYNC_MATCH.md).
 
 **Issue #10 (2026-11-05):** b24 development implements administrator-only allowlisted diagnostic preview/download and opt-in Companion completion notices. Default-off, fresh cooking→finished reports only; no replay or retry. Native acceptance remains pending. PR #46 b23 Actions passed. [Scope and checks](reports/ISSUE_10_SUPPORT.md).
