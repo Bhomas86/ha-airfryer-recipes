@@ -2,6 +2,8 @@
 
 [Deutsch](ROADMAP.de.md) | [English](ROADMAP.md)
 
+**b26-Test-Beta-Veröffentlichung vorbereitet (2026-11-08):** Eigentümer beauftragt eine veröffentlichte Beta und erlaubt PR-#48-Freigabe nach erfolgreichen Tests. PR bis zu bestätigten nativen Ergebnissen offen halten. Umfasst Abnahme #1/#10, aktuelle Abschlussvalidierung und Vorbereitung von Stable 0.1.0. Kein neuer Code oder Actions. [Release und Testcheckliste](releases/0.1.0b26.de.md).
+
 **Eigentümerentscheidung / b26 (2026-11-08):** Absicherung ohne Controller-Änderung in Airfryer Recipes umgesetzt. Eigener Einmal-Sender prüft beide Fächer nach Anmeldung an der HTTP-Übergabe, teilt Sperren/unklare Ergebnisse und unterstützt genaue Bestätigung samt serverseitigem Testmodus. Controller-Patch-Abhängigkeit entfernt. 285 Python-3.12- und 135 Frontend-Tests bestanden; native Abnahme offen. [Aktuelles Verhalten und Tests](reports/ISSUE_1_OWN_GUARD.de.md).
 
 **Freigegebene Weiterentwicklung (2026-11-08):** PR #48 enthält jetzt Controller-Nachprüfung, explizite Anfragen-/strikte Antwortvorbereitung, konservative Berichtssperren und einen getesteten Controller-Patchvorschlag. Echte SYNC-/MATCH-Übertragung bleibt bis zur Controller-Korrektur aus. 266 Python-3.12- und 133 Frontend-Tests bestanden; 3.14 in dieser Laufzeit nicht verfügbar. [Aktueller Umfang](reports/ISSUE_1_CONTROLLER_103.de.md).

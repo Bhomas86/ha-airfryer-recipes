@@ -2,6 +2,8 @@
 
 [English](ROADMAP.md) | [Deutsch](ROADMAP.de.md)
 
+**b26 test-beta release preparation (2026-11-08):** Owner requests a published beta and authorizes PR #48 approval after successful tests. Keep PR open until native results are confirmed. Includes #1 and #10 acceptance, current final validation and stable 0.1.0 preparation. No new code or Actions. [Release and test checklist](releases/0.1.0b26.md).
+
 **Owner decision / b26 (2026-11-08):** Protection is implemented in Airfryer Recipes without controller changes. Own one-shot sender validates both zones after login at the HTTP boundary, shares locks/uncertain outcomes and supports exact confirmation plus server dry run. Controller-patch dependency removed. 285 Python 3.12 and 135 frontend tests passed; native acceptance pending. [Current behavior and tests](reports/ISSUE_1_OWN_GUARD.md).
 
 **Authorized continuation (2026-11-08):** PR #48 now includes the controller follow-up report, explicit request/strict response preparation, conservative snapshot blockers, and a tested upstream state-guard patch proposal. Live SYNC/MATCH remains disabled pending controller correction. 266 Python 3.12 and 133 frontend tests passed; 3.14 unavailable in this runtime. [Current scope](reports/ISSUE_1_CONTROLLER_103.md).

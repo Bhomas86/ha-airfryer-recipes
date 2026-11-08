@@ -2,7 +2,7 @@
 
 [English](README.md) | [Deutsch](README.de.md)
 
-**b26 development:** SYNC/MATCH now use our own guarded prepare-only sender; no controller modification is required. Exact confirmation, fresh inactive zones, one HTTP attempt and no automatic retry. Requires reviewed controller 1.0.3 or 1.0.4-beta.1; native acceptance pending. [Setup and tests](docs/reports/ISSUE_1_OWN_GUARD.md). No new beta is announced.
+**[b26 test beta](docs/releases/0.1.0b26.md):** Own guarded SYNC/MATCH sender without controller changes, diagnostic preview/download and optional Companion completion notices. Native acceptance pending. [Installation and focused tests](docs/releases/0.1.0b26.md).
 
 **Issue #1 development (b25):** Separate SYNC/MATCH planning previews are implemented. Live combined sending remains blocked by the reviewed controller contract, including beta.4. [Scope and upstream requirements](docs/reports/ISSUE_1_SYNC_MATCH.md). No new beta is announced.
 
