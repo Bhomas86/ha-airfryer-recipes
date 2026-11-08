@@ -2,6 +2,8 @@
 
 [Deutsch](REQUIREMENTS.de.md) | [English](REQUIREMENTS.md)
 
+**Freigegebene Weiterentwicklung (2026-11-08):** PR #48 enthält jetzt Controller-Nachprüfung, explizite Anfragen-/strikte Antwortvorbereitung, konservative Berichtssperren und einen getesteten Controller-Patchvorschlag. Echte SYNC-/MATCH-Übertragung bleibt bis zur Controller-Korrektur aus. 266 Python-3.12- und 133 Frontend-Tests bestanden; 3.14 in dieser Laufzeit nicht verfügbar. [Aktueller Umfang](reports/ISSUE_1_CONTROLLER_103.de.md).
+
 **Controller-Prüfung (2026-11-08):** Stabile 1.0.3 und beta 1.0.4-beta.1 bieten jetzt explizite Werte, Strikt-/Einmal-/Rücksetzoptionen und strukturierte SYNC-/MATCH-Ergebnisse. Der Busy-Rückkehrfehler ist behoben. Zwölf isolierte Fälle mit echten Funktionen/simulierter API reproduzieren weiterhin Senden bei fehlendem/unbekanntem Fach. Echte Übertragung für #1 bleibt gesperrt; frühere erfolgreiche Eigentümer-Aktionstests bleiben gültig. [Nachweise und gezielte Korrektur](reports/ISSUE_1_CONTROLLER_103.de.md).
 
 **Issue #1 (2026-11-05):** PR #47 mit Eigentümerfreigabe zusammengeführt. b25-Entwicklung ergänzt getrennte, servergeprüfte SYNC-/MATCH-Vorschauen; keine kombinierten Geräteübertragungen. Geprüfte Controller-beta.3 und aktuelle beta.4 bieten weiterhin keine expliziten strikten Einmal-Werte und sichere Behandlung vorbereiteter Fächer. Echte Übertragung für #1 bleibt bis zu öffentlichem Controller-Vertrag und nativer Abnahme blockiert. [Nachweise und konkrete Anforderungen](reports/ISSUE_1_SYNC_MATCH.de.md).

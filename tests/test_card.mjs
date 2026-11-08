@@ -769,3 +769,15 @@ test("ordinary user multi-preview uses whole-device backend route", async () => 
   assert.equal(calls[0].action, 'multi_preview');
   assert.equal(calls[0].parameters.device_id, 'appliance');
 });
+
+test('multi preview explains the remaining state guard for the reviewed new controller', () => {
+  const { card } = makeCard();
+  card.multiPreview = { zones: [], controller_contract: { explicit_values: true, live_send_enabled: false } };
+  card.render();
+  assert.match(card.shadowRoot.innerHTML, /Controller unterstützt die neuen Optionen/);
+  assert.match(card.shadowRoot.innerHTML, /fehlender oder unbekannter Fächer/);
+  card._hass.language = 'en'; card.render();
+  assert.match(card.shadowRoot.innerHTML, /missing or unknown zones/);
+  card.multiPreview.controller_contract.explicit_values = false; card.render();
+  assert.match(card.shadowRoot.innerHTML, /has not been reviewed/);
+});

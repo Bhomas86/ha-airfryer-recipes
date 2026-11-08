@@ -1,0 +1,55 @@
+--- a/custom_components/airfryer_control/senden.py
++++ b/custom_components/airfryer_control/senden.py
+@@ -194,6 +194,28 @@
+         self.reason = reason
+ 
+ 
++def _require_sync_report(fryer: FryerData, *, allow_prepared: bool) -> None:
++    """Fail closed on incomplete, unknown or stale reports before writing."""
++    from datetime import datetime, timezone
++
++    if fryer.online is not True or getattr(fryer, "last_error", None):
++        raise SyncBlocked("Kein fehlerfreier Online-Bericht. Nichts gesendet.", "zustand_unbekannt")
++    reported = getattr(fryer, "last_report", None)
++    if (not isinstance(reported, datetime) or reported.tzinfo is None
++            or not 0 <= (datetime.now(timezone.utc) - reported).total_seconds() <= 15):
++        raise SyncBlocked("Kein frischer Bericht. Nichts gesendet.", "meldung_veraltet")
++    state = getattr(fryer, "state", None)
++    zones = getattr(state, "zones", None)
++    if (not isinstance(zones, dict) or len(zones) != 2
++            or any(type(z) is not int for z in zones) or set(zones) != {1, 2}
++            or getattr(state, "active", None) is not False):
++        raise SyncBlocked("Beide inaktiven Faecher muessen gemeldet sein. Nichts gesendet.", "zustand_unbekannt")
++    allowed = {"aus", "bereit"} | (PREPARED if allow_prepared else set())
++    if any(getattr(z, "status", None) not in allowed
++           or getattr(z, "active", None) is not False for z in zones.values()):
++        raise SyncBlocked("Ein Fach ist nicht sicher inaktiv. Nichts gesendet.", "zustand_unbekannt")
++
++
+ async def _check_and_reset(
+     coordinator: AirfryerCoordinator, fryer: FryerData, *, reset: bool
+ ) -> None:
+@@ -217,6 +239,7 @@
+             f"{names} {'arbeiten' if len(busy) > 1 else 'arbeitet'} gerade – Match/Sync geht erst, wenn beide Zonen frei sind. Nichts gesendet.",
+             "zone_arbeitet",
+         )
++    _require_sync_report(fryer, allow_prepared=True)
+     todo = [z for z in zones if states[z] in PREPARED]
+     if not todo:
+         return
+@@ -227,6 +250,7 @@
+             "zone_vorbereitet",
+         )
+     for z in todo:
++        _require_sync_report(fryer, allow_prepared=True)
+         try:
+             await coordinator.api.bypass_v2(fryer.info, "endCook", {"chamber": z})
+         except AirfryerDeviceOffline:
+@@ -310,6 +334,7 @@
+         plans = sync_plans(coordinator, fryer, sync_type)
+     payload = build_sync_payload(coordinator.api.account_id, sync_type, plans[0], plans[1])
+     extra = {"retry": False} if once else {}
++    _require_sync_report(fryer, allow_prepared=False)
+     answer = await coordinator.api.bypass_v2(fryer.info, "startMultiCook", payload, **extra)
+     await coordinator.async_request_fast_refresh()
+     return redact(answer) if isinstance(answer, dict) else {"antwort": answer}

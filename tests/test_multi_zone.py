@@ -36,7 +36,7 @@ class MultiZoneTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual([z["planned_delay_minutes"] for z in result["zones"]], [3, 0])
         self.assertFalse(result["transmitted"])
         self.assertFalse(result["live_send_enabled"])
-        self.assertIn("multi_contract_unsafe", result["blocking_reasons"])
+        self.assertIn("multi_contract_unreviewed", result["blocking_reasons"])
         self.hass.services.async_call.assert_not_called()
         self.discovery.assert_awaited_once_with(self.hass, allowed_device_ids={"d"})
 

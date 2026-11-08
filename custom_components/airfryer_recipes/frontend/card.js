@@ -295,11 +295,11 @@ class AirfryerRecipesCard extends AirfryerRecipesPanel {
     return this._hass?.language?.toLowerCase().startsWith("de") ? {
       title: "Beide Fächer", sync: "SYNC-Vorschau", match: "MATCH-Vorschau",
       info: "SYNC plant einen gemeinsamen Abschluss mit unterschiedlichen Werten. MATCH übernimmt die Werte von Fach 1 für beide Fächer. Übertragung noch nicht verfügbar; die Vorschau sendet nichts.",
-      missing: "Wähle zuerst die Werte in Fach 1 und für SYNC auch in Fach 2.", delay: "Geplante Wartezeit", noSend: "Nur Vorschau. Nichts an das Gerät gesendet."
+      missing: "Wähle zuerst die Werte in Fach 1 und für SYNC auch in Fach 2.", delay: "Geplante Wartezeit", noSend: "Nur Vorschau. Nichts an das Gerät gesendet.", guard: "Der Controller unterstützt die neuen Optionen. Für die Freigabe fehlt noch die sichere Prüfung fehlender oder unbekannter Fächer.", unreviewed: "Diese Controller-Version ist für die neue Schnittstelle noch nicht geprüft."
     } : {
       title: "Both zones", sync: "SYNC preview", match: "MATCH preview",
       info: "SYNC plans a shared finish with different settings. MATCH applies zone 1 settings to both zones. Transmission is not yet available; preview sends nothing.",
-      missing: "Select settings in zone 1 first, and in zone 2 for SYNC.", delay: "Planned waiting time", noSend: "Preview only. Nothing sent to the appliance."
+      missing: "Select settings in zone 1 first, and in zone 2 for SYNC.", delay: "Planned waiting time", noSend: "Preview only. Nothing sent to the appliance.", guard: "The controller supports the new options. Safe handling of missing or unknown zones is still required before enabling transmission.", unreviewed: "This controller version has not been reviewed for the new interface."
     };
   }
 
@@ -332,7 +332,7 @@ class AirfryerRecipesCard extends AirfryerRecipesPanel {
     const t = this.multiWords;
     const disabled = this.busy || this.devicesBusy || device.connectivity !== "reported_online";
     return `<section class="preview multi-preview"><h3>${t.title}</h3><p>${t.info}</p><button type="button" data-action="multi-sync" ${disabled ? "disabled" : ""}>${t.sync}</button> <button type="button" data-action="multi-match" ${disabled ? "disabled" : ""}>${t.match}</button>
-      ${this.multiPreview ? `<p>${t.noSend}</p>${this.multiPreview.zones.map(z => `<p>${this.cardWords.zone} ${z.zone_id}: ${html(this.programName(z.settings.program))} · ${this.toDisplay(z.settings.temperature_c)} ${this.unit} · ${z.settings.duration_minutes} min · ${t.delay}: ${z.planned_delay_minutes} min</p>`).join("")}` : ""}
+      ${this.multiPreview ? `<p>${t.noSend}</p>${this.multiPreview.controller_contract ? `<p>${this.multiPreview.controller_contract.explicit_values ? t.guard : t.unreviewed}</p>` : ""}${this.multiPreview.zones.map(z => `<p>${this.cardWords.zone} ${z.zone_id}: ${html(this.programName(z.settings.program))} · ${this.toDisplay(z.settings.temperature_c)} ${this.unit} · ${z.settings.duration_minutes} min · ${t.delay}: ${z.planned_delay_minutes} min</p>`).join("")}` : ""}
       ${this.multiMessage ? `<p role="status">${html(this.multiMessage)}</p>` : ""}</section>`;
   }
 

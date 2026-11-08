@@ -2,11 +2,11 @@
 from dataclasses import asdict
 
 from .const import DOMAIN
+from .multi_contract import describe_contract, snapshot_blockers, build_request
 from .beta_send import validate_settings
 from .command_preview import PreviewTargetNotFound
 from .device_discovery import discover_devices
 from .device_access import authorize_device, AccessDenied
-from .model_profiles import TURBO_TOWER_MODEL
 from .recipe_model import CookingPhase, RecipeValidationError
 
 
@@ -41,13 +41,11 @@ async def preview(hass, connection, device_id, mode, sources):
     device = next((d for d in discovery["devices"] if d["device_id"] == device_id), None)
     if device is None or {z["zone_id"] for z in device["zones"]} != {1, 2}:
         raise PreviewTargetNotFound
-    reasons = ["multi_contract_unsafe", "freshness_unverified", "multi_device_acceptance_pending"]
-    if device.get("model") != TURBO_TOWER_MODEL:
-        reasons.append("model_unsupported")
-    if device.get("connectivity") != "reported_online":
-        reasons.append("connection_unknown")
-    if any(z["status"] not in ("idle", "off") for z in device["zones"]):
-        reasons.append("zone_not_idle")
+    contract = await describe_contract(hass)
+    reasons = [contract["blocking_reason"], "multi_device_acceptance_pending"]
+    reasons.extend(snapshot_blockers(device))
+    # Validate our exact intended public request without submitting it.
+    build_request(device_id, mode, phases)
     for phase in phases.values():
         program = next((p for p in device.get("programs", []) if p.get("id") == phase.program), None)
         if program is None:
@@ -60,7 +58,7 @@ async def preview(hass, connection, device_id, mode, sources):
         raise AccessDenied
     longest = max(p.duration_minutes for p in phases.values())
     return {"mode": "dry_run", "operation": mode, "transmitted": False,
-            "live_send_enabled": False, "blocking_reasons": reasons,
+            "live_send_enabled": False, "blocking_reasons": reasons, "controller_contract": contract,
             "zones": [{"zone_id": int(z), "settings": asdict(p),
                        "planned_delay_minutes": longest - p.duration_minutes if mode == "sync" else 0}
                       for z, p in sorted(phases.items())]}
