@@ -329,7 +329,7 @@ test("card/editor registration, English fallback and escaping use no copied imag
   assert.equal(context.window.customCards[0].type, "airfryer-recipes-card");
   assert.equal(card.constructor.getStubConfig().dry_run, true);
   assert.equal(card.constructor.getConfigElement() instanceof elements.get("airfryer-recipes-card-editor"), true);
-  assert.match(cardSource, /\.\/panel\.js\?v=0\.1\.0b25/);
+  assert.match(cardSource, /\.\/panel\.js\?v=0\.1\.0b26/);
 });
 
 test("visual editor uses safe defaults and emits dashboard configuration only", () => {
@@ -775,9 +775,40 @@ test('multi preview explains the remaining state guard for the reviewed new cont
   card.multiPreview = { zones: [], controller_contract: { explicit_values: true, live_send_enabled: false } };
   card.render();
   assert.match(card.shadowRoot.innerHTML, /Controller unterstützt die neuen Optionen/);
-  assert.match(card.shadowRoot.innerHTML, /fehlender oder unbekannter Fächer/);
+  assert.match(card.shadowRoot.innerHTML, /fehlende oder unbekannte Fächer/);
   card._hass.language = 'en'; card.render();
   assert.match(card.shadowRoot.innerHTML, /missing or unknown zones/);
   card.multiPreview.controller_contract.explicit_values = false; card.render();
   assert.match(card.shadowRoot.innerHTML, /has not been reviewed/);
+});
+
+test('own multi-send asks confirmation with both exact phases before one confirm request', async () => {
+  const calls = [], dialogs = [];
+  const { card } = makeCard(async r => {
+    calls.push(r);
+    if (r.parameters?.token && r.action === 'multi_cancel') return {};
+    if (r.action === 'multi_prepare') return { token:'multi-token', zones:[{zone_id:1,settings:phase},{zone_id:2,settings:other}] };
+    if (r.action === 'multi_confirm') return { outcome:'accepted', history_saved:true };
+    return { available:true,zones:{} };
+  }, text => { dialogs.push(text); return true; });
+  card.config.dry_run = false;
+  card.drafts.set(JSON.stringify(['appliance','2']),{settings:other,recipe_id:null});
+  await click(card,'multi-send-sync');
+  assert.equal(dialogs.length,1);
+  assert.match(dialogs[0],/Fach 1.*180/); assert.match(dialogs[0],/Fach 2.*190/);
+  const controlled = calls.filter(r=>r.type==='airfryer_recipes/multi_action');
+  assert.equal(controlled[0].action,'multi_prepare');
+  assert.equal(controlled[0].parameters.dry_run,false);
+  assert.equal(controlled.filter(r=>r.action==='multi_confirm').length,1);
+});
+
+test('own multi dry-run and rejected dialog never confirm a device command', async () => {
+  for (const dry of [true,false]) {
+    const calls=[];
+    const { card } = makeCard(async r=>{calls.push(r);return {token:dry?undefined:'multi-token',zones:[{zone_id:1,settings:phase},{zone_id:2,settings:phase}]};},()=>false);
+    card.config.dry_run=dry;
+    await click(card,'multi-send-match');
+    assert.equal(calls.filter(r=>r.action==='multi_confirm').length,0);
+    assert.equal(calls[0].parameters.dry_run,dry);
+  }
 });

@@ -2,6 +2,8 @@
 
 [English](README.md) | [Deutsch](README.de.md)
 
+**b26 in Entwicklung:** SYNC/MATCH verwenden jetzt unseren eigenen abgesicherten Sender zum reinen Bereitstellen; keine Controller-Änderung erforderlich. Genaue Bestätigung, frisch gemeldete inaktive Fächer, ein HTTP-Versuch und keine automatische Wiederholung. Benötigt geprüften Controller 1.0.3 oder 1.0.4-beta.1; native Abnahme offen. [Einrichtung und Tests](docs/reports/ISSUE_1_OWN_GUARD.de.md). Keine neue Beta angekündigt.
+
 **Issue #1 in Entwicklung (b25):** Getrennte SYNC-/MATCH-Planungsvorschauen sind umgesetzt. Echte kombinierte Übertragung bleibt durch den geprüften Controller-Vertrag einschließlich beta.4 blockiert. [Umfang und Controller-Anforderungen](docs/reports/ISSUE_1_SYNC_MATCH.de.md). Keine neue Beta angekündigt.
 
 **Issue #10 in Entwicklung (b24):** Diagnosevorschau/-download nur für Administratoren und optionale Companion-Fertigmeldungen sind umgesetzt; die native Abnahme steht aus. [Einrichtung, Datenschutz und Tests](docs/reports/ISSUE_10_SUPPORT.de.md). Dies kündigt keine veröffentlichte Beta an.

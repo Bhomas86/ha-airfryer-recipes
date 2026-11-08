@@ -556,11 +556,11 @@ class WebsocketTests(unittest.IsolatedAsyncioTestCase):
         ws.registered.clear()
         self.api.register_commands(self.hass)
         commands = {handler._ws_command for handler in ws.registered}
-        self.assertEqual(len(commands), 32)
+        self.assertEqual(len(commands), 33)
         self.assertEqual(
             commands,
             {f"{DOMAIN}/{name}" for name in (
-                "multi_preview", "diagnostics_preview", "notification_settings", "notification_set",
+                "multi_action", "multi_preview", "diagnostics_preview", "notification_settings", "notification_set",
                 "list", "get", "create", "update", "duplicate", "delete",
                 "import_preview", "import_confirm", "export", "favorites", "set_favorite",
                 "devices", "sent_settings", "control", "access_list", "access_set", "appearance_get", "appearance_set", "appearance_upload",
@@ -568,6 +568,22 @@ class WebsocketTests(unittest.IsolatedAsyncioTestCase):
                 "batch_prepare", "batch_start", "batch_next", "batch_stop", "beta_recover",
             )},
         )
+
+    async def test_multi_action_envelope_uses_authenticated_connection_and_strict_fields(self):
+        fake = SimpleNamespace(prepare=AsyncMock(return_value={"transmitted":False}),confirm=AsyncMock(),cancel=AsyncMock(),recover=AsyncMock())
+        params = {"device_id":"device", "mode":"sync", "sources":{}, "dry_run":True}
+        with patch("custom_components.airfryer_recipes.guarded_multi.manager",return_value=fake):
+            result=await self.call("multi_action",FakeConnection(authenticated=False),action="multi_prepare",parameters=params)
+            self.assertEqual(result[2],"unauthorized")
+            fake.prepare.assert_not_called()
+            result=await self.call("multi_action",self.user,action="multi_prepare",parameters={**params,"readyStart":False})
+            self.assertEqual(result[2],"invalid_format")
+            fake.prepare.assert_not_called()
+            result=await self.call("multi_action",self.user,action="multi_prepare",parameters=params)
+            self.assertEqual(result[0],"result")
+            self.assertIs(fake.prepare.call_args.args[0],self.user)
+            result=await self.call("multi_action",self.user,action="befehl_senden",parameters={})
+            self.assertEqual(result[2],"invalid_format")
 
     async def test_multi_preview_routes_are_read_only_and_reject_live_fields(self):
         await self.access_setup()

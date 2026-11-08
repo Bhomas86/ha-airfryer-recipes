@@ -27,7 +27,8 @@ async def describe_contract(hass):
         pass  # The optional controller never prevents recipe management.
     return {"reviewed_version": version, "explicit_values": version is not None,
             "live_send_enabled": False,
-            "blocking_reason": "upstream_zone_state_guard" if version else "multi_contract_unreviewed"}
+            "own_guard_available": version is not None,
+            "blocking_reason": "multi_confirmation_required" if version else "multi_contract_unreviewed"}
 
 
 def snapshot_blockers(device, now=None):

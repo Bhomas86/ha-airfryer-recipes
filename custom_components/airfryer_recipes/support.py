@@ -128,7 +128,8 @@ class Support:
         from homeassistant.loader import async_get_integration
         try:
             integration = await async_get_integration(self.hass, "airfryer_control")
-            if integration.version != "1.0.3-beta.3":
+            from .beta_send import SUPPORTED_VERSIONS
+            if integration.version not in SUPPORTED_VERSIONS:
                 return {}
             loaded = {e.entry_id for e in self.hass.config_entries.async_loaded_entries("airfryer_control")}
             return {e.entity_id: e for e in er.async_get(self.hass).entities.values()

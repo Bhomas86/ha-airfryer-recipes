@@ -69,20 +69,8 @@ class ContractTests(unittest.IsolatedAsyncioTestCase):
             self.assertIsNone((await describe_contract(NS()))['reviewed_version'])
 
 
-def controller_functions(patched):
+def controller_functions():
     original=(ROOT/'tests/fixtures/controller_103_sync_functions.py.txt').read_text()
-    if patched:
-        # Apply the exact reviewed helper/hook additions from our proposed diff.
-        lines=(ROOT/'docs/upstream/controller-sync-state-guard.patch').read_text().splitlines()
-        added='\n'.join(l[1:] for l in lines if l.startswith('+') and not l.startswith('+++'))
-        helper_text='\n'.join(l for l in added.splitlines() if not l.lstrip().startswith('_require_sync_report(fryer,'))
-        module=ast.parse(helper_text)
-        helper=next(n for n in module.body if isinstance(n,ast.FunctionDef) and n.name=='_require_sync_report')
-        original=ast.unparse(helper)+'\n\n'+original
-        original=original.replace('    todo = [z for z in zones if states[z] in PREPARED]',
-            '    _require_sync_report(fryer, allow_prepared=True)\n    todo = [z for z in zones if states[z] in PREPARED]')
-        original=original.replace('    answer = await coordinator.api.bypass_v2(fryer.info, "startMultiCook", payload, **extra)',
-            '    _require_sync_report(fryer, allow_prepared=False)\n    answer = await coordinator.api.bypass_v2(fryer.info, "startMultiCook", payload, **extra)')
     env={'AirfryerError':type('AirfryerError',(Exception,),{}),'AirfryerDeviceOffline':type('Offline',(Exception,),{}),
          'BUSY':{'vorheizen','gart','pausiert','schublade_offen'},'PREPARED':{'wartet_auf_start','wartet_auf_sync'},
          'modelle':NS(ALL_MODES={'airfry':'airfry'}),'redact':lambda v:v}
@@ -90,9 +78,9 @@ def controller_functions(patched):
     return env
 
 
-class ControllerPatchTests(unittest.IsolatedAsyncioTestCase):
+class OriginalControllerRegressionTests(unittest.IsolatedAsyncioTestCase):
     async def attempt(self,statuses,patched,age=0,after_refresh=None):
-        env=controller_functions(patched)
+        env=controller_functions()
         api=NS(account_id='dummy',bypass_v2=AsyncMock(return_value={}))
         fryer=NS(online=True,last_error=None,last_report=datetime.now(timezone.utc)-timedelta(seconds=age),
                  state=NS(active=False,zones={k:NS(status=v,active=False) for k,v in statuses.items()}),info={})
@@ -110,20 +98,3 @@ class ControllerPatchTests(unittest.IsolatedAsyncioTestCase):
         for statuses in ({1:'bereit'},{1:'unbekannt',2:'bereit'}):
             blocked,write=await self.attempt(statuses,False)
             self.assertFalse(blocked);write.assert_awaited_once()
-
-    async def test_patch_blocks_missing_unknown_stale_and_refresh_race(self):
-        for statuses in ({1:'bereit'},{1:'unbekannt',2:'bereit'},{1:'gart',2:'bereit'},
-                         {1:'wartet_auf_start',2:'bereit'}):
-            blocked,write=await self.attempt(statuses,True)
-            self.assertTrue(blocked);write.assert_not_called()
-        blocked,write=await self.attempt({1:'bereit',2:'bereit'},True,age=16)
-        self.assertTrue(blocked);write.assert_not_called()
-        blocked,write=await self.attempt({1:'bereit',2:'bereit'},True,
-            after_refresh=lambda fryer:fryer.state.zones.pop(2))
-        self.assertTrue(blocked);write.assert_not_called()
-
-    async def test_patch_still_allows_exactly_one_prepare_only_idle_write(self):
-        blocked,write=await self.attempt({1:'bereit',2:'bereit'},True)
-        self.assertFalse(blocked);write.assert_awaited_once()
-        self.assertIs(write.call_args.kwargs['retry'],False)
-        self.assertIs(write.call_args.args[2]['readyStart'],True)

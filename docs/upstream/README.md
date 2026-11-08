@@ -1,11 +1,12 @@
-# Controller state-guard proposal
+# Reviewed controller transport sources
 
 [English](README.md) | [Deutsch](README.de.md)
 
-`controller-sync-state-guard.patch` is a proposed change for `misterm2310/airfryer-control` stable 1.0.3, commit `75d30c800ae79eea2254e5d4f5da31ec154398e7`. It is **not installed**, not applied to the user's controller and not submitted upstream. It adds a fail-closed report guard before reset writes and immediately before the combined write. Both zone reports must exist, be explicitly inactive and safely idle (or prepared only during authorized reset preparation), with online/error checks and a report at most 15 seconds old. It does not add retries or start heating.
+The owner requires controller-independent protection. The previous patch proposal was removed; **no controller patch is required, installed or submitted**. Production uses our own guarded sender, not the upstream SYNC/MATCH actions. [Current implementation](../reports/ISSUE_1_OWN_GUARD.md).
 
-Review the 15-second freshness bound against the controller's actual successful refresh contract. This remains a proposal pending upstream review, complete controller tests and native acceptance. Apply to a clean controller checkout using `git apply --check /path/to/controller-sync-state-guard.patch`, then `git apply /path/to/controller-sync-state-guard.patch`. Do not patch a running installation blindly. This repository's tests execute only extracted functions with mocked device APIs.
+Test-only extracts originate from `misterm2310/airfryer-control`, commit `75d30c800ae79eea2254e5d4f5da31ec154398e7`, copyright (c) 2026 misterm2310, under the MIT license retained in [LICENSE.airfryer-control](LICENSE.airfryer-control):
 
-The extracted fixture `tests/fixtures/controller_103_sync_functions.py.txt` originates from that commit's `senden.py`, copyright (c) 2026 misterm2310, under the MIT license retained in [LICENSE.airfryer-control](LICENSE.airfryer-control). Proposed changes retain that license. The fixture is for isolated contract regressions, not a vendored production controller.
+- `tests/fixtures/controller_103_sync_functions.py.txt`: actual combined sender functions, retained to reproduce the original unknown/missing-zone defect with mocked device calls.
+- `tests/fixtures/controller_103_transport.py.txt`: actual `bypass_v2`, `_once`, `_unwrap`, exercised with our guard and a mocked HTTP boundary. The complete `core/api.py` source is identical in reviewed 1.0.3 and 1.0.4-beta.1.
 
-Airfryer Recipes' `multi_contract.py` prepares exact service envelopes and validates response echoes. Preview identifies only the two reviewed versions and current-snapshot blockers. None of this enables live transmission: a preflight check cannot protect the controller's later refresh/write boundary. [Review and remaining gap](../reports/ISSUE_1_CONTROLLER_103.md).
+No upstream code is installed as a production controller. Our adapter composes the existing loaded transport without replacing any controller attributes or functions. Login/error handling stays with the transport; final report/identity/permission/expiry checks and one-shot submission are enforced by our integration.

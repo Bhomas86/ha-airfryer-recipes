@@ -9,6 +9,10 @@ from .device_access import AccessDenied, authorize_device, device_scope
 from .recipe_model import RecipeValidationError
 
 FIELDS = {
+    "multi_prepare": {"device_id", "mode", "sources", "dry_run"},
+    "multi_confirm": {"token", "acknowledge"},
+    "multi_cancel": {"token"},
+    "multi_recover": {"device_id", "acknowledge"},
     "multi_preview": {"device_id", "mode", "sources"},
     "appearance_get": {"device_id"},
     "devices": set(), "sent_settings": {"device_id"},
@@ -30,6 +34,16 @@ async def execute(hass: Any, connection: Any, request_id: int, action: str, para
     if action == "beta_prepare" and not isinstance(params["source"], dict):
         raise RecipeValidationError("Choose recipe or manual settings")
     uid = connection.user.id
+    if action in {"multi_prepare", "multi_confirm", "multi_cancel", "multi_recover"}:
+        from .guarded_multi import manager
+        multi = manager(hass)
+        if action == "multi_prepare":
+            return await multi.prepare(connection, **params)
+        if action == "multi_confirm":
+            return await multi.confirm(connection, params["token"], params["acknowledge"])
+        if action == "multi_cancel":
+            return await multi.cancel(connection, params["token"])
+        return await multi.recover(connection, params["device_id"], params["acknowledge"])
     if action == "multi_preview":
         from .multi_zone import preview
         return await preview(hass, connection, **params)

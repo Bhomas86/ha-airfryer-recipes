@@ -2,6 +2,8 @@
 
 [English](ISSUE_1_SYNC_MATCH.md) | [Deutsch](ISSUE_1_SYNC_MATCH.de.md)
 
+**Ersetzter Lösungsweg (2026-11-08):** Der Eigentümer verlangt die Absicherung in unserer Software. Der Controller-Patch ist nicht mehr erforderlich oder enthalten. [Implementierter Sender ohne Controller-Änderung](ISSUE_1_OWN_GUARD.de.md). Die folgenden Befunde bleiben historische Nachweise.
+
 **Nachprüfung 2026-11-08:** Mehrere unten genannte Blocker sind in Controller 1.0.3 behoben. Senden bei fehlendem/unbekanntem Fach bleibt reproduzierbar. [Aktuelle Prüfung](ISSUE_1_CONTROLLER_103.de.md). Frühere erfolgreiche SYNC-/MATCH-Eigentümertests bleiben gültig.
 
 Issue #1 bleibt **für echte Übertragung blockiert**. Die b25-Entwicklung implementiert nur getrennte, lesende Dashboard-Vorschauen und Backend-Validierung. PR #47 wurde mit Eigentümerfreigabe zusammengeführt; dessen native Diagnose-/Push-Abnahme wird weiterhin nicht behauptet. Diese Arbeit veröffentlicht keine neue Beta.

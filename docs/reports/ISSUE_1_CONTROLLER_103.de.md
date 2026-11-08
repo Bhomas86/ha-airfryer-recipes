@@ -2,6 +2,8 @@
 
 [English](ISSUE_1_CONTROLLER_103.md) | [Deutsch](ISSUE_1_CONTROLLER_103.de.md)
 
+**Ersetzter Lösungsweg (2026-11-08):** Der Eigentümer verlangt die Absicherung in unserer Software. Der Controller-Patch ist nicht mehr erforderlich oder enthalten. [Implementierter Sender ohne Controller-Änderung](ISSUE_1_OWN_GUARD.de.md). Die folgenden Befunde bleiben historische Nachweise.
+
 Geprüft am 2026-11-08: stabiler `v1.0.3` mit `75d30c800ae79eea2254e5d4f5da31ec154398e7` und aktueller `v1.0.4-beta.1` mit `ca92b375547c75b698e25a21f8a8734688174e47` aus `misterm2310/airfryer-control`. Dieser Bericht ersetzt die früheren beta.3-/beta.4-Vertragsbefunde an den unten genannten Stellen. Die früheren erfolgreichen SYNC-/MATCH-Aktionstests des Eigentümers bleiben gültige lokale Nachweise; hier wurden keine neuen Gerätetests durchgeführt.
 
 ## Im Controller umgesetzt

@@ -630,8 +630,15 @@ class AdapterTests(unittest.IsolatedAsyncioTestCase):
                 await read_target(self.hass,'ha-device',1,settings=CookingPhase('proof',31,1))
         self.assertTrue(all(c.args[1]=='faehigkeiten' for c in self.hass.services.async_call.await_args_list))
 
+    async def test_reviewed_stable_and_beta_keep_single_zone_read_guards(self):
+        for version in ('1.0.3','1.0.4-beta.1'):
+            self.integration.version=version
+            target=await self.read()
+            self.assertIn(version,target.fingerprint)
+            self.assertTrue(target.unchanged())
+
     async def test_unreviewed_adapter_releases_are_blocked_before_any_service_call(self):
-        for version in ['1.0.2-beta.1','1.0.2','1.0.3-beta.1','1.0.3-beta.2','1.0.3','1.0.4-beta.1']:
+        for version in ['1.0.2-beta.1','1.0.2','1.0.3-beta.1','1.0.3-beta.2','1.0.4-beta.2','1.0.4']:
             self.integration.version=version
             with self.assertRaisesRegex(BetaTestBlocked,'adapter_version'):await self.read()
         self.hass.services.async_call.assert_not_awaited()

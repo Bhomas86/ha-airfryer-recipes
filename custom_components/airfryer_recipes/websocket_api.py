@@ -640,7 +640,19 @@ async def ws_multi_preview(hass, connection, msg):
     await _respond(hass, connection, msg, run)
 
 
+@websocket_api.websocket_command({voluptuous.Required("type"): f"{DOMAIN}/multi_action", voluptuous.Required("action"): str, voluptuous.Required("parameters"): dict})
+@websocket_api.async_response
+async def ws_multi_action(hass, connection, msg):
+    async def run(repo):
+        from .control_api import execute
+        if set(msg) != {"id", "type", "action", "parameters"} or msg["action"] not in {"multi_prepare", "multi_confirm", "multi_cancel", "multi_recover"}:
+            raise RecipeValidationError("Unexpected multi-zone action")
+        return await execute(hass, connection, msg["id"], msg["action"], msg["parameters"])
+    await _respond(hass, connection, msg, run)
+
+
 COMMANDS = (
+    ws_multi_action,
     ws_multi_preview,
     ws_diagnostics_preview, ws_notification_settings, ws_notification_set,
     ws_list,

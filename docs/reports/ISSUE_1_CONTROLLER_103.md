@@ -2,6 +2,8 @@
 
 [English](ISSUE_1_CONTROLLER_103.md) | [Deutsch](ISSUE_1_CONTROLLER_103.de.md)
 
+**Superseded approach (2026-11-08):** The owner requires our own software to enforce the guard. The controller patch is no longer required or included. [Implemented controller-independent sender](ISSUE_1_OWN_GUARD.md). The findings below remain historical evidence.
+
 Reviewed 2026-11-08: stable `v1.0.3` at `75d30c800ae79eea2254e5d4f5da31ec154398e7` and current `v1.0.4-beta.1` at `ca92b375547c75b698e25a21f8a8734688174e47` in `misterm2310/airfryer-control`. This supersedes the earlier beta.3/beta.4 contract findings where noted below. The owner's earlier successful SYNC/MATCH action tests remain valid local evidence; no new appliance testing was performed here.
 
 ## Implemented upstream

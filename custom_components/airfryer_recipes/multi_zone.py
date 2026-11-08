@@ -18,25 +18,7 @@ async def preview(hass, connection, device_id, mode, sources):
         raise RecipeValidationError("Select explicit settings for every required zone")
     uid = connection.user.id
     permission = await authorize_device(hass, uid, device_id)
-    phases = {}
-    for zone, source in sources.items():
-        if not isinstance(source, dict):
-            raise RecipeValidationError("Invalid settings source")
-        if set(source) == {"recipe_id"} and isinstance(source["recipe_id"], str):
-            recipe = await hass.data[DOMAIN]["repository"].async_get(source["recipe_id"])
-            if len(recipe.phases) != 1:
-                raise RecipeValidationError("Choose a single-phase recipe")
-            phase = recipe.phases[0]
-        elif set(source) == {"settings"} and isinstance(source["settings"], dict) and set(source["settings"]) == {"program", "temperature_c", "duration_minutes"}:
-            phase = CookingPhase(**source["settings"])
-            if phase.program != source["settings"]["program"]:
-                raise RecipeValidationError("Invalid program")
-        else:
-            raise RecipeValidationError("Choose recipe or manual settings")
-        validate_settings(phase)
-        phases[zone] = phase
-    if mode == "match":
-        phases["2"] = phases["1"]
+    phases, _ = await resolve_sources(hass, mode, sources)
     discovery = await discover_devices(hass, allowed_device_ids={device_id})
     device = next((d for d in discovery["devices"] if d["device_id"] == device_id), None)
     if device is None or {z["zone_id"] for z in device["zones"]} != {1, 2}:
@@ -62,3 +44,30 @@ async def preview(hass, connection, device_id, mode, sources):
             "zones": [{"zone_id": int(z), "settings": asdict(p),
                        "planned_delay_minutes": longest - p.duration_minutes if mode == "sync" else 0}
                       for z, p in sorted(phases.items())]}
+
+
+async def resolve_sources(hass, mode, sources):
+    if mode not in ("sync", "match") or not isinstance(sources, dict) or set(sources) != ({"1", "2"} if mode == "sync" else {"1"}):
+        raise RecipeValidationError("Choose explicit zone sources")
+    references = []
+    phases = {}
+    for zone, source in sources.items():
+        if not isinstance(source, dict):
+            raise RecipeValidationError("Invalid settings source")
+        if set(source) == {"recipe_id"} and isinstance(source["recipe_id"], str):
+            recipe = await hass.data[DOMAIN]["repository"].async_get(source["recipe_id"])
+            if len(recipe.phases) != 1:
+                raise RecipeValidationError("Choose a single-phase recipe")
+            references.append((hass.data[DOMAIN]["repository"], recipe))
+            phase = recipe.phases[0]
+        elif set(source) == {"settings"} and isinstance(source["settings"], dict) and set(source["settings"]) == {"program", "temperature_c", "duration_minutes"}:
+            phase = CookingPhase(**source["settings"])
+            if phase.program != source["settings"]["program"]:
+                raise RecipeValidationError("Invalid program")
+        else:
+            raise RecipeValidationError("Choose recipe or manual settings")
+        validate_settings(phase)
+        phases[zone] = phase
+    if mode == "match":
+        phases["2"] = phases["1"]
+    return phases, references
