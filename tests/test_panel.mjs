@@ -50,6 +50,7 @@ function panelWith(api, admin = true, confirmDialog = () => true) {
   };
   vm.runInNewContext(source.replace(/^export /m, ""), context);
   const panel = new Panel();
+  Object.defineProperty(panel, "betaFeatures", { value: true, writable: true, configurable: true });
   panel._hass = { language: "de", user: { id: "u1", is_admin: admin }, connection: fakeConnection(), callWS: api };
   panel.watchConnection(panel._hass.connection);
   panel.events = events;
@@ -1159,4 +1160,33 @@ test('expired diagnostic preview shows relevant feedback without starting a down
   await panel.supportAction('diagnostics-download',{});
   assert.match(panel.error,/Diagnosevorschau ist abgelaufen/);
   assert.equal(panel.createdElements.length,0);
+});
+
+
+test('production recipe library hides all commissioning sections but retains recipes and settings', () => {
+ const panel=panelWith(async()=>({}));panel.betaFeatures=false;panel.render();
+ assert.doesNotMatch(panel.shadowRoot.innerHTML,/id="batch-test"|id="device-preview"|id="beta-device-test"/);
+ assert.match(panel.shadowRoot.innerHTML,/data-action="new"/);
+ assert.match(panel.shadowRoot.innerHTML,/notifications-load/);
+ panel.betaFeatures=true;panel.render();
+ assert.match(panel.shadowRoot.innerHTML,/id="batch-test"/);
+});
+
+
+test('shipped stable version disables beta features without an override', () => {
+ const panel=panelWith(async()=>({}));
+ delete panel.betaFeatures;
+ assert.equal(panel.betaFeatures,false);
+ panel.render();
+ assert.doesNotMatch(panel.shadowRoot.innerHTML,/id="batch-test"|id="device-preview"|id="beta-device-test"/);
+});
+
+test('release channel shows tools only for beta versions', () => {
+ for (const [version,expected] of [['0.2.0',false],['0.2.0b1',true],['0.2.0-beta.1',true]]) {
+  let Panel;
+  vm.runInNewContext(source.replace('"0.2.0"',JSON.stringify(version)).replace(/^export /m,''),{
+   HTMLElement:class {},customElements:{get(){},define(name,type){Panel=type;}}
+  });
+  assert.equal(Panel.betaFeatures,expected);
+ }
 });

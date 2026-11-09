@@ -2,7 +2,7 @@
 
 [English](README.md) | [Deutsch](README.de.md)
 
-**Version 0.1.0** manages device-independent air fryer recipes locally in Home Assistant and prepares settings on a supported appliance through [Airfryer Control](https://github.com/misterm2310/airfryer-control). Cooking starts physically at the appliance.
+**Version 0.2.0** manages device-independent air fryer recipes locally in Home Assistant and prepares settings on a supported appliance through [Airfryer Control](https://github.com/misterm2310/airfryer-control). Cooking starts physically at the appliance.
 
 - Recipe library with administrator editing, categories/tags, search, favorites and validated JSON import/export.
 - Dashboard card with independent recipe/manual settings per zone, persistent last sent settings and a visual editor.
@@ -15,11 +15,11 @@
 ## Install and set up
 
 1. Add `https://github.com/Bhomas86/ha-airfryer-recipes` to HACS as a custom **Integration** repository.
-2. Install **v0.1.0**, restart Home Assistant and fully reopen the browser/Companion app.
+2. Install **v0.2.0**, restart Home Assistant and fully reopen the browser/Companion app.
 3. Add **Airfryer Recipes** under Settings → Devices & services. Recipe management needs no appliance or cloud credentials.
-4. Dashboard → Edit → Add card → **Airfryer Recipes**. No dashboard is created or changed automatically. New cards start in **test mode**, which makes no device-control calls.
+4. Dashboard → Edit → Add card → **Airfryer Recipes**. No dashboard is created or changed automatically. Stable versions hide commissioning tests and the card test-mode option. Cards use normal confirmed preparation; beta versions expose the test tools again.
 5. For ordinary users, explicitly share the entire appliance in the administrator recipe library, then refresh the card.
-6. Select recipe/manual values per zone. Review previews first; disable test mode only for deliberate settings preparation. A confirmation shows exact values. Start cooking at the appliance.
+6. Select recipe/manual values per zone. Sending requires a deliberate click and confirmation of exact values. Start cooking at the appliance.
 
 ## Supported device and controller
 
@@ -45,7 +45,7 @@ Diagnostic export uses only allowlisted technical fields, with preview before do
 
 ## Release and validation
 
-[0.1.0 release notes](docs/releases/0.1.0.md) · [Final release gate](docs/reports/RELEASE_0_1_0.md) · [SYNC/MATCH design and acceptance](docs/reports/ISSUE_1_OWN_GUARD.md) · [Requirements](docs/REQUIREMENTS.md) · [Roadmap](docs/ROADMAP.md).
+[0.2.0 release notes](docs/releases/0.2.0.md) · [Final release gate](docs/reports/RELEASE_0_1_0.md) · [SYNC/MATCH design and acceptance](docs/reports/ISSUE_1_OWN_GUARD.md) · [Requirements](docs/REQUIREMENTS.md) · [Roadmap](docs/ROADMAP.md).
 
 The owner confirmed device preparation, SYNC/MATCH, cancellation without sending, no automatic heating start, persistence, permissions and a real completion notice. The owner accepted the diagnostic filename correction without another phone test; that distinction is documented. Automated tests use mocks, not real appliances. Historical beta notes/reports remain under `docs/releases` and `docs/reports` as historical evidence.
 
