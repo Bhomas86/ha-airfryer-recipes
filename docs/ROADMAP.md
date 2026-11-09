@@ -2,6 +2,16 @@
 
 [English](ROADMAP.md) | [Deutsch](ROADMAP.de.md)
 
+**b26 test-beta release preparation (2026-11-08):** Owner requests a published beta and authorizes PR #48 approval after successful tests. Keep PR open until native results are confirmed. Includes #1 and #10 acceptance, current final validation and stable 0.1.0 preparation. No new code or Actions. [Release and test checklist](releases/0.1.0b26.md).
+
+**Owner decision / b26 (2026-11-08):** Protection is implemented in Airfryer Recipes without controller changes. Own one-shot sender validates both zones after login at the HTTP boundary, shares locks/uncertain outcomes and supports exact confirmation plus server dry run. Controller-patch dependency removed. 285 Python 3.12 and 135 frontend tests passed; native acceptance pending. [Current behavior and tests](reports/ISSUE_1_OWN_GUARD.md).
+
+**Authorized continuation (2026-11-08):** PR #48 now includes the controller follow-up report, explicit request/strict response preparation, conservative snapshot blockers, and a tested upstream state-guard patch proposal. Live SYNC/MATCH remains disabled pending controller correction. 266 Python 3.12 and 133 frontend tests passed; 3.14 unavailable in this runtime. [Current scope](reports/ISSUE_1_CONTROLLER_103.md).
+
+**Controller review (2026-11-08):** Stable 1.0.3 and beta 1.0.4-beta.1 now provide explicit values, strict/once/reset options and structured SYNC/MATCH results. The busy-return defect is fixed. Twelve isolated real-function/mock-API cases still reproduce sending with a missing/unknown zone. Live #1 remains blocked; existing owner-reported successful action tests remain valid. [Evidence and focused correction](reports/ISSUE_1_CONTROLLER_103.md).
+
+**Issue #1 (2026-11-05):** PR #47 merged with owner authorization. b25 development adds separate, server-validated SYNC/MATCH previews; no combined device sends. Reviewed controller beta.3 and current beta.4 still lack explicit strict one-shot values and safe prepared-zone handling. Live #1 remains blocked pending a public upstream contract and native acceptance. [Evidence and exact requirements](reports/ISSUE_1_SYNC_MATCH.md).
+
 **Issue #10 (2026-11-05):** b24 development implements administrator-only allowlisted diagnostic preview/download and opt-in Companion completion notices. Default-off, fresh cooking→finished reports only; no replay or retry. Native acceptance remains pending. PR #46 b23 Actions passed. [Scope and checks](reports/ISSUE_10_SUPPORT.md).
 
 **b23 (2026-11-04):** Owner confirms the focused b22 save/restart check and requests removal of unverified limit/send comments. Program selections now display only localized names; missing-program warnings and backend capability data/checks remain. Official HACS/Hassfest evidence is still separate. [Change and checks](releases/0.1.0b23.md).

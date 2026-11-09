@@ -329,7 +329,7 @@ test("card/editor registration, English fallback and escaping use no copied imag
   assert.equal(context.window.customCards[0].type, "airfryer-recipes-card");
   assert.equal(card.constructor.getStubConfig().dry_run, true);
   assert.equal(card.constructor.getConfigElement() instanceof elements.get("airfryer-recipes-card-editor"), true);
-  assert.match(cardSource, /\.\/panel\.js\?v=0\.1\.0b24/);
+  assert.match(cardSource, /\.\/panel\.js\?v=0\.1\.0b26/);
 });
 
 test("visual editor uses safe defaults and emits dashboard configuration only", () => {
@@ -723,4 +723,92 @@ test('B keeps rectangles visible in the designer and applies resized invisible a
   assert.ok(hotspots(card).every(button=>/><\/button>$/.test(button)));
   assert.deepEqual(calls.map(r=>r.type),['airfryer_recipes/appearance_set','airfryer_recipes/appearance_get']);
   card.disconnectedCallback();
+});
+
+test("SYNC preview uses explicit drafts of both zones and never calls send", async () => {
+  const calls = [];
+  const { card } = makeCard(async r => { calls.push(r); return { zones: [{ zone_id: 1, settings: phase, planned_delay_minutes: 3 }, { zone_id: 2, settings: other, planned_delay_minutes: 0 }], transmitted: false }; });
+  card.drafts.set(JSON.stringify(['appliance', '2']), { settings: other, recipe_id: null });
+  await click(card, 'multi-sync');
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].type, 'airfryer_recipes/multi_preview');
+  assert.deepEqual(plain(calls[0].sources), { '1': { settings: phase }, '2': { settings: other } });
+  assert.match(card.shadowRoot.innerHTML, /Nur Vorschau/);
+  assert.match(card.shadowRoot.innerHTML, /Geplante Wartezeit: 3 min/);
+});
+
+test("MATCH explicitly uses zone one even when zone two is selected", async () => {
+  const calls = [];
+  const { card } = makeCard(async r => { calls.push(r); return { zones: [] }; });
+  card.drafts.set(JSON.stringify(['appliance', '1']), { settings: phase, recipe_id: null });
+  card.selectedZoneId = '2'; card.manualPreviewProgram = other.program;
+  card.manualPreviewTemperatureC = other.temperature_c; card.manualPreviewDurationMinutes = other.duration_minutes;
+  await click(card, 'multi-match');
+  assert.equal(calls[0].mode, 'match');
+  assert.deepEqual(plain(calls[0].sources), { '1': { settings: phase } });
+});
+
+test("missing zone drafts and unsupported/offline devices cannot silently send", async () => {
+  const calls = [];
+  const { card } = makeCard(async r => { calls.push(r); });
+  await click(card, 'multi-sync');
+  assert.equal(calls.length, 0);
+  assert.match(card.shadowRoot.innerHTML, /Wähle zuerst die Werte/);
+  card.selectedDevice().connectivity = 'offline'; card.render();
+  assert.match(card.shadowRoot.innerHTML, /data-action="multi-sync" disabled/);
+  card.selectedDevice().zones.pop(); card.render();
+  assert.doesNotMatch(card.shadowRoot.innerHTML, /data-action="multi-sync"/);
+});
+
+test("ordinary user multi-preview uses whole-device backend route", async () => {
+  const calls = [];
+  const { card } = makeCard(async r => { calls.push(r); return { zones: [] }; });
+  card._hass.user = { id: 'user', is_admin: false }; card.accessUserId = 'user';
+  await click(card, 'multi-match');
+  assert.equal(calls[0].type, 'airfryer_recipes/control');
+  assert.equal(calls[0].action, 'multi_preview');
+  assert.equal(calls[0].parameters.device_id, 'appliance');
+});
+
+test('multi preview explains the remaining state guard for the reviewed new controller', () => {
+  const { card } = makeCard();
+  card.multiPreview = { zones: [], controller_contract: { explicit_values: true, live_send_enabled: false } };
+  card.render();
+  assert.match(card.shadowRoot.innerHTML, /Controller unterstützt die neuen Optionen/);
+  assert.match(card.shadowRoot.innerHTML, /fehlende oder unbekannte Fächer/);
+  card._hass.language = 'en'; card.render();
+  assert.match(card.shadowRoot.innerHTML, /missing or unknown zones/);
+  card.multiPreview.controller_contract.explicit_values = false; card.render();
+  assert.match(card.shadowRoot.innerHTML, /has not been reviewed/);
+});
+
+test('own multi-send asks confirmation with both exact phases before one confirm request', async () => {
+  const calls = [], dialogs = [];
+  const { card } = makeCard(async r => {
+    calls.push(r);
+    if (r.parameters?.token && r.action === 'multi_cancel') return {};
+    if (r.action === 'multi_prepare') return { token:'multi-token', zones:[{zone_id:1,settings:phase},{zone_id:2,settings:other}] };
+    if (r.action === 'multi_confirm') return { outcome:'accepted', history_saved:true };
+    return { available:true,zones:{} };
+  }, text => { dialogs.push(text); return true; });
+  card.config.dry_run = false;
+  card.drafts.set(JSON.stringify(['appliance','2']),{settings:other,recipe_id:null});
+  await click(card,'multi-send-sync');
+  assert.equal(dialogs.length,1);
+  assert.match(dialogs[0],/Fach 1.*180/); assert.match(dialogs[0],/Fach 2.*190/);
+  const controlled = calls.filter(r=>r.type==='airfryer_recipes/multi_action');
+  assert.equal(controlled[0].action,'multi_prepare');
+  assert.equal(controlled[0].parameters.dry_run,false);
+  assert.equal(controlled.filter(r=>r.action==='multi_confirm').length,1);
+});
+
+test('own multi dry-run and rejected dialog never confirm a device command', async () => {
+  for (const dry of [true,false]) {
+    const calls=[];
+    const { card } = makeCard(async r=>{calls.push(r);return {token:dry?undefined:'multi-token',zones:[{zone_id:1,settings:phase},{zone_id:2,settings:phase}]};},()=>false);
+    card.config.dry_run=dry;
+    await click(card,'multi-send-match');
+    assert.equal(calls.filter(r=>r.action==='multi_confirm').length,0);
+    assert.equal(calls[0].parameters.dry_run,dry);
+  }
 });

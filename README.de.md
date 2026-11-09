@@ -2,6 +2,10 @@
 
 [English](README.md) | [Deutsch](README.de.md)
 
+**[b26 Test-Beta](docs/releases/0.1.0b26.de.md):** Eigener abgesicherter SYNC-/MATCH-Sender ohne Controller-Änderung, Diagnosevorschau/-download und optionale Companion-Fertigmeldungen. Native Abnahme offen. [Installation und gezielte Tests](docs/releases/0.1.0b26.de.md).
+
+**Issue #1 in Entwicklung (b25):** Getrennte SYNC-/MATCH-Planungsvorschauen sind umgesetzt. Echte kombinierte Übertragung bleibt durch den geprüften Controller-Vertrag einschließlich beta.4 blockiert. [Umfang und Controller-Anforderungen](docs/reports/ISSUE_1_SYNC_MATCH.de.md). Keine neue Beta angekündigt.
+
 **Issue #10 in Entwicklung (b24):** Diagnosevorschau/-download nur für Administratoren und optionale Companion-Fertigmeldungen sind umgesetzt; die native Abnahme steht aus. [Einrichtung, Datenschutz und Tests](docs/reports/ISSUE_10_SUPPORT.de.md). Dies kündigt keine veröffentlichte Beta an.
 
 **[b23: Klare Programmnamen](docs/releases/0.1.0b23.de.md).** Herkunfts-/Prüfzusätze in den Programm-Dropdowns von Dashboard, Rezepteditor und Vorschau entfernt. Fehlende Programme bleiben gekennzeichnet. Eigentümer bestätigt den b22-Speicher-/Neustarttest.

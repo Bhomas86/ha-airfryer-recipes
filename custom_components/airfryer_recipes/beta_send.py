@@ -22,6 +22,7 @@ from .recipe_repository import RecipeNotFoundError
 UPSTREAM = "airfryer_control"
 MODEL = TURBO_TOWER_MODEL
 VERSION = "1.0.3-beta.3"
+SUPPORTED_VERSIONS = (VERSION, "1.0.3", "1.0.4-beta.1")
 REVIEWED_COMMIT = "a9fc49e37c3d2698d21bfb361192717ff790eb6e"
 TTL_SECONDS = 15
 MAX_REPORT_AGE = 15
@@ -86,7 +87,7 @@ async def read_target(
     require(isinstance(device_id, str) and 0 < len(device_id) <= 128, "target")
     require(type(zone_id) is int and zone_id in (1, 2), "target")
     integration = await async_get_integration(hass, UPSTREAM)
-    require(integration.version == VERSION, "adapter_version")
+    require(integration.version in SUPPORTED_VERSIONS, "adapter_version")
     require(hass.services.has_service(UPSTREAM, "programm_senden"), "adapter_version")
     device = dr.async_get(hass).async_get(device_id)
     require(device is not None and device.disabled_by is None, "target")
@@ -211,7 +212,7 @@ async def read_target(
 
     return Target(device.name_by_user or device.name or "Airfryer",
                   (entry.entry_id, id(runtime), id(fryer), reported.isoformat(), revision,
-                   statuses, programs, MODEL, VERSION), unchanged)
+                   statuses, programs, MODEL, integration.version), unchanged)
 
 
 @dataclass

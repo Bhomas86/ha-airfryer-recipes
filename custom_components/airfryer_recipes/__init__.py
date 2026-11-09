@@ -1,6 +1,6 @@
 """Airfryer Recipes integration, local recipe persistence and WebSocket API.
 
-Airfryer Control is optional. Supervised beta tests use its public service only.
+Airfryer Control is optional. Combined settings use our guarded transport adapter.
 """
 
 from __future__ import annotations
@@ -72,6 +72,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Disable API access when the integration entry is unloaded."""
     state = hass.data.get(DOMAIN)
     if state is not None:
+        multi = state.pop("multi_sender", None)
+        if multi is not None:
+            multi.close()
         support = state.pop("support", None)
         if support is not None:
             support.close()

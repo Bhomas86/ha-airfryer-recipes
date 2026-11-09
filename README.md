@@ -2,6 +2,10 @@
 
 [English](README.md) | [Deutsch](README.de.md)
 
+**[b26 test beta](docs/releases/0.1.0b26.md):** Own guarded SYNC/MATCH sender without controller changes, diagnostic preview/download and optional Companion completion notices. Native acceptance pending. [Installation and focused tests](docs/releases/0.1.0b26.md).
+
+**Issue #1 development (b25):** Separate SYNC/MATCH planning previews are implemented. Live combined sending remains blocked by the reviewed controller contract, including beta.4. [Scope and upstream requirements](docs/reports/ISSUE_1_SYNC_MATCH.md). No new beta is announced.
+
 **Issue #10 development (b24):** Administrator-only diagnostic preview/download and optional Companion completion notices are implemented; native acceptance is pending. [Setup, privacy and tests](docs/reports/ISSUE_10_SUPPORT.md). This does not announce a published beta.
 
 **[b23: Clear program names](docs/releases/0.1.0b23.md).** Remove the program-dropdown provenance/verification suffixes in the dashboard, recipe editor and preview. Missing programs remain marked. Owner confirms the b22 save/restart check.

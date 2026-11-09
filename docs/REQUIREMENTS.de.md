@@ -2,6 +2,16 @@
 
 [Deutsch](REQUIREMENTS.de.md) | [English](REQUIREMENTS.md)
 
+**b26-Test-Beta-Veröffentlichung vorbereitet (2026-11-08):** Eigentümer beauftragt eine veröffentlichte Beta und erlaubt PR-#48-Freigabe nach erfolgreichen Tests. PR bis zu bestätigten nativen Ergebnissen offen halten. Umfasst Abnahme #1/#10, aktuelle Abschlussvalidierung und Vorbereitung von Stable 0.1.0. Kein neuer Code oder Actions. [Release und Testcheckliste](releases/0.1.0b26.de.md).
+
+**Eigentümerentscheidung / b26 (2026-11-08):** Absicherung ohne Controller-Änderung in Airfryer Recipes umgesetzt. Eigener Einmal-Sender prüft beide Fächer nach Anmeldung an der HTTP-Übergabe, teilt Sperren/unklare Ergebnisse und unterstützt genaue Bestätigung samt serverseitigem Testmodus. Controller-Patch-Abhängigkeit entfernt. 285 Python-3.12- und 135 Frontend-Tests bestanden; native Abnahme offen. [Aktuelles Verhalten und Tests](reports/ISSUE_1_OWN_GUARD.de.md).
+
+**Freigegebene Weiterentwicklung (2026-11-08):** PR #48 enthält jetzt Controller-Nachprüfung, explizite Anfragen-/strikte Antwortvorbereitung, konservative Berichtssperren und einen getesteten Controller-Patchvorschlag. Echte SYNC-/MATCH-Übertragung bleibt bis zur Controller-Korrektur aus. 266 Python-3.12- und 133 Frontend-Tests bestanden; 3.14 in dieser Laufzeit nicht verfügbar. [Aktueller Umfang](reports/ISSUE_1_CONTROLLER_103.de.md).
+
+**Controller-Prüfung (2026-11-08):** Stabile 1.0.3 und beta 1.0.4-beta.1 bieten jetzt explizite Werte, Strikt-/Einmal-/Rücksetzoptionen und strukturierte SYNC-/MATCH-Ergebnisse. Der Busy-Rückkehrfehler ist behoben. Zwölf isolierte Fälle mit echten Funktionen/simulierter API reproduzieren weiterhin Senden bei fehlendem/unbekanntem Fach. Echte Übertragung für #1 bleibt gesperrt; frühere erfolgreiche Eigentümer-Aktionstests bleiben gültig. [Nachweise und gezielte Korrektur](reports/ISSUE_1_CONTROLLER_103.de.md).
+
+**Issue #1 (2026-11-05):** PR #47 mit Eigentümerfreigabe zusammengeführt. b25-Entwicklung ergänzt getrennte, servergeprüfte SYNC-/MATCH-Vorschauen; keine kombinierten Geräteübertragungen. Geprüfte Controller-beta.3 und aktuelle beta.4 bieten weiterhin keine expliziten strikten Einmal-Werte und sichere Behandlung vorbereiteter Fächer. Echte Übertragung für #1 bleibt bis zu öffentlichem Controller-Vertrag und nativer Abnahme blockiert. [Nachweise und konkrete Anforderungen](reports/ISSUE_1_SYNC_MATCH.de.md).
+
 **Issue #10 (2026-11-05):** b24-Entwicklung enthält Diagnosevorschau/-download mit Positivliste nur für Administratoren und optionale Companion-Fertigmeldungen. Standardmäßig aus, nur frische Meldungen gart→fertig; kein Nachholen oder Wiederholen. Native Abnahme steht aus. Actions für PR #46/b23 bestanden. [Umfang und Prüfungen](reports/ISSUE_10_SUPPORT.de.md).
 
 **b23 (04.11.2026):** Eigentümer bestätigt gezielten b22-Speicher-/Neustarttest und wünscht Entfernung der Kommentare zu ungeprüften Grenzen/Senden. Programmauswahlen zeigen nur lokalisierte Namen; Hinweise auf fehlende Programme und Backend-Fähigkeitsdaten/-Prüfungen bleiben erhalten. Offizielle HACS-/Hassfest-Nachweise bleiben getrennt. [Änderung und Prüfungen](releases/0.1.0b23.de.md).

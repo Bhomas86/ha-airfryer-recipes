@@ -1,0 +1,86 @@
+# From misterm2310/airfryer-control, commit 75d30c800ae79eea2254e5d4f5da31ec154398e7
+# Copyright (c) 2026 misterm2310; MIT license: docs/upstream/LICENSE.airfryer-control
+class ReviewedAPI:
+    async def bypass_v2(
+            self,
+            device: dict[str, Any],
+            method: str,
+            data: dict[str, Any] | None = None,
+            *,
+            retry: bool = True,
+        ) -> dict[str, Any]:
+            """Einen Befehl an ein Gerät schicken (so macht es die App).
+    
+            Gibt das innere Ergebnis zurück. Wirft AirfryerDeviceOffline, wenn die
+            Fritteuse nicht erreichbar ist, sonst AirfryerError mit Code.
+            Mit ``retry=False`` geht die Anfrage höchstens einmal raus: Ist das
+            Token abgelaufen, gibt es einen AirfryerAuthError (nichts gesendet),
+            und beim nächsten Mal wird vorher neu angemeldet.
+            """
+            await self._ensure_login()
+    
+            async def _do() -> dict[str, Any]:
+                body = {
+                    "acceptLanguage": self._lang,
+                    "accountID": self._account_id,
+                    "appVersion": APP_VERSION_FULL,
+                    "cid": device.get("cid"),
+                    "configModule": device.get("configModule") or "",
+                    "debugMode": False,
+                    "deviceRegion": device.get("deviceRegion") or self._current_region,
+                    "method": "bypassV2",
+                    "payload": {"data": data or {}, "method": method, "source": "APP"},
+                    "phoneBrand": PHONE_BRAND,
+                    "phoneOS": PHONE_OS,
+                    "timeZone": self._time_zone,
+                    "token": self._token,
+                    "traceId": self._trace(),
+                    "userCountryCode": self._country_code,
+                }
+                return await self._post(
+                    f"{self.base_url}/cloud/v2/deviceManaged/bypassV2", body
+                )
+    
+            if retry:
+                res = await self._with_relogin(_do)
+            else:
+                res = await self._once(_do)
+            return self._unwrap(res, method)
+
+    @staticmethod
+    def _unwrap(res: dict[str, Any], method: str) -> dict[str, Any]:
+            code = res.get("code")
+            if code in (CODE_DEVICE_OFFLINE, CODE_DEVICE_TIMEOUT):
+                raise AirfryerDeviceOffline(
+                    f"Fritteuse antwortet nicht ({res.get('msg')})", code
+                )
+            if code != CODE_OK:
+                raise AirfryerError(
+                    f"„{method}“ abgelehnt: {res.get('msg')} (Code {code})", code
+                )
+            result = res.get("result")
+            if isinstance(result, dict):
+                inner_code = result.get("code")
+                if inner_code not in (None, 0):
+                    raise AirfryerError(
+                        f"„{method}“ vom Gerät abgelehnt (Code {inner_code})", inner_code
+                    )
+                inner = result.get("result")
+                if isinstance(inner, dict):
+                    return inner
+                return result
+            return {}
+
+    async def _once(self, func) -> dict[str, Any]:
+            """Anfrage genau einmal schicken – auch nach abgelaufenem Token keine Wiederholung."""
+            try:
+                res = await func()
+            except AirfryerAuthError:
+                res = {"code": -11001000}
+            if res.get("code") in AUTH_ERROR_CODES:
+                self._token = None  # beim nächsten Versuch vorher neu anmelden
+                raise AirfryerAuthError(
+                    "Anmeldung abgelaufen – nichts gesendet, bitte erneut versuchen",
+                    res.get("code"),
+                )
+            return res

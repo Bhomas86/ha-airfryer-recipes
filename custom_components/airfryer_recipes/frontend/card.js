@@ -1,5 +1,5 @@
 // Bundled locally; share the panel's transport, localization and token lifecycle.
-import { AirfryerRecipesPanel } from "./panel.js?v=0.1.0b24";
+import { AirfryerRecipesPanel } from "./panel.js?v=0.1.0b26";
 
 const CARD_TEXT = {
   en: {
@@ -116,6 +116,9 @@ class AirfryerRecipesCard extends AirfryerRecipesPanel {
 
   set hass(value) {
     if (this._hass && (this._hass.user?.id !== value?.user?.id || this._hass.user?.is_admin !== value?.user?.is_admin)) {
+      this.multiUncertain = false;
+      this.multiPreview = null;
+      this.multiMessage = "";
       this.drafts.clear();
       this.appearance=null;this.appearanceDevice="";
       this.accessUserId = "";
@@ -141,7 +144,7 @@ class AirfryerRecipesCard extends AirfryerRecipesPanel {
   get hasDeviceAccess() { return this.admin || Boolean(this.accessUserId && this.accessUserId === this._hass?.user?.id && this.selectedDevice()); }
 
   async request(name, fields = {}) {
-    const controlled = ["appearance_get", "devices", "sent_settings", "prepare_send", "beta_prepare", "beta_confirm", "beta_cancel", "beta_recover"];
+    const controlled = ["multi_preview", "appearance_get", "devices", "sent_settings", "prepare_send", "beta_prepare", "beta_confirm", "beta_cancel", "beta_recover"];
     if (!this.admin && controlled.includes(name)) {
       if (this._hass?.connection?.connected === false || (!this.panelActive && name !== "beta_cancel")) throw { code: "beta_test_blocked", message: "connection_changed" };
       return super.request("control", { action: name, parameters: fields });
@@ -187,6 +190,9 @@ class AirfryerRecipesCard extends AirfryerRecipesPanel {
     this.manualPreviewDurationMinutes = phase.duration_minutes;
   }
   clearFeedback() {
+    this.multiPreview = null;
+    this.multiMessage = "";
+    this.multiUncertain = false;
     this.previewMessage = "";
     this.betaMessage = "";
     this.batchMessage = "";
@@ -287,6 +293,112 @@ class AirfryerRecipesCard extends AirfryerRecipesPanel {
       (this.sourceMode !== "recipe" || this.selectedPreviewRecipe());
   }
 
+  forgetBeta() {
+    if (this.multiToken) this.multiRequest("multi_cancel", { token: this.multiToken }).catch(() => {});
+    this.multiToken = null;
+    super.forgetBeta();
+  }
+
+  multiRequest(action, parameters) {
+    return super.request("multi_action", { action, parameters });
+  }
+
+  async sendMulti(mode) {
+    if (!this.hasDeviceAccess || this.busy || !this.controlCurrent(this.controlRevision)) return;
+    this.saveDraft(); this.forgetBeta();
+    const sources = {};
+    for (const zone of mode === "sync" ? ["1", "2"] : ["1"]) {
+      const draft = this.drafts.get(JSON.stringify([this.selectedDeviceId, zone]));
+      if (!draft) { this.multiMessage = this.multiWords.missing; this.render(); return; }
+      sources[zone] = draft.recipe_id ? { recipe_id: draft.recipe_id } : { settings: { ...draft.settings } };
+    }
+    const revision = this.controlRevision, selection = this.selectionRevision;
+    const current = () => this.controlCurrent(revision) && selection === this.selectionRevision;
+    this.busy = true; this.multiMessage = ""; this.render();
+    let token = null, submitted = false;
+    try {
+      const prepared = await this.multiRequest("multi_prepare", { device_id: this.selectedDeviceId, mode, sources, dry_run: this.config.dry_run });
+      token = prepared.token;
+      if (!current()) return;
+      if (this.config.dry_run) { this.multiMessage = this.multiWords.noSend; return; }
+      this.multiToken = token;
+      const exact = prepared.zones.map(z => `${this.cardWords.zone} ${z.zone_id}: ${this.programName(z.settings.program)} · ${this.toDisplay(z.settings.temperature_c)} ${this.unit} · ${z.settings.duration_minutes} min`).join("\n");
+      if (!confirm(`${mode.toUpperCase()}\n${exact}\n\n${this.multiWords.confirm}`) || !current()) return;
+      submitted = true;
+      const result = await this.multiRequest("multi_confirm", { token, acknowledge: true });
+      if (!current()) return;
+      this.multiUncertain = result.outcome !== "accepted";
+      this.multiMessage = result.outcome === "accepted" ? this.cardWords.accepted + (result.history_saved === false ? ` ${this.cardWords.saveError}` : "") : this.multiWords.unknown;
+      await this.loadHistory();
+    } catch (error) {
+      if (current()) {
+        this.multiUncertain = submitted && error?.code !== "beta_test_blocked";
+        this.multiMessage = this.multiUncertain ? this.multiWords.unknown : this.multiWords.blocked;
+      }
+    } finally {
+      if (token) this.multiRequest("multi_cancel", { token }).catch(() => {});
+      this.multiToken = null; this.finishWork();
+    }
+  }
+
+  async recoverMulti() {
+    if (!this.hasDeviceAccess || this.busy || !confirm(this.words.betaRecoverConfirm)) return;
+    const revision = this.controlRevision;
+    this.busy = true;
+    try {
+      await this.multiRequest("multi_recover", { device_id: this.selectedDeviceId, acknowledge: true });
+      if (this.controlCurrent(revision)) { this.multiUncertain = false; this.multiMessage = this.words.betaRecovered; }
+    } catch { if (this.controlCurrent(revision)) this.multiMessage = this.multiWords.blocked; }
+    finally { this.finishWork(); }
+  }
+
+  get multiWords() {
+    return this._hass?.language?.toLowerCase().startsWith("de") ? {
+      confirm: "Beide Fächer müssen bereit sein. Diese Einstellungen einmalig bereitstellen? Bleibe am Gerät. Start erfolgt nur am Gerät.", liveSync: "SYNC bereitstellen", liveMatch: "MATCH bereitstellen", blocked: "Nicht gesendet. Beide Fächer müssen frisch als bereit gemeldet sein. Controller 1.0.3 oder 1.0.4-beta.1 erforderlich. Prüfe Freigabe, Programme und Zustand.", unknown: "Ergebnis unklar. Nicht erneut senden. Beide Fächer am Gerät prüfen und vorbereitete Programme dort beenden.", title: "Beide Fächer", sync: "SYNC-Vorschau", match: "MATCH-Vorschau",
+      info: "SYNC plant einen gemeinsamen Abschluss mit unterschiedlichen Werten. MATCH übernimmt die Werte von Fach 1 für beide Fächer. Vorschau sendet nichts. Bereitstellen prüft beide Fächer und startet keinen Garvorgang.",
+      missing: "Wähle zuerst die Werte in Fach 1 und für SYNC auch in Fach 2.", delay: "Geplante Wartezeit", noSend: "Nur Vorschau. Nichts an das Gerät gesendet.", guard: "Der Controller unterstützt die neuen Optionen. Unsere Integration prüft fehlende oder unbekannte Fächer selbst.", unreviewed: "Diese Controller-Version ist für die neue Schnittstelle noch nicht geprüft."
+    } : {
+      confirm: "Both zones must be idle. Prepare these settings once? Remain beside the appliance. Start only at the appliance.", liveSync: "Prepare SYNC", liveMatch: "Prepare MATCH", blocked: "Not sent. Both zones must freshly report idle. Requires controller 1.0.3 or 1.0.4-beta.1. Check permissions, programs and state.", unknown: "Outcome unknown. Do not resend. Check both zones physically and cancel prepared programs there.", title: "Both zones", sync: "SYNC preview", match: "MATCH preview",
+      info: "SYNC plans a shared finish with different settings. MATCH applies zone 1 settings to both zones. Preview sends nothing. Preparing checks both zones and does not start cooking.",
+      missing: "Select settings in zone 1 first, and in zone 2 for SYNC.", delay: "Planned waiting time", noSend: "Preview only. Nothing sent to the appliance.", guard: "The controller supports the new options. Our integration checks missing or unknown zones itself.", unreviewed: "This controller version has not been reviewed for the new interface."
+    };
+  }
+
+  async previewMulti(mode) {
+    if (!this.hasDeviceAccess || this.busy || !this.controlCurrent(this.controlRevision)) return;
+    this.saveDraft();
+    this.multiPreview = null;
+    const sources = {};
+    for (const zone of mode === "sync" ? ["1", "2"] : ["1"]) {
+      const draft = this.drafts.get(JSON.stringify([this.selectedDeviceId, zone]));
+      if (!draft) { this.multiMessage = this.multiWords.missing; this.render(); return; }
+      sources[zone] = draft.recipe_id ? { recipe_id: draft.recipe_id } : { settings: { ...draft.settings } };
+    }
+    this.forgetBeta();
+    const revision = this.controlRevision, selection = this.selectionRevision;
+    this.busy = true;
+    this.multiMessage = "";
+    this.render();
+    try {
+      const result = await this.request("multi_preview", { device_id: this.selectedDeviceId, mode, sources });
+      if (this.controlCurrent(revision) && selection === this.selectionRevision) this.multiPreview = result;
+    } catch (error) {
+      if (this.controlCurrent(revision) && selection === this.selectionRevision) this.multiMessage = this.betaError(error);
+    } finally { this.finishWork(); }
+  }
+
+  renderMulti() {
+    const device = this.selectedDevice();
+    if (!this.hasDeviceAccess || !device || device.zones.length !== 2 || !device.zones.some(z => z.zone_id === 1) || !device.zones.some(z => z.zone_id === 2)) return "";
+    const t = this.multiWords;
+    const disabled = this.busy || this.devicesBusy || device.connectivity !== "reported_online";
+    return `<section class="preview multi-preview"><h3>${t.title}</h3><p>${t.info}</p><button type="button" data-action="multi-sync" ${disabled ? "disabled" : ""}>${t.sync}</button> <button type="button" data-action="multi-match" ${disabled ? "disabled" : ""}>${t.match}</button>
+      ${this.multiPreview ? `<p>${t.noSend}</p>${this.multiPreview.controller_contract ? `<p>${this.multiPreview.controller_contract.explicit_values ? t.guard : t.unreviewed}</p>` : ""}${this.multiPreview.zones.map(z => `<p>${this.cardWords.zone} ${z.zone_id}: ${html(this.programName(z.settings.program))} · ${this.toDisplay(z.settings.temperature_c)} ${this.unit} · ${z.settings.duration_minutes} min · ${t.delay}: ${z.planned_delay_minutes} min</p>`).join("")}` : ""}
+      <div><button type="button" data-action="multi-send-sync" ${disabled ? "disabled" : ""}>${this.config.dry_run ? t.sync : t.liveSync}</button> <button type="button" data-action="multi-send-match" ${disabled ? "disabled" : ""}>${this.config.dry_run ? t.match : t.liveMatch}</button></div>
+      ${this.multiUncertain ? `<button type="button" data-action="multi-recover" ${disabled ? "disabled" : ""}>${this.words.betaRecover}</button>` : ""}
+      ${this.multiMessage ? `<p role="status">${html(this.multiMessage)}</p>` : ""}</section>`;
+  }
+
   async sendSettings(form) {
     if (!this.canSend() || !form?.reportValidity?.()) return;
     this.saveDraft();
@@ -343,9 +455,12 @@ class AirfryerRecipesCard extends AirfryerRecipesPanel {
     const value = event.target.value === "" ? NaN : Number(event.target.value);
     if (event.target.id === "card-temperature") this.manualPreviewTemperatureC = this.fromDisplay(value);
     else this.manualPreviewDurationMinutes = value;
+    this.multiPreview = null;
+    this.multiMessage = "";
     this.sendPreview = null;
     this.previewMessage = "";
     this.shadowRoot.querySelector?.(".preview")?.remove();
+    this.shadowRoot.querySelector?.(".multi-preview")?.remove();
     this.saveDraft();
   }
   onChange(event) {
@@ -374,6 +489,9 @@ class AirfryerRecipesCard extends AirfryerRecipesPanel {
     const action = button.dataset.action;
     if (action === "zone") return this.selectTarget(this.selectedDeviceId, button.dataset.zone);
     if (action === "refresh") return this.load();
+    if (action === "multi-send-sync" || action === "multi-send-match") return this.sendMulti(action === "multi-send-sync" ? "sync" : "match");
+    if (action === "multi-recover") return this.recoverMulti();
+    if (action === "multi-sync" || action === "multi-match") return this.previewMulti(action === "multi-sync" ? "sync" : "match");
     if (action === "send") return this.sendSettings(this.shadowRoot.getElementById("card-form"));
     if (action === "recover") return this.recoverBeta();
     if (action === "mode") {
@@ -448,6 +566,7 @@ class AirfryerRecipesCard extends AirfryerRecipesPanel {
       ${this.sendPreview ? `<div class="preview"><p>${html(this.previewMessage)}</p><p>${html(this.programName(this.sendPreview.settings.program))} · ${this.toDisplay(this.sendPreview.settings.temperature_c)} ${this.unit} · ${this.sendPreview.settings.duration_minutes} min</p><p>${(this.sendPreview.blocking_reasons || []).map((r) => html(this.reasonLabel(r))).join(" · ")}</p></div>` : ""}
       ${[this.error, this.deviceError, this.betaMessage, this.batchMessage].filter(Boolean).map((m) => `<p class="message" role="status">${html(m)}</p>`).join("")}
       ${this.needsRecovery ? `<button type="button" data-action="recover" class="recover" ${disabled ? "disabled" : ""}>${this.words.betaRecover}</button><p class="message">${this.words.betaRecoverInfo}</p>` : ""}
+      ${this.renderMulti()}
       <p class="foot">ⓘ ${t.start}</p>`}
     </ha-card>`;
   }
@@ -459,7 +578,7 @@ class AirfryerRecipesCardEditor extends HTMLElement {
     this.attachShadow({ mode: "open" });
     this.shadowRoot.addEventListener("click", async (event) => {
       if(event.target.dataset?.customize!=="true"||!this._hass?.user?.is_admin)return;
-      await import("./personalization.js?v=0.1.0b24");this.customize=true;this.render();
+      await import("./personalization.js?v=0.1.0b26");this.customize=true;this.render();
     });
     this.shadowRoot.addEventListener("change", (event) => {
       const target = event.target;
