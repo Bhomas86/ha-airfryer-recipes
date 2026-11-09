@@ -131,6 +131,8 @@ Action: Confirm current model before implementation; do not claim to switch it.
 9. Record decisions in `docs/REQUIREMENTS.md` and staged work in
    `docs/ROADMAP.md`. Do not label planned features as implemented.
 
+**Release authorization (2026-11-09):** The owner explicitly authorizes merging PR #49, running final Actions, then merging the release PR and publishing stable 0.1.0 only after green results. This overrides the earlier Actions pause for this release package. The owner waives another native filename check. Preserve expected-SHA merges and verify tested-tree/tag/release identity. [Release gate](docs/reports/RELEASE_0_1_0.md).
+
 **Current owner instruction (2026-10-30): Do not trigger GitHub Actions for further updates until instructed otherwise; validate locally only. This overrides the general budget rules below. Suppress automatic PR/push runs when publishing (for example, `[skip ci]` in the commit); do not manually dispatch workflows.**
 
 ## GitHub Actions budget (effective 2026-10-30)

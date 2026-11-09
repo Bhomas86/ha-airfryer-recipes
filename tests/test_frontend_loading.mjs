@@ -31,13 +31,13 @@ for (const mode of ["fresh", "panel-first", "legacy-panel-first", "multiple-quer
         existingPanel = class LegacyPanel extends HTMLElement {};
         customElements.define("airfryer-recipes-panel", existingPanel);
       } else if (mode !== "fresh") {
-        const query = mode === "panel-first" ? "0.1.0b27" : "previous";
+        const query = mode === "panel-first" ? "0.1.0" : "previous";
         await import(new URL("panel.js?v=" + query, base));
         existingPanel = customElements.get("airfryer-recipes-panel");
       }
-      await import(new URL("card.js?v=0.1.0b27", base));
-      const { AirfryerRecipesPanel } = await import(new URL("panel.js?v=0.1.0b27", base));
-      await import(new URL("personalization.js?v=0.1.0b27", base));
+      await import(new URL("card.js?v=0.1.0", base));
+      const { AirfryerRecipesPanel } = await import(new URL("panel.js?v=0.1.0", base));
+      await import(new URL("personalization.js?v=0.1.0", base));
       assert.ok(customElements.get("airfryer-device-designer"));
       const Card = customElements.get("airfryer-recipes-card");
       assert.ok(Card);

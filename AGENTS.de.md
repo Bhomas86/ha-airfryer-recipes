@@ -84,6 +84,8 @@ Aktion: Modell vor der Implementierung bestätigen lassen.
 8. Home-Assistant-Async-Regeln beachten; keine blockierenden Dateizugriffe im Event-Loop und keine Umgehung der Berechtigungen.
 9. Entscheidungen unter `docs/REQUIREMENTS.md` / `docs/REQUIREMENTS.de.md` sowie Zeitplanung unter `docs/ROADMAP.md` / `docs/ROADMAP.de.md` festhalten. Geplante Funktionen nie als fertig bezeichnen.
 
+**Releasefreigabe (2026-11-09):** Der Eigentümer erlaubt ausdrücklich PR #49 zusammenzuführen, finale Actions auszuführen und anschließend nach grünen Ergebnissen den Release-PR zusammenzuführen und stabile 0.1.0 zu veröffentlichen. Dies hebt die frühere Actions-Pause für dieses Releasepaket auf. Ein erneuter nativer Dateinamentest entfällt auf Eigentümerwunsch. Merge mit erwarteter SHA und Identität von geprüftem Dateibaum/Tag/Release prüfen. [Releasebedingungen](docs/reports/RELEASE_0_1_0.de.md).
+
 **Aktuelle Eigentümervorgabe (30.10.2026): Für weitere Updates vorerst keine GitHub Actions auslösen; ausschließlich lokal prüfen. Diese Vorgabe hat Vorrang vor den nachfolgenden allgemeinen Budgetregeln. Bei späterer Veröffentlichung automatische PR-/Push-Läufe ebenfalls unterdrücken (z. B. `[skip ci]` im Commit); keine Workflows manuell starten.**
 
 ## GitHub-Actions-Budget (ab 30.10.2026)
