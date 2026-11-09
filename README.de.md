@@ -2,7 +2,7 @@
 
 [English](README.md) | [Deutsch](README.de.md)
 
-**Version 0.1.0** verwaltet geräteunabhängige Heißluftfritteusen-Rezepte lokal in Home Assistant und stellt Einstellungen über [Airfryer Control](https://github.com/misterm2310/airfryer-control) an einem unterstützten Gerät bereit. Der Garstart erfolgt physisch am Gerät.
+**Version 0.2.0** verwaltet geräteunabhängige Heißluftfritteusen-Rezepte lokal in Home Assistant und stellt Einstellungen über [Airfryer Control](https://github.com/misterm2310/airfryer-control) an einem unterstützten Gerät bereit. Der Garstart erfolgt physisch am Gerät.
 
 - Rezeptbibliothek mit Admin-Bearbeitung, Kategorien/Tags, Suche, Favoriten und geprüftem JSON-Import/-Export.
 - Dashboard-Karte mit unabhängigen Rezept-/manuellen Werten pro Fach, dauerhaft zuletzt gesendeten Einstellungen und grafischem Editor.
@@ -15,11 +15,11 @@
 ## Installation und Einrichtung
 
 1. `https://github.com/Bhomas86/ha-airfryer-recipes` in HACS als benutzerdefiniertes **Integrationsrepository** hinzufügen.
-2. **v0.1.0** installieren, Home Assistant neu starten und Browser/Companion-App vollständig neu öffnen.
+2. **v0.2.0** installieren, Home Assistant neu starten und Browser/Companion-App vollständig neu öffnen.
 3. **Airfryer Recipes** unter Einstellungen → Geräte & Dienste hinzufügen. Rezeptverwaltung benötigt weder Gerät noch Cloud-Zugangsdaten.
-4. Dashboard → Bearbeiten → Karte hinzufügen → **Airfryer Recipes**. Kein Dashboard wird automatisch angelegt oder verändert. Neue Karten beginnen im **Testmodus** ohne Gerätesteueraufrufe.
+4. Dashboard → Bearbeiten → Karte hinzufügen → **Airfryer Recipes**. Kein Dashboard wird automatisch angelegt oder verändert. Stabile Versionen blenden Geräte-/Entwicklertests und den Karten-Testmodus aus. Karten verwenden normales bestätigtes Bereitstellen; Beta-Versionen zeigen die Testwerkzeuge wieder.
 5. Für normale Benutzer das gesamte Gerät ausdrücklich in der Admin-Rezeptbibliothek freigeben und die Karte aktualisieren.
-6. Pro Fach Rezept/manuelle Werte wählen. Zuerst Vorschauen prüfen; Testmodus nur für bewusstes Bereitstellen ausschalten. Eine Bestätigung zeigt die genauen Werte. Garstart erfolgt am Gerät.
+6. Pro Fach Rezept/manuelle Werte wählen. Senden verlangt einen bewussten Klick und die Bestätigung der genauen Werte. Garstart erfolgt am Gerät.
 
 ## Unterstütztes Gerät und Controller
 
@@ -45,7 +45,7 @@ Diagnoseexport verwendet ausschließlich freigegebene technische Felder mit Vors
 
 ## Release und Prüfung
 
-[Release Notes 0.1.0](docs/releases/0.1.0.de.md) · [Abschließende Releasefreigabe](docs/reports/RELEASE_0_1_0.de.md) · [SYNC-/MATCH-Entwurf und Abnahme](docs/reports/ISSUE_1_OWN_GUARD.de.md) · [Anforderungen](docs/REQUIREMENTS.de.md) · [Roadmap](docs/ROADMAP.de.md).
+[Release Notes 0.2.0](docs/releases/0.2.0.de.md) · [Abschließende Releasefreigabe](docs/reports/RELEASE_0_1_0.de.md) · [SYNC-/MATCH-Entwurf und Abnahme](docs/reports/ISSUE_1_OWN_GUARD.de.md) · [Anforderungen](docs/REQUIREMENTS.de.md) · [Roadmap](docs/ROADMAP.de.md).
 
 Der Eigentümer bestätigt Gerätevorbereitung, SYNC/MATCH, Abbrechen ohne Senden, keinen automatischen Heizstart, Speicherung, Berechtigungen und eine echte Fertigmeldung. Die Diagnose-Dateinamenkorrektur wurde ohne erneuten Handytest akzeptiert; diese Unterscheidung ist dokumentiert. Automatisierte Tests verwenden Simulationen statt echter Geräte. Frühere Beta-Notizen/-Berichte bleiben unter `docs/releases` und `docs/reports` als historische Nachweise erhalten.
 

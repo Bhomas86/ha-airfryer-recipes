@@ -1,5 +1,5 @@
 // Bundled locally; share the panel's transport, localization and token lifecycle.
-import { AirfryerRecipesPanel } from "./panel.js?v=0.1.0";
+import { AirfryerRecipesPanel } from "./panel.js?v=0.2.0";
 
 const CARD_TEXT = {
   en: {
@@ -57,7 +57,7 @@ const samePhase = (a, b) => a && b && ["program", "temperature_c", "duration_min
 class AirfryerRecipesCard extends AirfryerRecipesPanel {
   constructor() {
     super();
-    this.config = { dry_run: true };
+    this.config = { dry_run: this.betaFeatures };
     this.drafts = new Map();
     this.history = {};
     this.historyAvailable = null;
@@ -96,7 +96,7 @@ class AirfryerRecipesCard extends AirfryerRecipesPanel {
         (config.dry_run !== undefined && typeof config.dry_run !== "boolean")) throw new Error(this.cardWords.invalidConfig);
     this.saveDraft();
     this.invalidateControls();
-    this.config = displayConfig({ ...config, dry_run: config.dry_run !== false });
+    this.config = displayConfig({ ...config, dry_run: AirfryerRecipesPanel.betaFeatures && config.dry_run !== false });
     if (config.device_id) this.selectedDeviceId = config.device_id;
     this.clearFeedback();
     if (this.started) this.scheduleReload();
@@ -166,7 +166,7 @@ class AirfryerRecipesCard extends AirfryerRecipesPanel {
     finally { this.finishWork(); }
   }
   getCardSize() { return { compact: 11, normal: 14, large: 17 }[this.config.size || "normal"]; }
-  static getStubConfig() { return { dry_run: true }; }
+  static getStubConfig() { return { dry_run: AirfryerRecipesPanel.betaFeatures }; }
   static getConfigElement() { return document.createElement("airfryer-recipes-card-editor"); }
   key() { return JSON.stringify([this.selectedDeviceId, this.selectedZoneId]); }
   phase() {
@@ -355,11 +355,11 @@ class AirfryerRecipesCard extends AirfryerRecipesPanel {
   get multiWords() {
     return this._hass?.language?.toLowerCase().startsWith("de") ? {
       confirm: "Beide Fächer müssen bereit sein. Diese Einstellungen einmalig bereitstellen? Bleibe am Gerät. Start erfolgt nur am Gerät.", liveSync: "SYNC bereitstellen", liveMatch: "MATCH bereitstellen", blocked: "Nicht gesendet. Beide Fächer müssen frisch als bereit gemeldet sein. Controller 1.0.3 oder 1.0.4-beta.1 erforderlich. Prüfe Freigabe, Programme und Zustand.", unknown: "Ergebnis unklar. Nicht erneut senden. Beide Fächer am Gerät prüfen und vorbereitete Programme dort beenden.", title: "Beide Fächer", sync: "SYNC-Vorschau", match: "MATCH-Vorschau",
-      info: "SYNC plant einen gemeinsamen Abschluss mit unterschiedlichen Werten. MATCH übernimmt die Werte von Fach 1 für beide Fächer. Vorschau sendet nichts. Bereitstellen prüft beide Fächer und startet keinen Garvorgang.",
+      info: "SYNC plant einen gemeinsamen Abschluss mit unterschiedlichen Werten. MATCH übernimmt die Werte von Fach 1 für beide Fächer. Bereitstellen prüft beide Fächer und startet keinen Garvorgang.",
       missing: "Wähle zuerst die Werte in Fach 1 und für SYNC auch in Fach 2.", delay: "Geplante Wartezeit", noSend: "Nur Vorschau. Nichts an das Gerät gesendet.", guard: "Der Controller unterstützt die neuen Optionen. Unsere Integration prüft fehlende oder unbekannte Fächer selbst.", unreviewed: "Diese Controller-Version ist für die neue Schnittstelle noch nicht geprüft."
     } : {
       confirm: "Both zones must be idle. Prepare these settings once? Remain beside the appliance. Start only at the appliance.", liveSync: "Prepare SYNC", liveMatch: "Prepare MATCH", blocked: "Not sent. Both zones must freshly report idle. Requires controller 1.0.3 or 1.0.4-beta.1. Check permissions, programs and state.", unknown: "Outcome unknown. Do not resend. Check both zones physically and cancel prepared programs there.", title: "Both zones", sync: "SYNC preview", match: "MATCH preview",
-      info: "SYNC plans a shared finish with different settings. MATCH applies zone 1 settings to both zones. Preview sends nothing. Preparing checks both zones and does not start cooking.",
+      info: "SYNC plans a shared finish with different settings. MATCH applies zone 1 settings to both zones. Preparing checks both zones and does not start cooking.",
       missing: "Select settings in zone 1 first, and in zone 2 for SYNC.", delay: "Planned waiting time", noSend: "Preview only. Nothing sent to the appliance.", guard: "The controller supports the new options. Our integration checks missing or unknown zones itself.", unreviewed: "This controller version has not been reviewed for the new interface."
     };
   }
@@ -392,7 +392,7 @@ class AirfryerRecipesCard extends AirfryerRecipesPanel {
     if (!this.hasDeviceAccess || !device || device.zones.length !== 2 || !device.zones.some(z => z.zone_id === 1) || !device.zones.some(z => z.zone_id === 2)) return "";
     const t = this.multiWords;
     const disabled = this.busy || this.devicesBusy || device.connectivity !== "reported_online";
-    return `<section class="preview multi-preview"><h3>${t.title}</h3><p>${t.info}</p><button type="button" data-action="multi-sync" ${disabled ? "disabled" : ""}>${t.sync}</button> <button type="button" data-action="multi-match" ${disabled ? "disabled" : ""}>${t.match}</button>
+    return `<section class="preview multi-preview"><h3>${t.title}</h3><p>${t.info}</p>${this.betaFeatures ? `<button type="button" data-action="multi-sync" ${disabled ? "disabled" : ""}>${t.sync}</button> <button type="button" data-action="multi-match" ${disabled ? "disabled" : ""}>${t.match}</button>` : ""}
       ${this.multiPreview ? `<p>${t.noSend}</p>${this.multiPreview.controller_contract ? `<p>${this.multiPreview.controller_contract.explicit_values ? t.guard : t.unreviewed}</p>` : ""}${this.multiPreview.zones.map(z => `<p>${this.cardWords.zone} ${z.zone_id}: ${html(this.programName(z.settings.program))} · ${this.toDisplay(z.settings.temperature_c)} ${this.unit} · ${z.settings.duration_minutes} min · ${t.delay}: ${z.planned_delay_minutes} min</p>`).join("")}` : ""}
       <div><button type="button" data-action="multi-send-sync" ${disabled ? "disabled" : ""}>${this.config.dry_run ? t.sync : t.liveSync}</button> <button type="button" data-action="multi-send-match" ${disabled ? "disabled" : ""}>${this.config.dry_run ? t.match : t.liveMatch}</button></div>
       ${this.multiUncertain ? `<button type="button" data-action="multi-recover" ${disabled ? "disabled" : ""}>${this.words.betaRecover}</button>` : ""}
@@ -578,7 +578,7 @@ class AirfryerRecipesCardEditor extends HTMLElement {
     this.attachShadow({ mode: "open" });
     this.shadowRoot.addEventListener("click", async (event) => {
       if(event.target.dataset?.customize!=="true"||!this._hass?.user?.is_admin)return;
-      await import("./personalization.js?v=0.1.0");this.customize=true;this.render();
+      await import("./personalization.js?v=0.2.0");this.customize=true;this.render();
     });
     this.shadowRoot.addEventListener("change", (event) => {
       const target = event.target;
@@ -587,7 +587,7 @@ class AirfryerRecipesCardEditor extends HTMLElement {
       this.dispatchEvent(new CustomEvent("config-changed", { detail: { config: this.config }, bubbles: true, composed: true }));
     });
   }
-  setConfig(config) { this.config = displayConfig({ ...config, dry_run: config.dry_run !== false }); this.render(); }
+  setConfig(config) { this.config = displayConfig({ ...config, dry_run: AirfryerRecipesPanel.betaFeatures && config.dry_run !== false }); this.render(); }
   set hass(value) { const language = this._hass?.language; this._hass = value; if (language !== value?.language) this.render(); const designer=this.shadowRoot.querySelector?.("airfryer-device-designer");if(designer)designer.hass=value; }
   render() {
     if (!this.config) return;
@@ -598,7 +598,7 @@ class AirfryerRecipesCardEditor extends HTMLElement {
       ${[["size", t.size, ["compact", "normal", "large"]], ["graphic_size", t.graphicSize, ["small", "normal", "large"]]].map(([key, label, values]) => `<label>${label}<select name="${key}">${values.map((value) => `<option value="${value}" ${this.config[key] === value ? "selected" : ""}>${t[value]}</option>`).join("")}</select></label>`).join("")}
       <label>${t.zoneStyle}<select name="zone_style">${[["invisible", t.zoneInvisible], ["outline", t.zoneOutline]].map(([value, label]) => `<option value="${value}" ${this.config.zone_style === value ? "selected" : ""}>${label}</option>`).join("")}</select></label><p>${t.zoneStyleHelp}</p>
       ${[["show_status", t.showStatus], ["show_last_sent", t.showHistory]].map(([key, label]) => `<label><input name="${key}" type="checkbox" ${this.config[key] ? "checked" : ""}> ${label}</label>`).join("")}
-      <label><input name="dry_run" type="checkbox" ${this.config.dry_run ? "checked" : ""}> ${t.configTest}</label><p>${t.configHelp}</p>${this._hass?.user?.is_admin ? `<button type="button" data-customize="true">${this._hass.language?.startsWith("de")?"Airfryer individualisieren":"Customize Airfryer"}</button>`:""}${this.customize?"<airfryer-device-designer></airfryer-device-designer>":""}`;
+      ${AirfryerRecipesPanel.betaFeatures ? `<label><input name="dry_run" type="checkbox" ${this.config.dry_run ? "checked" : ""}> ${t.configTest}</label>` : ""}<p>${t.configHelp}</p>${this._hass?.user?.is_admin ? `<button type="button" data-customize="true">${this._hass.language?.startsWith("de")?"Airfryer individualisieren":"Customize Airfryer"}</button>`:""}${this.customize?"<airfryer-device-designer></airfryer-device-designer>":""}`;
     const designer=this.shadowRoot.querySelector?.("airfryer-device-designer");if(designer){designer.preferredDevice=this.config.device_id||"";designer.hass=this._hass;}
   }
 }

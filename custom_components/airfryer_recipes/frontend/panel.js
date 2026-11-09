@@ -186,6 +186,8 @@ const ACCESS_TEXT = {
 };
 
 export class AirfryerRecipesPanel extends HTMLElement {
+  static get betaFeatures() { return /(?:b\d+|-beta(?:[.-]\d+)?)$/i.test("0.2.0"); }
+  get betaFeatures() { return AirfryerRecipesPanel.betaFeatures; }
   constructor() {
     super();
     this.attachShadow({ mode: "open" });
@@ -678,7 +680,7 @@ export class AirfryerRecipesPanel extends HTMLElement {
           <div class="actions"><button class="primary" type="submit" ${this.busy || multiple ? "disabled" : ""}>${t.save}</button><button type="button" data-action="cancel">${t.cancel}</button></div></form>` : ""}
         ${this.preview ? `<section class="preview"><h2>${t.preview}</h2><p>${t.incoming}: ${this.preview.incoming_count}</p><p>${t.duplicateIds}: ${this.preview.duplicate_ids.length}${this.preview.duplicate_ids.length ? ` (${escapeHtml(this.preview.duplicate_ids.join(", "))})` : ""}</p><p>${t.duplicateNames}: ${this.preview.duplicate_names.length}${this.preview.duplicate_names.length ? ` (${escapeHtml(this.preview.duplicate_names.join(", "))})` : ""}</p>
           <div class="actions"><button class="primary" data-action="import-skip" ${this.busy ? "disabled" : ""}>${t.skip}</button><button data-action="import-replace" ${this.busy ? "disabled" : ""}>${t.replace}</button><button data-action="cancel-preview">${t.cancel}</button></div></section>` : ""}
-        ${this.admin ? `<section class="preview" id="batch-test"><h2>${t.batchTitle}</h2><p>${t.batchInfo}</p>
+        ${this.admin && this.betaFeatures ? `<section class="preview" id="batch-test"><h2>${t.batchTitle}</h2><p>${t.batchInfo}</p>
           <label for="batch-device">${t.device}</label><select id="batch-device" ${this.busy || this.batchRunning ? "disabled" : ""}>${this.deviceState.devices.map((item) => `<option value="${escapeHtml(item.device_id)}" ${item.device_id === this.selectedDeviceId ? "selected" : ""}>${escapeHtml(item.name)}</option>`).join("")}</select>
           <div class="actions"><button type="button" data-action="batch-prepare" ${this.busy || this.devicesBusy || this.batchRunning || !device ? "disabled" : ""}>${t.batchPrepare}</button>
           ${this.batchRunning ? `<button type="button" data-action="batch-stop">${t.batchStop}</button>` : `<button type="button" data-action="beta-recover" ${this.busy || !device ? "disabled" : ""}>${t.betaRecover}</button>`}</div><p class="muted">${t.betaRecoverInfo}</p>
@@ -688,7 +690,7 @@ export class AirfryerRecipesPanel extends HTMLElement {
           ${this.batchMessage ? `<p class="message" role="status">${escapeHtml(this.batchMessage)}</p>` : ""}
           ${this.batchResults.length ? `<ol>${this.batchResults.map((item) => `<li>${t.zone} ${item.zone_id} · ${escapeHtml(this.programName(item.settings.program))} · ${item.settings.temperature_c} °C · ${item.settings.duration_minutes} min ✓</li>`).join("")}</ol>` : ""}
         </section>` : ""}
-        ${this.admin ? `<section class="preview" id="device-preview"><h2>${t.devicePreview}</h2>
+        ${this.admin && this.betaFeatures ? `<section class="preview" id="device-preview"><h2>${t.devicePreview}</h2>
           <p>${t.devicePreviewInfo}</p>
           ${this.deviceError ? `<p class="message error" role="alert">${escapeHtml(this.deviceError)}</p>` : ""}
           ${deviceMessage ? `<p class="message">${deviceMessage}</p>` : ""}
@@ -715,7 +717,7 @@ export class AirfryerRecipesPanel extends HTMLElement {
             <p>${t.blockingReasons}:</p><ul>${this.sendPreview.blocking_reasons.map((reason) => `<li>${escapeHtml(this.reasonLabel(reason))}</li>`).join("")}</ul></section>` : ""}
         </section>` : ""}
         ${this.busy && !this.recipes.length ? `<p>${t.loading}</p>` : ""}
-        ${this.admin ? `<section class="preview" id="beta-device-test"><h2>${t.betaTitle}</h2><p>${t.betaIntro}</p>
+        ${this.admin && this.betaFeatures ? `<section class="preview" id="beta-device-test"><h2>${t.betaTitle}</h2><p>${t.betaIntro}</p>
           <p>${t.device}: ${escapeHtml(device?.name || "—")} · ${t.zone}: ${escapeHtml(this.selectedZoneId || "—")}</p>
           <button type="button" data-action="beta-prepare" ${this.busy || this.devicesBusy || !this.selectedZone() ? "disabled" : ""}>${t.betaPrepare}</button>
           ${this.betaTest ? `<div class="message"><p>${t.betaPending}</p>
@@ -732,7 +734,7 @@ export class AirfryerRecipesPanel extends HTMLElement {
           ${this.admin ? `<div class="actions"><button data-action="personal-favorite" data-id="${escapeHtml(recipe.id)}" aria-label="${t.myFavorite}: ${escapeHtml(recipe.name)}">${this.favorites.has(recipe.id) ? "★" : "☆"} ${t.myFavorite}</button><button data-action="edit" data-id="${escapeHtml(recipe.id)}">${t.edit}</button><button data-action="copy" data-id="${escapeHtml(recipe.id)}">${t.copy}</button><button data-action="delete" data-id="${escapeHtml(recipe.id)}">${t.remove}</button></div>` : ""}
         </article>`).join("")}</section>
         ${!this.busy && !this.filtered().length ? `<p>${t.empty}</p>` : ""}
-        <p class="muted">${t.devicesNote}</p>
+        ${this.betaFeatures ? `<p class="muted">${t.devicesNote}</p>` : ""}
       </main>`;
     this.renderedEditor = this.editor;
     this.editorRenderedUnit = this.unit;

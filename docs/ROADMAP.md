@@ -2,6 +2,8 @@
 
 [English](ROADMAP.md) | [Deutsch](ROADMAP.de.md)
 
+**0.2.0 (2026-11-09):** Owner requests production UI without test tools, including dashboard test mode. Stable builds hide commissioning/preview controls and use normal confirmed preparation even for existing dry_run cards; beta builds restore tools/default dry run. Backend safety/dry-run APIs remain. [Changes and upgrade](releases/0.2.0.md).
+
 **Stable 0.1.0 release gate (2026-11-09):** Owner authorizes PR #49 merge, final Actions, release PR merge and stable publication after green checks; waives another phone filename test. PR #49 merged. Consolidated stable docs/version metadata; no control/storage changes. Full matrix/HACS/Hassfest results are recorded on the release PR/release before publication. [Gate and authorization](reports/RELEASE_0_1_0.md).
 
 **b26 acceptance / b27 download fix (2026-11-09):** Owner confirms SYNC/MATCH, canceled confirmation, no heating start, diagnostic export, restart persistence and exactly one actual completion notice. PR #48 merged under conditional approval. Follow-up replaces cryptic blob filenames with an authenticated, named HTTP attachment of the same preview. Native filename verification pending; no send changes. [Acceptance and checks](reports/B26_ACCEPTANCE_AND_DOWNLOAD.md).

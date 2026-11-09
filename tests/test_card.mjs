@@ -32,6 +32,7 @@ function makeCard(api = async () => ({}), dialog = () => true) {
     document: { createElement: (name) => new (elements.get(name))() },
   };
   vm.runInNewContext(panelSource.replace(/^export /m, ""), context);
+  vm.runInNewContext("Object.defineProperty(AirfryerRecipesPanel, 'betaFeatures', { configurable:true, get:()=>true });", context);
   vm.runInNewContext(cardSource.replace(/^import .*;$/m, ""), context);
   const card = new (elements.get("airfryer-recipes-card"))();
   const listeners = new Set();
@@ -329,7 +330,7 @@ test("card/editor registration, English fallback and escaping use no copied imag
   assert.equal(context.window.customCards[0].type, "airfryer-recipes-card");
   assert.equal(card.constructor.getStubConfig().dry_run, true);
   assert.equal(card.constructor.getConfigElement() instanceof elements.get("airfryer-recipes-card-editor"), true);
-  assert.match(cardSource, /\.\/panel\.js\?v=0\.1\.0/);
+  assert.match(cardSource, /\.\/panel\.js\?v=0\.2\.0/);
 });
 
 test("visual editor uses safe defaults and emits dashboard configuration only", () => {
@@ -811,4 +812,19 @@ test('own multi dry-run and rejected dialog never confirm a device command', asy
     assert.equal(calls.filter(r=>r.action==='multi_confirm').length,0);
     assert.equal(calls[0].parameters.dry_run,dry);
   }
+});
+
+
+test('production hides dry-run and preview controls and requires normal confirmed sending', () => {
+ const {card,context,elements}=makeCard();
+ vm.runInNewContext("Object.defineProperty(AirfryerRecipesPanel,'betaFeatures',{configurable:true,get:()=>false});",context);
+ card.setConfig({dry_run:true});
+ assert.equal(card.config.dry_run,false);
+ assert.doesNotMatch(card.shadowRoot.innerHTML,/data-action="multi-sync"|data-action="multi-match"/);
+ assert.match(card.shadowRoot.innerHTML,/data-action="multi-send-sync"/);
+ const editor=new (elements.get('airfryer-recipes-card-editor'))();editor.setConfig({dry_run:true});
+ assert.doesNotMatch(editor.shadowRoot.innerHTML,/name="dry_run"/);
+ assert.equal(editor.config.dry_run,false);
+ vm.runInNewContext("Object.defineProperty(AirfryerRecipesPanel,'betaFeatures',{configurable:true,get:()=>true});",context);
+ editor.setConfig({dry_run:true});assert.match(editor.shadowRoot.innerHTML,/name="dry_run"/);
 });

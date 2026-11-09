@@ -2,6 +2,8 @@
 
 [Deutsch](REQUIREMENTS.de.md) | [English](REQUIREMENTS.md)
 
+**0.2.0 (2026-11-09):** Eigentümer verlangt produktive Oberfläche ohne Testwerkzeuge einschließlich Dashboard-Testmodus. Stable blendet Inbetriebnahme-/Vorschautasten aus und nutzt normales bestätigtes Bereitstellen auch für bisherige dry_run-Karten; Beta zeigt Werkzeuge/Standard-Testmodus wieder. Backend-Sicherheit/Testvorschau-APIs bleiben erhalten. [Änderungen und Update](releases/0.2.0.de.md).
+
 **Stable-0.1.0-Releasebedingungen (2026-11-09):** Eigentümer erlaubt PR-#49-Merge, finale Actions, Release-PR-Merge und stabile Veröffentlichung nach grünen Prüfungen; verzichtet auf erneuten Handy-Dateinamentest. PR #49 zusammengeführt. Stabile Dokumentation/Versionsmetadaten konsolidiert; keine Steuer-/Speicheränderung. Vollständige Matrix-/HACS-/Hassfest-Ergebnisse werden vor Veröffentlichung am Release-PR/Release festgehalten. [Bedingungen und Freigabe](reports/RELEASE_0_1_0.de.md).
 
 **b26-Abnahme / b27-Downloadkorrektur (2026-11-09):** Eigentümer bestätigt SYNC/MATCH, verworfene Bestätigung, keinen Heizstart, Diagnoseexport, Neustarterhalt und genau eine tatsächliche Fertigmeldung. PR #48 unter bedingter Freigabe zusammengeführt. Folgezweig ersetzt kryptische Blob-Dateinamen durch authentifizierten benannten HTTP-Anhang derselben Vorschau. Native Dateinamenprüfung offen; keine Sendeänderung. [Abnahme und Prüfungen](reports/B26_ACCEPTANCE_AND_DOWNLOAD.de.md).
