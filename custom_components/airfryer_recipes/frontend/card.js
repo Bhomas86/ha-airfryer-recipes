@@ -1,5 +1,5 @@
 // Bundled locally; share the panel's transport, localization and token lifecycle.
-import { AirfryerRecipesPanel } from "./panel.js?v=0.1.0b26";
+import { AirfryerRecipesPanel } from "./panel.js?v=0.1.0b27";
 
 const CARD_TEXT = {
   en: {
@@ -578,7 +578,7 @@ class AirfryerRecipesCardEditor extends HTMLElement {
     this.attachShadow({ mode: "open" });
     this.shadowRoot.addEventListener("click", async (event) => {
       if(event.target.dataset?.customize!=="true"||!this._hass?.user?.is_admin)return;
-      await import("./personalization.js?v=0.1.0b26");this.customize=true;this.render();
+      await import("./personalization.js?v=0.1.0b27");this.customize=true;this.render();
     });
     this.shadowRoot.addEventListener("change", (event) => {
       const target = event.target;

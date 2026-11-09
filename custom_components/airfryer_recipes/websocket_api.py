@@ -597,7 +597,27 @@ async def ws_diagnostics_preview(hass, connection, msg):
         if set(msg) != {"id", "type"}:
             raise RecipeValidationError("Unexpected diagnostic parameter")
         await _access_admin(hass, connection)
-        return {"diagnostics": diagnostics(hass)}
+        from .diagnostic_download import previews
+        value = diagnostics(hass)
+        token = previews(hass).create(connection.user.id, value)
+        return {"diagnostics": value, "preview_id": token}
+    await _respond(hass, connection, msg, run)
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command({voluptuous.Required("type"): f"{DOMAIN}/diagnostics_download", voluptuous.Required("preview_id"): str})
+@websocket_api.async_response
+async def ws_diagnostics_download(hass, connection, msg):
+    async def run(repo):
+        from .diagnostic_download import previews, DIAGNOSTIC_FILENAME, DIAGNOSTIC_URL
+        from homeassistant.components.http.auth import async_sign_path
+        if set(msg) != {"id", "type", "preview_id"}:
+            raise RecipeValidationError("Unexpected diagnostic parameter")
+        await _access_admin(hass, connection)
+        previews(hass).read(connection.user.id, msg["preview_id"])
+        path = f"{DIAGNOSTIC_URL}/{msg['preview_id']}/{DIAGNOSTIC_FILENAME}"
+        return {"url": async_sign_path(hass, path, timedelta(seconds=EXPORT_LINK_TTL_SECONDS)),
+                "filename": DIAGNOSTIC_FILENAME, "expires_seconds": EXPORT_LINK_TTL_SECONDS}
     await _respond(hass, connection, msg, run)
 
 
@@ -654,7 +674,7 @@ async def ws_multi_action(hass, connection, msg):
 COMMANDS = (
     ws_multi_action,
     ws_multi_preview,
-    ws_diagnostics_preview, ws_notification_settings, ws_notification_set,
+    ws_diagnostics_download, ws_diagnostics_preview, ws_notification_settings, ws_notification_set,
     ws_list,
     ws_get,
     ws_create,

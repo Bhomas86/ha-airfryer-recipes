@@ -9,7 +9,7 @@ import sys
 import types
 import unittest
 from types import SimpleNamespace
-from unittest.mock import patch
+from unittest.mock import patch, AsyncMock
 
 from custom_components.airfryer_recipes.const import DOMAIN
 from custom_components.airfryer_recipes.recipe_model import create_recipe
@@ -76,7 +76,7 @@ class ExportHttpTests(unittest.TestCase):
         )
         self.http.register_http_view(hass)
         self.http.register_http_view(hass)
-        self.assertEqual(registered, [self.http.RecipeExportView])
+        self.assertEqual(registered, [self.http.RecipeExportView, self.http.DiagnosticExportView])
 
     def test_admin_download_has_expected_name_and_versioned_json(self):
         async def run():
@@ -121,6 +121,42 @@ class ExportHttpTests(unittest.TestCase):
             hass_user=SimpleNamespace(is_admin=False)
         )))
         self.assertEqual(response.status, 401)
+
+    def test_diagnostic_attachment_has_fixed_name_and_exact_preview(self):
+        from custom_components.airfryer_recipes.diagnostic_download import previews
+        async def run():
+            hass = SimpleNamespace(data={DOMAIN: {"repository": object()}},
+                auth=SimpleNamespace(async_get_user=AsyncMock(return_value=SimpleNamespace(is_admin=True,is_active=True))))
+            value = {"schema_version":1,"notification_rule_count":0}
+            token = previews(hass).create("admin",value)
+            value["notification_rule_count"] = 99
+            class Request(dict): pass
+            request=Request(hass_user=SimpleNamespace(id="admin",is_admin=True));request.app={"hass":hass}
+            response=await self.http.DiagnosticExportView().get(request,token)
+            self.assertEqual(response.status,200)
+            self.assertEqual(response.headers["Content-Disposition"],'attachment; filename="airfryer-recipes-diagnostics.json"')
+            self.assertEqual(response.headers["Cache-Control"],"no-store")
+            self.assertEqual(response.headers["X-Content-Type-Options"],"nosniff")
+            self.assertEqual(json.loads(response.body)["notification_rule_count"],0)
+            self.assertTrue(self.http.DiagnosticExportView.requires_auth)
+        asyncio.run(run())
+
+    def test_diagnostic_download_rejects_other_users_revocation_and_unload(self):
+        from custom_components.airfryer_recipes.diagnostic_download import previews
+        async def run():
+            current=SimpleNamespace(is_admin=True,is_active=True)
+            hass=SimpleNamespace(data={DOMAIN:{"repository":object()}},auth=SimpleNamespace(async_get_user=AsyncMock(return_value=current)))
+            token=previews(hass).create("owner",{"schema_version":1})
+            class Request(dict): pass
+            request=Request(hass_user=SimpleNamespace(id="other",is_admin=True));request.app={"hass":hass}
+            self.assertEqual((await self.http.DiagnosticExportView().get(request,token)).status,404)
+            request["hass_user"].id="owner";current.is_admin=False
+            self.assertEqual((await self.http.DiagnosticExportView().get(request,token)).status,401)
+            current.is_admin=True;current.is_active=False
+            self.assertEqual((await self.http.DiagnosticExportView().get(request,token)).status,401)
+            current.is_active=True;hass.data[DOMAIN].pop("repository")
+            self.assertEqual((await self.http.DiagnosticExportView().get(request,token)).status,503)
+        asyncio.run(run())
 
 
 if __name__ == "__main__":
