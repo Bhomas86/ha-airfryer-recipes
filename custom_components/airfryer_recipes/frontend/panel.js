@@ -1,7 +1,7 @@
 // Local Home Assistant custom panel. All mutations go through the authenticated API.
 const SUPPORT_TEXT = {
-  en: { title: "Diagnostics and completion notices", preview: "Preview diagnostics", warning: "Passwords, tokens, cookies, network addresses, personal and device IDs, names, recipes and images are excluded. Review the preview before sharing. Downloading sends nothing to GitHub.", download: "Download reviewed diagnostics", notifications: "Load completion notice settings", info: "Off by default. Choose a reported zone status sensor and a Companion mobile notification service. Only a fresh cooking → finished report triggers one notice. No notice after restart, offline gaps, cancellation or an uncertain state; no retry. Requires reviewed Airfryer Control 1.0.3-beta.3, 1.0.3 or 1.0.4-beta.1. Each zone is configured separately.", source: "Zone status sensor", target: "Mobile notification service", save: "Enable for selected zone", remove: "Disable", empty: "No completion notices enabled.", saved: "Settings saved", unavailable: "Notification settings unavailable; existing data preserved." },
-  de: { title: "Diagnose und Fertigmeldungen", preview: "Diagnosevorschau anzeigen", warning: "Passwörter, Tokens, Cookies, Netzwerkadressen, persönliche und Gerätekennungen, Namen, Rezepte und Bilder sind ausgeschlossen. Prüfe die Vorschau vor dem Teilen. Der Download sendet nichts an GitHub.", download: "Geprüfte Diagnose herunterladen", notifications: "Einstellungen für Fertigmeldungen laden", info: "Standardmäßig aus. Wähle einen gemeldeten Fach-Statussensor und einen mobilen Benachrichtigungsdienst der Companion-App. Nur eine frische Meldung gart → fertig löst eine Nachricht aus. Keine Nachricht nach Neustart, Offline-Lücken, Abbruch oder unklarem Zustand; keine Wiederholung. Benötigt geprüftes Airfryer Control 1.0.3-beta.3, 1.0.3 oder 1.0.4-beta.1. Jedes Fach wird separat eingestellt.", source: "Fach-Statussensor", target: "Mobiler Benachrichtigungsdienst", save: "Für gewähltes Fach aktivieren", remove: "Deaktivieren", empty: "Keine Fertigmeldungen aktiviert.", saved: "Einstellungen gespeichert", unavailable: "Benachrichtigungseinstellungen nicht verfügbar; bestehende Daten bleiben erhalten." },
+  en: { expired: "The diagnostic preview expired. Show a new preview and download again.", title: "Diagnostics and completion notices", preview: "Preview diagnostics", warning: "Passwords, tokens, cookies, network addresses, personal and device IDs, names, recipes and images are excluded. Review the preview before sharing. Downloading sends nothing to GitHub.", download: "Download reviewed diagnostics", notifications: "Load completion notice settings", info: "Off by default. Choose a reported zone status sensor and a Companion mobile notification service. Only a fresh cooking → finished report triggers one notice. No notice after restart, offline gaps, cancellation or an uncertain state; no retry. Requires reviewed Airfryer Control 1.0.3-beta.3, 1.0.3 or 1.0.4-beta.1. Each zone is configured separately.", source: "Zone status sensor", target: "Mobile notification service", save: "Enable for selected zone", remove: "Disable", empty: "No completion notices enabled.", saved: "Settings saved", unavailable: "Notification settings unavailable; existing data preserved." },
+  de: { expired: "Die Diagnosevorschau ist abgelaufen. Zeige eine neue Vorschau an und lade sie erneut herunter.", title: "Diagnose und Fertigmeldungen", preview: "Diagnosevorschau anzeigen", warning: "Passwörter, Tokens, Cookies, Netzwerkadressen, persönliche und Gerätekennungen, Namen, Rezepte und Bilder sind ausgeschlossen. Prüfe die Vorschau vor dem Teilen. Der Download sendet nichts an GitHub.", download: "Geprüfte Diagnose herunterladen", notifications: "Einstellungen für Fertigmeldungen laden", info: "Standardmäßig aus. Wähle einen gemeldeten Fach-Statussensor und einen mobilen Benachrichtigungsdienst der Companion-App. Nur eine frische Meldung gart → fertig löst eine Nachricht aus. Keine Nachricht nach Neustart, Offline-Lücken, Abbruch oder unklarem Zustand; keine Wiederholung. Benötigt geprüftes Airfryer Control 1.0.3-beta.3, 1.0.3 oder 1.0.4-beta.1. Jedes Fach wird separat eingestellt.", source: "Fach-Statussensor", target: "Mobiler Benachrichtigungsdienst", save: "Für gewähltes Fach aktivieren", remove: "Deaktivieren", empty: "Keine Fertigmeldungen aktiviert.", saved: "Einstellungen gespeichert", unavailable: "Benachrichtigungseinstellungen nicht verfügbar; bestehende Daten bleiben erhalten." },
 };
 const WORDS = {
   en: {
@@ -252,6 +252,7 @@ export class AirfryerRecipesPanel extends HTMLElement {
     if (this._hass && (this._hass.user?.id !== value?.user?.id || oldAdmin !== value?.user?.is_admin)) {
       this.supportData = null;
       this.diagnosticPreview = null;
+      this.diagnosticPreviewId = null;
       this.supportMessage = "";
       this.accessData = null;
       this.accessMessage = "";
@@ -537,12 +538,12 @@ export class AirfryerRecipesPanel extends HTMLElement {
     try {
       if (type === "diagnostics-preview") {
         const result = await this.request("diagnostics_preview");
-        if (current()) this.diagnosticPreview = result.diagnostics;
+        if (current()) { this.diagnosticPreview = result.diagnostics; this.diagnosticPreviewId = result.preview_id; }
       } else if (type === "diagnostics-download" && this.diagnosticPreview) {
-        const url = URL.createObjectURL(new Blob([JSON.stringify(this.diagnosticPreview, null, 2)], { type: "application/json" }));
+        const result = await this.request("diagnostics_download", { preview_id: this.diagnosticPreviewId });
+        if (!current()) return;
         const link = document.createElement("a");
-        link.href = url; link.download = "airfryer-recipes-diagnostics.json"; link.click();
-        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        link.href = result.url; link.download = result.filename; link.click();
       } else {
         if (type !== "notifications-load") {
           const form = new FormData(this.shadowRoot.getElementById("notifications-form"));
@@ -553,7 +554,7 @@ export class AirfryerRecipesPanel extends HTMLElement {
         const data = await this.request("notification_settings");
         if (current()) this.supportData = data;
       }
-    } catch (error) { if (current()) this.showError(error); }
+    } catch (error) { if (current()) { if (error?.code === "preview_expired") this.error = this.supportWords.expired; else this.showError(error); } }
     finally { this.busy = false; this.render(); }
   }
 

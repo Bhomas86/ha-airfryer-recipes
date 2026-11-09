@@ -81,6 +81,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         sender = state.pop("beta_sender", None)
         if sender is not None:
             sender.close()
+        state.pop("diagnostic_downloads", None)
         state.pop("repository", None)
         state.pop("favorites", None)
         from .panel import async_remove_panel

@@ -1139,14 +1139,24 @@ test("notification settings escape labels and disabling sends only the chosen se
 });
 
 
-test("diagnostic download uses the displayed snapshot without another backend request", async () => {
-  let calls = 0;
-  const panel = panelWith(async () => { calls++; return {}; });
+test("diagnostic download requests only the reviewed preview and uses a real named URL", async () => {
+  const calls = [];
+  const panel = panelWith(async req => { calls.push(req); return { url:"/api/airfryer_recipes/diagnostics/token/airfryer-recipes-diagnostics.json?authSig=signed", filename:"airfryer-recipes-diagnostics.json" }; });
   panel.diagnosticPreview = { schema_version: 1, library_loaded: true };
+  panel.diagnosticPreviewId = "reviewed-preview";
   await panel.supportAction("diagnostics-download", {});
-  assert.equal(calls, 0);
-  assert.equal(panel.createdElements.length, 1);
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].type, "airfryer_recipes/diagnostics_download");
+  assert.equal(calls[0].preview_id, "reviewed-preview");
   assert.equal(panel.createdElements[0].download, "airfryer-recipes-diagnostics.json");
-  assert.equal(panel.createdElements[0].href, "blob:diagnostic-preview");
+  assert.match(panel.createdElements[0].href, /\/airfryer-recipes-diagnostics.json\?authSig=/);
   assert.equal(panel.createdElements[0].clicked, true);
+});
+
+test('expired diagnostic preview shows relevant feedback without starting a download', async () => {
+  const panel = panelWith(async () => { throw { code:'preview_expired' }; });
+  panel.diagnosticPreview = { schema_version:1 }; panel.diagnosticPreviewId='old';
+  await panel.supportAction('diagnostics-download',{});
+  assert.match(panel.error,/Diagnosevorschau ist abgelaufen/);
+  assert.equal(panel.createdElements.length,0);
 });

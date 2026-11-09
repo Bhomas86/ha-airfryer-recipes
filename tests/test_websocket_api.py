@@ -556,11 +556,11 @@ class WebsocketTests(unittest.IsolatedAsyncioTestCase):
         ws.registered.clear()
         self.api.register_commands(self.hass)
         commands = {handler._ws_command for handler in ws.registered}
-        self.assertEqual(len(commands), 33)
+        self.assertEqual(len(commands), 34)
         self.assertEqual(
             commands,
             {f"{DOMAIN}/{name}" for name in (
-                "multi_action", "multi_preview", "diagnostics_preview", "notification_settings", "notification_set",
+                "multi_action", "multi_preview", "diagnostics_download", "diagnostics_preview", "notification_settings", "notification_set",
                 "list", "get", "create", "update", "duplicate", "delete",
                 "import_preview", "import_confirm", "export", "favorites", "set_favorite",
                 "devices", "sent_settings", "control", "access_list", "access_set", "appearance_get", "appearance_set", "appearance_upload",
@@ -601,6 +601,20 @@ class WebsocketTests(unittest.IsolatedAsyncioTestCase):
             result = await self.call("control", self.user, action="sync_senden", parameters={"device_id": "d"})
             self.assertEqual(result[2], "invalid_format")
             planner.assert_awaited_once()
+
+    async def test_named_diagnostic_url_is_user_bound_and_preserves_preview(self):
+        await self.access_setup()
+        preview=(await self.call("diagnostics_preview",self.admin))[2]
+        token=preview["preview_id"]
+        result=await self.call("diagnostics_download",self.admin,preview_id=token)
+        self.assertEqual(result[0],"result")
+        self.assertEqual(result[2]["filename"],"airfryer-recipes-diagnostics.json")
+        self.assertIn("/airfryer-recipes-diagnostics.json?authSig=",result[2]["url"])
+        self.assertEqual(result[2]["expires_seconds"],30)
+        for user in (self.user,FakeConnection(authenticated=False)):
+            self.assertEqual((await self.call("diagnostics_download",user,preview_id=token))[2],"unauthorized")
+        self.assertEqual((await self.call("diagnostics_download",self.admin,preview_id="not-real"))[2],"preview_expired")
+        self.assertEqual((await self.call("diagnostics_download",self.admin,preview_id=token,filename="private"))[2],"invalid_format")
 
     async def test_support_commands_enforce_current_admin_and_strict_payloads(self):
         await self.access_setup()
