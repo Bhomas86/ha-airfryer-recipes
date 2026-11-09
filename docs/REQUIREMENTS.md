@@ -2,6 +2,8 @@
 
 [English](REQUIREMENTS.md) | [Deutsch](REQUIREMENTS.de.md)
 
+**Stable 0.1.0 release gate (2026-11-09):** Owner authorizes PR #49 merge, final Actions, release PR merge and stable publication after green checks; waives another phone filename test. PR #49 merged. Consolidated stable docs/version metadata; no control/storage changes. Full matrix/HACS/Hassfest results are recorded on the release PR/release before publication. [Gate and authorization](reports/RELEASE_0_1_0.md).
+
 **b26 acceptance / b27 download fix (2026-11-09):** Owner confirms SYNC/MATCH, canceled confirmation, no heating start, diagnostic export, restart persistence and exactly one actual completion notice. PR #48 merged under conditional approval. Follow-up replaces cryptic blob filenames with an authenticated, named HTTP attachment of the same preview. Native filename verification pending; no send changes. [Acceptance and checks](reports/B26_ACCEPTANCE_AND_DOWNLOAD.md).
 
 **b26 test-beta release preparation (2026-11-08):** Owner requests a published beta and authorizes PR #48 approval after successful tests. Keep PR open until native results are confirmed. Includes #1 and #10 acceptance, current final validation and stable 0.1.0 preparation. No new code or Actions. [Release and test checklist](releases/0.1.0b26.md).

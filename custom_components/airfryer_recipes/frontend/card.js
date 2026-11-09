@@ -1,5 +1,5 @@
 // Bundled locally; share the panel's transport, localization and token lifecycle.
-import { AirfryerRecipesPanel } from "./panel.js?v=0.1.0b27";
+import { AirfryerRecipesPanel } from "./panel.js?v=0.1.0";
 
 const CARD_TEXT = {
   en: {
@@ -10,13 +10,13 @@ const CARD_TEXT = {
     reported: "Reported connection and zone status; refresh to update. Sending checks fresh state again.",
     admin: "No permitted device available. Ask an administrator to share the device, then refresh.",
     test: "Test mode · no transmission", preview: "Check test preview", previewDone: "Test preview checked. No device command was sent.",
-    beta: "Supervised beta · settings only", historyError: "Last sent settings are unavailable.",
+    beta: "Settings only · start at appliance", historyError: "Last sent settings are unavailable.",
     saveError: "Transmission accepted, but last settings could not be saved. Do not resend just to save them.",
     accepted: "Settings accepted by adapter; not confirmed on the appliance. Check the appliance.",
     historyInfo: "Last accepted transmission, not the current appliance settings.",
-    confirm: "Send these exact settings once as a supervised beta test? Check both zones are idle. Cooking starts at the appliance only.",
+    confirm: "Prepare these exact settings once? Check both zones are idle. Cooking starts at the appliance only.",
     configTitle: "Title", configDevice: "Home Assistant device ID (optional)", configTest: "Test mode (no device commands)",
-    configHelp: "Leave the device ID empty to initially select an available appliance. Administrators grant ordinary users an entire device in the recipe library. Live transmission remains a supervised beta test.",
+    configHelp: "Leave the device ID empty to initially select an available appliance. Administrators grant ordinary users an entire device in the recipe library. Sending prepares settings only; start cooking at the appliance.",
     size: "Card size", graphicSize: "Device graphic size", compact: "Compact", normal: "Normal", large: "Large", small: "Small", showStatus: "Show status", showHistory: "Show last sent settings",
     zoneStyle: "Zone selection on the image", zoneOutline: "A – Subtle outline", zoneInvisible: "B – Invisible touch areas",
     zoneStyleHelp: "A marks the selected zone with a thin outline and small numbers. B keeps the photo clear; its configured zones remain tappable. Set their size and position in Customize Airfryer, where the boxes stay visible. Choose zones on the image or beside it.",
@@ -30,13 +30,13 @@ const CARD_TEXT = {
     reported: "Gemeldete Verbindung und Fachzustände; zum Aktualisieren neu laden. Senden prüft den Zustand erneut frisch.",
     admin: "Kein freigegebenes Gerät verfügbar. Ein Administrator muss das Gerät freigeben; anschließend aktualisieren.",
     test: "Testmodus · keine Übertragung", preview: "Testvorschau prüfen", previewDone: "Testvorschau geprüft. Es wurde kein Gerätebefehl gesendet.",
-    beta: "Beaufsichtigte Beta · nur Einstellungen", historyError: "Zuletzt gesendete Einstellungen sind nicht verfügbar.",
+    beta: "Nur Einstellungen · Start am Gerät", historyError: "Zuletzt gesendete Einstellungen sind nicht verfügbar.",
     saveError: "Übertragung angenommen, letzte Einstellungen konnten aber nicht gespeichert werden. Dafür nicht erneut senden.",
     accepted: "Einstellungen vom Adapter angenommen; keine Gerätebestätigung. Am Gerät kontrollieren.",
     historyInfo: "Letzte angenommene Übertragung, nicht die aktuellen Geräteeinstellungen.",
-    confirm: "Diese Einstellungen einmalig als beaufsichtigten Beta-Test senden? Beide Fächer müssen ruhen. Garstart nur am Gerät.",
+    confirm: "Diese Einstellungen einmalig bereitstellen? Beide Fächer müssen ruhen. Garstart nur am Gerät.",
     configTitle: "Titel", configDevice: "Home-Assistant-Geräte-ID (optional)", configTest: "Testmodus (keine Gerätebefehle)",
-    configHelp: "Ohne Geräte-ID wird anfangs ein verfügbares Gerät ausgewählt. Administratoren geben normalen Benutzern in der Rezeptbibliothek ein ganzes Gerät frei. Echtes Senden bleibt ein beaufsichtigter Beta-Test.",
+    configHelp: "Ohne Geräte-ID wird anfangs ein verfügbares Gerät ausgewählt. Administratoren geben normalen Benutzern in der Rezeptbibliothek ein ganzes Gerät frei. Senden stellt nur Einstellungen bereit; Garstart erfolgt am Gerät.",
     size: "Kartengröße", graphicSize: "Größe der Gerätegrafik", compact: "Kompakt", normal: "Normal", large: "Groß", small: "Klein", showStatus: "Status anzeigen", showHistory: "Zuletzt gesendete Einstellungen anzeigen",
     zoneStyle: "Fachauswahl auf dem Bild", zoneOutline: "A – Dezente Markierung", zoneInvisible: "B – Unsichtbare Touchbereiche",
     zoneStyleHelp: "A markiert das ausgewählte Fach mit einer dünnen Kontur und kleinen Nummern. B lässt das Foto frei; die eingerichteten Fachbereiche bleiben antippbar. Größe und Position unter Airfryer individualisieren einstellen; dort bleiben die Rechtecke sichtbar. Fach auf dem Bild oder daneben auswählen.",
@@ -578,7 +578,7 @@ class AirfryerRecipesCardEditor extends HTMLElement {
     this.attachShadow({ mode: "open" });
     this.shadowRoot.addEventListener("click", async (event) => {
       if(event.target.dataset?.customize!=="true"||!this._hass?.user?.is_admin)return;
-      await import("./personalization.js?v=0.1.0b27");this.customize=true;this.render();
+      await import("./personalization.js?v=0.1.0");this.customize=true;this.render();
     });
     this.shadowRoot.addEventListener("change", (event) => {
       const target = event.target;

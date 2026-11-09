@@ -2,6 +2,8 @@
 
 [Deutsch](REQUIREMENTS.de.md) | [English](REQUIREMENTS.md)
 
+**Stable-0.1.0-Releasebedingungen (2026-11-09):** Eigentümer erlaubt PR-#49-Merge, finale Actions, Release-PR-Merge und stabile Veröffentlichung nach grünen Prüfungen; verzichtet auf erneuten Handy-Dateinamentest. PR #49 zusammengeführt. Stabile Dokumentation/Versionsmetadaten konsolidiert; keine Steuer-/Speicheränderung. Vollständige Matrix-/HACS-/Hassfest-Ergebnisse werden vor Veröffentlichung am Release-PR/Release festgehalten. [Bedingungen und Freigabe](reports/RELEASE_0_1_0.de.md).
+
 **b26-Abnahme / b27-Downloadkorrektur (2026-11-09):** Eigentümer bestätigt SYNC/MATCH, verworfene Bestätigung, keinen Heizstart, Diagnoseexport, Neustarterhalt und genau eine tatsächliche Fertigmeldung. PR #48 unter bedingter Freigabe zusammengeführt. Folgezweig ersetzt kryptische Blob-Dateinamen durch authentifizierten benannten HTTP-Anhang derselben Vorschau. Native Dateinamenprüfung offen; keine Sendeänderung. [Abnahme und Prüfungen](reports/B26_ACCEPTANCE_AND_DOWNLOAD.de.md).
 
 **b26-Test-Beta-Veröffentlichung vorbereitet (2026-11-08):** Eigentümer beauftragt eine veröffentlichte Beta und erlaubt PR-#48-Freigabe nach erfolgreichen Tests. PR bis zu bestätigten nativen Ergebnissen offen halten. Umfasst Abnahme #1/#10, aktuelle Abschlussvalidierung und Vorbereitung von Stable 0.1.0. Kein neuer Code oder Actions. [Release und Testcheckliste](releases/0.1.0b26.de.md).
