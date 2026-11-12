@@ -1,5 +1,14 @@
 # Airfryer Recipes for Home Assistant
 
+![Home Assistant](https://img.shields.io/badge/Home%20Assistant-Custom%20Integration-41BDF5?logo=home-assistant)
+![HACS](https://img.shields.io/badge/HACS-Compatible-41BDF5)
+[![GitHub Downloads](https://img.shields.io/github/downloads/Bhomas86/ha-airfryer-recipes/total)](https://github.com/Bhomas86/ha-airfryer-recipes/releases)
+[![GitHub License](https://img.shields.io/github/license/Bhomas86/ha-airfryer-recipes)](https://github.com/Bhomas86/ha-airfryer-recipes/blob/main/LICENSE)
+[![GitHub Release](https://img.shields.io/github/v/release/Bhomas86/ha-airfryer-recipes)](https://github.com/Bhomas86/ha-airfryer-recipes/releases/latest)
+[![GitHub Stars](https://img.shields.io/github/stars/Bhomas86/ha-airfryer-recipes)](https://github.com/Bhomas86/ha-airfryer-recipes/stargazers)
+[![GitHub Issues](https://img.shields.io/github/issues/Bhomas86/ha-airfryer-recipes)](https://github.com/Bhomas86/ha-airfryer-recipes/issues)
+[![Sponsor Bhomas86](https://img.shields.io/badge/Sponsor-Bhomas86-EA4AAA?logo=githubsponsors)](https://github.com/sponsors/Bhomas86)
+
 [English](README.md) | [Deutsch](README.de.md)
 
 **Version 0.2.0** manages device-independent air fryer recipes locally in Home Assistant and prepares settings on a supported appliance through [Airfryer Control](https://github.com/misterm2310/airfryer-control). Cooking starts physically at the appliance.
@@ -50,3 +59,7 @@ Diagnostic export uses only allowlisted technical fields, with preview before do
 The owner confirmed device preparation, SYNC/MATCH, cancellation without sending, no automatic heating start, persistence, permissions and a real completion notice. The owner accepted the diagnostic filename correction without another phone test; that distinction is documented. Automated tests use mocks, not real appliances. Historical beta notes/reports remain under `docs/releases` and `docs/reports` as historical evidence.
 
 Report issues and verified device compatibility through [GitHub Issues](https://github.com/Bhomas86/ha-airfryer-recipes/issues). This project is independent of Cosori, VeSync and the Airfryer Control developers.
+
+## Support
+
+If you find this project useful, you can [sponsor its further development on GitHub](https://github.com/sponsors/Bhomas86).
